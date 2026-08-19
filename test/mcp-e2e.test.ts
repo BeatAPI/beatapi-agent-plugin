@@ -35,6 +35,44 @@ test("bundled stdio MCP serves BeatAPI tools and protects credentials", async ()
       );
       return;
     }
+    if (request.url === "/v1/media/models") {
+      response.end(
+        JSON.stringify({
+          data: {
+            object: "list",
+            data: [
+              {
+                id: "nano-banana",
+                object: "generation_model",
+                name: "Nano Banana",
+                media_type: "image",
+                input_modes: ["text"],
+              },
+            ],
+          },
+        }),
+      );
+      return;
+    }
+    if (request.url === "/v1/effects") {
+      response.end(
+        JSON.stringify({
+          data: {
+            object: "list",
+            data: [{ id: "video-muscle-max", object: "effect" }],
+          },
+        }),
+      );
+      return;
+    }
+    if (request.url === "/v1/effects/video-muscle-max") {
+      response.end(
+        JSON.stringify({
+          data: { id: "video-muscle-max", object: "effect", version: 1 },
+        }),
+      );
+      return;
+    }
     if (request.url === "/v1/usage") {
       response.end(
         JSON.stringify({
@@ -79,6 +117,28 @@ test("bundled stdio MCP serves BeatAPI tools and protects credentials", async ()
             request_id: "req_test",
             error_code: null,
             error_message: null,
+          },
+        }),
+      );
+      return;
+    }
+    if (
+      request.url === "/v1/images/tasks" ||
+      request.url === "/v1/videos/tasks" ||
+      request.url === "/v1/effects/tasks"
+    ) {
+      response.statusCode = 201;
+      response.end(
+        JSON.stringify({
+          data: {
+            id: `task_${request.url.split("/")[2]}`,
+            object: "task",
+            task_kind: request.url.includes("images")
+              ? "image"
+              : request.url.includes("videos")
+                ? "video"
+                : "effect",
+            status: "queued",
           },
         }),
       );
@@ -178,7 +238,7 @@ test("bundled stdio MCP serves BeatAPI tools and protects credentials", async ()
   try {
     await client.connect(transport);
     const listed = await client.listTools();
-    assert.equal(listed.tools.length, 19);
+    assert.equal(listed.tools.length, 25);
     assert.ok(listed.tools.every((tool) => !/api[_-]?key/i.test(JSON.stringify(tool.inputSchema))));
 
     const workflows = await client.callTool({
@@ -188,6 +248,55 @@ test("bundled stdio MCP serves BeatAPI tools and protects credentials", async ()
     assert.equal(
       (workflows.structuredContent as { result: Array<{ id: string }> }).result[0]?.id,
       "music-video",
+    );
+
+    const models = await client.callTool({
+      name: "beatapi_list_generation_models",
+      arguments: {},
+    });
+    assert.equal(
+      (models.structuredContent as { result: Array<{ id: string }> }).result[0]?.id,
+      "nano-banana",
+    );
+
+    const imageTask = await client.callTool({
+      name: "beatapi_create_image",
+      arguments: { model: "nano-banana", prompt: "Editorial still" },
+    });
+    assert.equal(
+      (imageTask.structuredContent as { result: { id: string } }).result.id,
+      "task_images",
+    );
+
+    const effects = await client.callTool({
+      name: "beatapi_list_effects",
+      arguments: {},
+    });
+    assert.equal(
+      (effects.structuredContent as { result: Array<{ id: string }> }).result[0]?.id,
+      "video-muscle-max",
+    );
+
+    const effect = await client.callTool({
+      name: "beatapi_get_effect",
+      arguments: { effect_id: "video-muscle-max" },
+    });
+    assert.equal(
+      (effect.structuredContent as { result: { version: number } }).result.version,
+      1,
+    );
+
+    const effectTask = await client.callTool({
+      name: "beatapi_create_effect",
+      arguments: {
+        effect_id: "video-muscle-max",
+        images: ["https://media.example.com/portrait.png"],
+        idempotency_key: "effect-mcp-test",
+      },
+    });
+    assert.equal(
+      (effectTask.structuredContent as { result: { id: string } }).result.id,
+      "task_effects",
     );
 
     const musicTask = await client.callTool({
@@ -302,7 +411,13 @@ test("bundled stdio MCP serves BeatAPI tools and protects credentials", async ()
     );
 
     const authenticatedRequests = requests.filter(
-      (request) => request.path !== "/v1/workflows",
+      (request) =>
+        request.path !== "/v1/workflows" &&
+        request.path !== "/v1/media/models" &&
+        !(
+          request.method === "GET" &&
+          request.path.startsWith("/v1/effects")
+        ),
     );
     assert.ok(
       authenticatedRequests.every(
@@ -312,6 +427,18 @@ test("bundled stdio MCP serves BeatAPI tools and protects credentials", async ()
     assert.equal(
       requests.find((request) => request.path === "/v1/workflows")?.authorization,
       undefined,
+    );
+    assert.equal(
+      requests.find((request) => request.path === "/v1/media/models")?.authorization,
+      undefined,
+    );
+    assert.ok(
+      requests
+        .filter(
+          (request) =>
+            request.method === "GET" && request.path.startsWith("/v1/effects"),
+        )
+        .every((request) => request.authorization === undefined),
     );
   } finally {
     await client.close().catch(() => undefined);

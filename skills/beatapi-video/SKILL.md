@@ -1,6 +1,6 @@
 ---
 name: beatapi-video
-description: Create, monitor, and troubleshoot BeatAPI Music Video, Ecommerce Video, and Realtime Video sessions through bundled BeatAPI MCP tools when available or the official BeatAPI CLI as a fallback. Use when a user wants to generate an AI video, create or inspect a realtime browser session, upload workflow media, check credits and concurrency, manage storyboard shots, retrieve hosted output, configure webhooks, or diagnose a BeatAPI API error.
+description: Create, monitor, and troubleshoot BeatAPI image, video, Effect, Music Video, Ecommerce Video, and Realtime tasks through bundled BeatAPI MCP tools when available or the official BeatAPI CLI as a fallback. Use when a user wants to generate media with a BeatAPI model, run a published Effect, create or inspect a realtime browser session, upload media, check balance and concurrency, manage storyboard shots, retrieve hosted output, configure webhooks, or diagnose a BeatAPI API error.
 ---
 
 # BeatAPI Video
@@ -24,7 +24,8 @@ The Skills-only distribution requires Node.js 20.19+ or 22.12+ and
   `BEATAPI_API_KEY`.
 - Never request a key in chat, pass it as a command argument, print it, or place
   it in JSON, source files, logs, screenshots, or issue text.
-- Treat task creation, shot editing, and composition as paid mutations.
+- Treat image, video, Effect, workflow, Realtime, shot-editing, and composition
+  creation as paid mutations.
 - Consider an explicit request to generate or edit authorization for that
   operation. Ask before spending credits only when the request is ambiguous,
   material settings are missing, or the operation expands beyond the request.
@@ -41,12 +42,18 @@ The Skills-only distribution requires Node.js 20.19+ or 22.12+ and
    terminal or set `BEATAPI_API_KEY`. Do not ask them to paste the key into the
    conversation.
 5. Before a paid operation, call `beatapi_get_usage` or run `beatapi usage`.
-   Check both credit balance and active concurrency.
+   Check both USD balance and active concurrency.
 
-Skip credential checks for anonymous `beatapi_list_workflows` or
-`beatapi workflows list`.
+Skip credential checks for anonymous workflow, model, and Effect discovery.
 
 ## Choose the workflow
+
+- Choose Image generation for one hosted still image. Choose Video generation
+  for one hosted model-specific video. Read
+  [generation-and-effects.md](references/generation-and-effects.md) before
+  selecting a model or request shape.
+- Choose an Effect only after listing and reading its current published input
+  contract. Effects can return an image or video.
 
 - Choose Music Video when the user supplies audio plus 1-7 visual references.
 - Choose automatic Music Video composition unless the user wants to inspect,
@@ -59,8 +66,8 @@ Skip credential checks for anonymous `beatapi_list_workflows` or
   session. Read [realtime-video.md](references/realtime-video.md) first. The
   agent may manage the server-side session but does not own camera permission,
   WebRTC negotiation, or browser rendering.
-- Do not force unrelated video editing, transcription, generic image
-  generation, or non-BeatAPI API design tasks into this Skill.
+- Do not force unrelated editing, transcription, or non-BeatAPI API design
+  tasks into this Skill.
 
 Read [credits-and-limits.md](references/credits-and-limits.md) when estimating
 cost or validating media and generation settings.
@@ -83,6 +90,25 @@ cost or validating media and generation settings.
 
 Reject unsupported media, private-network URLs, localhost URLs, data URLs, and
 unknown fields instead of guessing.
+
+## Execute image, video, or Effect generation
+
+1. Read [generation-and-effects.md](references/generation-and-effects.md).
+2. Discover the current model or Effect before selecting it.
+3. Copy the matching image, video, or Effect template to a temporary file.
+4. Validate the exact model-specific or Effect-version-specific fields against
+   the bundled OpenAPI contract.
+5. With MCP, call `beatapi_create_image`, `beatapi_create_video`, or
+   `beatapi_create_effect`. With the CLI fallback:
+
+   ```bash
+   beatapi images create --file /tmp/beatapi-image.json
+   beatapi videos create --file /tmp/beatapi-video.json
+   beatapi effects create --file /tmp/beatapi-effect.json \
+     --idempotency-key effect_request_123
+   ```
+
+6. Preserve the task ID and wait through the shared task endpoint.
 
 ## Execute automatic Music Video
 
@@ -120,7 +146,11 @@ unknown fields instead of guessing.
 - Inspect one task with `beatapi_get_task` or `beatapi tasks get TASK_ID`.
 - Discover workflows with `beatapi_list_workflows` or
   `beatapi workflows list`.
-- Inspect balance and concurrency with `beatapi_get_usage` or `beatapi usage`.
+- Discover model aliases with `beatapi_list_generation_models` or
+  `beatapi models list`; discover Effects with `beatapi_list_effects` or
+  `beatapi effects list`.
+- Inspect USD balance and concurrency with `beatapi_get_usage` or
+  `beatapi usage`.
 - Manage webhook endpoints with the `beatapi_*_webhook` tools or
   `beatapi webhooks list|create|get|update|delete`.
 - Read [api-workflows.md](references/api-workflows.md) for the exact MCP, CLI,
@@ -156,7 +186,8 @@ Return:
 - workflow and task ID;
 - final or actionable status;
 - hosted output URL(s) only when present;
-- credits charged, settled, or refunded when useful;
+- USD amount charged, settled, or refunded when useful; compatibility response
+  fields still use `credits_*` names;
 - `request_id`, `error_code`, and `error_message` for failures;
 - the next required action for `storyboard_ready` or `requires_action`.
 

@@ -3644,12 +3644,7 @@ var require_fast_uri = __commonJS({
     }
     function resolve2(baseURI, relativeURI, options) {
       const schemelessOptions = options ? Object.assign({ scheme: "null" }, options) : { scheme: "null" };
-      const { parsed: baseParsed, malformedAuthorityOrPort: baseMalformed } = parseWithStatus(baseURI, schemelessOptions);
-      const { parsed: relativeParsed, malformedAuthorityOrPort: relativeMalformed } = parseWithStatus(relativeURI, schemelessOptions);
-      if (baseMalformed || relativeMalformed) {
-        throw new Error(baseParsed.error || relativeParsed.error || "URI is malformed.");
-      }
-      const resolved = resolveComponent(baseParsed, relativeParsed, schemelessOptions, true);
+      const resolved = resolveComponent(parse3(baseURI, schemelessOptions), parse3(relativeURI, schemelessOptions), schemelessOptions, true);
       schemelessOptions.skipEscape = true;
       return serialize(resolved, schemelessOptions);
     }
@@ -3774,8 +3769,6 @@ var require_fast_uri = __commonJS({
       return uriTokens.join("");
     }
     var URI_PARSE = /^(?:([^#/:?]+):)?(?:\/\/((?:([^#/?@]*)@)?(\[[^#/?\]]+\]|[^#/:?]*)(?::(\d*))?))?([^#?]*)(?:\?([^#]*))?(?:#((?:.|[\n\r])*))?/u;
-    var AUTHORITY_PREFIX = /^(?:[^#/:?]+:)?\/\/([^/?#]*)/;
-    var AUTHORITY_INTRODUCER_REGION = /^(?:[^#/:?]+:)?([/\\\t\n\r]*)/;
     function getParseError(parsed, matches) {
       if (matches[2] !== void 0 && parsed.path && parsed.path[0] !== "/") {
         return 'URI path must start with "/" when authority is present.';
@@ -3803,25 +3796,6 @@ var require_fast_uri = __commonJS({
           uri2 = options.scheme + ":" + uri2;
         } else {
           uri2 = "//" + uri2;
-        }
-      }
-      const authorityMatch = uri2.match(AUTHORITY_PREFIX);
-      if (authorityMatch !== null && authorityMatch[1].indexOf("\\") !== -1) {
-        parsed.error = "URI authority must not contain a literal backslash.";
-        malformedAuthorityOrPort = true;
-      }
-      const introducerMatch = uri2.match(AUTHORITY_INTRODUCER_REGION);
-      if (introducerMatch !== null) {
-        const region = introducerMatch[1];
-        const normalizedRegion = region.replace(/[\t\n\r]/g, "");
-        if (normalizedRegion.length >= 2) {
-          if (normalizedRegion.slice(0, 2) !== "//") {
-            parsed.error = parsed.error || "URI authority must not contain a literal backslash.";
-            malformedAuthorityOrPort = true;
-          } else if (region.length !== normalizedRegion.length) {
-            parsed.error = parsed.error || "URI authority introducer must not contain whitespace.";
-            malformedAuthorityOrPort = true;
-          }
         }
       }
       const matches = uri2.match(URI_PARSE);
@@ -23068,32 +23042,16 @@ function normalizeObjectSchema(schema) {
   }
   return void 0;
 }
-function getDotPath(path) {
-  if (path.length === 0) {
-    return "object root";
-  }
-  return path.reduce((acc, seg, index) => {
-    if (index === 0) {
-      return String(seg);
-    }
-    if (typeof seg === "number") {
-      return `${acc}[${seg}]`;
-    }
-    return `${acc}.${seg}`;
-  }, "");
-}
 function getParseErrorMessage(error51) {
   if (error51 && typeof error51 === "object") {
-    if ("issues" in error51 && Array.isArray(error51.issues) && error51.issues.length > 0) {
-      return error51.issues.map((i) => {
-        if (!i.path?.length) {
-          return i.message;
-        }
-        return `${i.message} at ${getDotPath(i.path)}`;
-      }).join("\n");
-    }
     if ("message" in error51 && typeof error51.message === "string") {
       return error51.message;
+    }
+    if ("issues" in error51 && Array.isArray(error51.issues) && error51.issues.length > 0) {
+      const firstIssue = error51.issues[0];
+      if (firstIssue && typeof firstIssue === "object" && "message" in firstIssue) {
+        return String(firstIssue.message);
+      }
     }
     try {
       return JSON.stringify(error51);
@@ -29709,7 +29667,16 @@ var Server = class extends Protocol {
     if (!methodSchema) {
       throw new Error("Schema is missing a method literal");
     }
-    const methodValue = getLiteralValue(methodSchema);
+    let methodValue;
+    if (isZ4Schema(methodSchema)) {
+      const v4Schema = methodSchema;
+      const v4Def = v4Schema._zod?.def;
+      methodValue = v4Def?.value ?? v4Schema.value;
+    } else {
+      const v3Schema = methodSchema;
+      const legacyDef = v3Schema._def;
+      methodValue = legacyDef?.value ?? v3Schema.value;
+    }
     if (typeof methodValue !== "string") {
       throw new Error("Schema method literal must be a string");
     }
@@ -30897,17 +30864,8 @@ var EMPTY_COMPLETION_RESULT = {
 import process3 from "node:process";
 
 // node_modules/@modelcontextprotocol/sdk/dist/esm/shared/stdio.js
-var STDIO_DEFAULT_MAX_BUFFER_SIZE = 10 * 1024 * 1024;
 var ReadBuffer = class {
-  constructor(options) {
-    this._maxBufferSize = options?.maxBufferSize ?? STDIO_DEFAULT_MAX_BUFFER_SIZE;
-  }
   append(chunk) {
-    const newSize = (this._buffer?.length ?? 0) + chunk.length;
-    if (newSize > this._maxBufferSize) {
-      this.clear();
-      throw new Error(`ReadBuffer exceeded maximum size of ${this._maxBufferSize} bytes`);
-    }
     this._buffer = this._buffer ? Buffer.concat([this._buffer, chunk]) : chunk;
   }
   readMessage() {
@@ -30935,24 +30893,18 @@ function serializeMessage(message) {
 
 // node_modules/@modelcontextprotocol/sdk/dist/esm/server/stdio.js
 var StdioServerTransport = class {
-  constructor(_stdin = process3.stdin, _stdout = process3.stdout, options) {
+  constructor(_stdin = process3.stdin, _stdout = process3.stdout) {
     this._stdin = _stdin;
     this._stdout = _stdout;
+    this._readBuffer = new ReadBuffer();
     this._started = false;
     this._ondata = (chunk) => {
-      try {
-        this._readBuffer.append(chunk);
-        this.processReadBuffer();
-      } catch (error51) {
-        this.onerror?.(error51);
-        this.close().catch(() => {
-        });
-      }
+      this._readBuffer.append(chunk);
+      this.processReadBuffer();
     };
     this._onerror = (error51) => {
       this.onerror?.(error51);
     };
-    this._readBuffer = new ReadBuffer({ maxBufferSize: options?.maxBufferSize });
   }
   /**
    * Starts listening for messages on stdin.
@@ -31186,6 +31138,44 @@ var BeatAPIClient = class {
       "/v1/workflows",
       { authenticated: false }
     ).then((result) => result.data);
+  }
+  listGenerationModels() {
+    return this.request(
+      "/v1/media/models",
+      { authenticated: false }
+    ).then((result) => result.data);
+  }
+  createImageTask(input) {
+    return this.request("/v1/images/tasks", { method: "POST", body: input });
+  }
+  createVideoTask(input) {
+    return this.request("/v1/videos/tasks", { method: "POST", body: input });
+  }
+  listEffects(filters = {}) {
+    const query = new URLSearchParams();
+    if (filters.outputType) query.set("output_type", filters.outputType);
+    if (filters.category) query.set("category", filters.category);
+    const suffix = query.size > 0 ? `?${query.toString()}` : "";
+    return this.request(
+      `/v1/effects${suffix}`,
+      { authenticated: false }
+    ).then((result) => result.data);
+  }
+  getEffect(effectId) {
+    return this.request(`/v1/effects/${encodePathSegment(effectId)}`, {
+      authenticated: false
+    });
+  }
+  createEffectTask(input, options) {
+    const idempotencyKey = options.idempotencyKey.trim();
+    if (!idempotencyKey) {
+      throw new TypeError("idempotencyKey must not be empty.");
+    }
+    return this.request("/v1/effects/tasks", {
+      method: "POST",
+      body: input,
+      headers: { "idempotency-key": idempotencyKey }
+    });
   }
   getUsage() {
     return this.request("/v1/usage");
@@ -31468,6 +31458,18 @@ var BeatAPIExecutor = class {
     if (name === "beatapi_list_workflows") {
       return sanitize(await this.direct.listWorkflows());
     }
+    if (name === "beatapi_list_generation_models") {
+      return sanitize(await this.direct.listGenerationModels());
+    }
+    if (name === "beatapi_list_effects") {
+      return sanitize(await this.direct.listEffects({
+        ...typeof input.output_type === "string" ? { outputType: input.output_type } : {},
+        ...typeof input.category === "string" ? { category: input.category } : {}
+      }));
+    }
+    if (name === "beatapi_get_effect") {
+      return sanitize(await this.direct.getEffect(stringValue(input, "effect_id")));
+    }
     if (!this.usesDirectClient) return this.executeViaCli(name, input);
     return this.executeDirect(name, input);
   }
@@ -31513,6 +31515,21 @@ var BeatAPIExecutor = class {
     switch (name) {
       case "beatapi_get_usage":
         return sanitize(await this.direct.getUsage());
+      case "beatapi_create_image":
+        return sanitize(
+          await this.direct.createImageTask(input)
+        );
+      case "beatapi_create_video":
+        return sanitize(
+          await this.direct.createVideoTask(input)
+        );
+      case "beatapi_create_effect":
+        return sanitize(
+          await this.direct.createEffectTask(
+            without(input, ["idempotency_key"]),
+            { idempotencyKey: stringValue(input, "idempotency_key") }
+          )
+        );
       case "beatapi_upload_file": {
         const path = resolve(stringValue(input, "path"));
         const info = await stat(path);
@@ -31642,6 +31659,31 @@ var BeatAPIExecutor = class {
     switch (name) {
       case "beatapi_get_usage":
         result = await runCli(["usage"]);
+        break;
+      case "beatapi_create_image":
+        result = await withJsonFile(
+          input,
+          (path) => runCli(["images", "create", "--file", path])
+        );
+        break;
+      case "beatapi_create_video":
+        result = await withJsonFile(
+          input,
+          (path) => runCli(["videos", "create", "--file", path])
+        );
+        break;
+      case "beatapi_create_effect":
+        result = await withJsonFile(
+          without(input, ["idempotency_key"]),
+          (path) => runCli([
+            "effects",
+            "create",
+            "--file",
+            path,
+            "--idempotency-key",
+            stringValue(input, "idempotency_key")
+          ])
+        );
         break;
       case "beatapi_upload_file":
         result = await runCli(["files", "upload", resolve(stringValue(input, "path"))]);
@@ -31838,6 +31880,120 @@ var httpsOrigin = external_exports.string().url().superRefine((value, context) =
     });
   }
 });
+var generationPrompt = external_exports.string().trim().min(1).max(5e3);
+var generationImages = (max) => external_exports.array(httpsUrl).min(1).max(max);
+var imageGenerationInput = external_exports.discriminatedUnion("model", [
+  external_exports.object({
+    model: external_exports.literal("nano-banana"),
+    prompt: generationPrompt,
+    aspect_ratio: external_exports.enum(["1:1", "9:16", "16:9", "3:4", "4:3", "3:2", "2:3", "5:4", "4:5", "21:9", "auto"]).optional(),
+    output_format: external_exports.enum(["png", "jpeg"]).optional()
+  }).strict(),
+  external_exports.object({
+    model: external_exports.literal("nano-banana-pro"),
+    prompt: generationPrompt,
+    images: generationImages(8).optional(),
+    aspect_ratio: external_exports.enum(["1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "21:9", "auto"]).optional(),
+    resolution: external_exports.enum(["1K", "2K", "4K"]).optional(),
+    output_format: external_exports.enum(["png", "jpg"]).optional()
+  }).strict(),
+  external_exports.object({
+    model: external_exports.literal("gpt-image-2"),
+    prompt: generationPrompt,
+    images: generationImages(16).optional(),
+    aspect_ratio: external_exports.enum(["auto", "1:1", "3:2", "2:3", "4:3", "3:4", "5:4", "4:5", "16:9", "9:16", "2:1", "1:2", "3:1", "1:3", "21:9", "9:21"]).optional(),
+    resolution: external_exports.enum(["1K", "2K", "4K"]).optional()
+  }).strict(),
+  external_exports.object({
+    model: external_exports.literal("seedream-5-pro"),
+    prompt: generationPrompt,
+    images: generationImages(10).optional(),
+    aspect_ratio: external_exports.enum(["auto", "1:1", "4:3", "3:4", "16:9", "9:16", "3:2", "2:3", "21:9"]).optional(),
+    resolution: external_exports.enum(["1K", "2K"]).optional(),
+    output_format: external_exports.enum(["png", "jpeg"]).optional()
+  }).strict()
+]);
+var videoAspectRatio = external_exports.enum(["adaptive", "21:9", "16:9", "4:3", "1:1", "3:4", "9:16"]);
+function seedanceInput(model, resolutions) {
+  return external_exports.object({
+    model: external_exports.literal(model),
+    prompt: generationPrompt,
+    images: generationImages(2).optional(),
+    reference_images: generationImages(9).optional(),
+    reference_videos: generationImages(3).optional(),
+    reference_audios: generationImages(3).optional(),
+    duration: external_exports.number().int().min(4).max(15).optional(),
+    aspect_ratio: videoAspectRatio.optional(),
+    resolution: external_exports.enum(resolutions).optional(),
+    ...model === "seedance-2" || model === "seedance-2-fast" ? { generate_audio: external_exports.boolean().optional() } : {}
+  }).strict();
+}
+var klingShot = external_exports.object({
+  prompt: external_exports.string().trim().min(1).max(500),
+  duration: external_exports.number().int().min(1).max(12)
+}).strict();
+var klingElement = external_exports.object({
+  name: external_exports.string().trim().min(1),
+  description: external_exports.string().optional(),
+  element_input_urls: generationImages(4),
+  element_input_audio_urls: generationImages(1).optional(),
+  start_time: external_exports.number().int().min(0).max(3e4).optional(),
+  end_time: external_exports.number().int().min(0).max(3e4).optional()
+}).strict();
+var videoGenerationInput = external_exports.discriminatedUnion("model", [
+  seedanceInput("minimax-h3", ["768P", "2K"]),
+  seedanceInput("seedance-2", ["480p", "720p", "1080p", "4k"]),
+  seedanceInput("seedance-2-fast", ["480p", "720p"]),
+  seedanceInput("seedance-2-mini", ["480p", "720p"]),
+  external_exports.object({
+    model: external_exports.literal("veo-3.1"),
+    prompt: generationPrompt,
+    images: generationImages(2).optional(),
+    reference_images: generationImages(3).optional(),
+    aspect_ratio: external_exports.enum(["16:9", "9:16", "auto"]).optional(),
+    quality: external_exports.enum(["Quality", "Fast", "Lite"]).optional(),
+    watermark: external_exports.string().optional(),
+    enable_translation: external_exports.boolean().optional()
+  }).strict(),
+  external_exports.object({
+    model: external_exports.literal("seedance-2.5"),
+    prompt: generationPrompt,
+    images: generationImages(2).optional(),
+    reference_images: generationImages(30).optional(),
+    reference_videos: generationImages(10).optional(),
+    reference_audios: generationImages(10).optional(),
+    duration: external_exports.number().int().min(4).max(30).optional(),
+    aspect_ratio: videoAspectRatio.optional(),
+    resolution: external_exports.literal("720p").optional(),
+    generate_audio: external_exports.boolean().optional(),
+    seed: external_exports.number().int().min(-1).max(4294967295).optional()
+  }).strict(),
+  external_exports.object({
+    model: external_exports.literal("kling-3"),
+    prompt: generationPrompt,
+    images: generationImages(2).optional(),
+    duration: external_exports.number().int().min(3).max(15).optional(),
+    aspect_ratio: external_exports.enum(["16:9", "9:16", "1:1"]).optional(),
+    resolution: external_exports.enum(["std", "pro", "4K"]).optional(),
+    sound: external_exports.boolean().optional(),
+    multi_shots: external_exports.boolean().optional(),
+    multi_prompt: external_exports.array(klingShot).min(1).max(5).optional(),
+    elements: external_exports.array(klingElement).max(3).optional()
+  }).strict()
+]);
+var effectTaskInput = external_exports.object({
+  effect_id: id,
+  effect_version: external_exports.number().int().min(1).optional(),
+  images: generationImages(7),
+  options: external_exports.object({
+    aspect_ratio: external_exports.string().optional(),
+    resolution: external_exports.string().optional(),
+    duration: external_exports.number().int().optional(),
+    bgm: external_exports.boolean().optional(),
+    seed: external_exports.number().int().optional()
+  }).strict().optional(),
+  idempotency_key: external_exports.string().trim().min(1).max(255)
+}).strict();
 var musicVideoInput = external_exports.object({
   images: imageUrls,
   audio_url: httpsUrl,
@@ -31900,6 +32056,51 @@ var toolDefinitions = [
     description: "List public BeatAPI launch workflows. Authentication is not required.",
     inputSchema: external_exports.object({}).strict(),
     annotations: readOnly
+  },
+  {
+    name: "beatapi_list_generation_models",
+    title: "List BeatAPI generation models",
+    description: "List stable public BeatAPI image and video model aliases and input modes. Authentication is not required.",
+    inputSchema: external_exports.object({}).strict(),
+    annotations: readOnly
+  },
+  {
+    name: "beatapi_create_image",
+    title: "Create BeatAPI image",
+    description: "Paid mutation: create one asynchronous image task with a stable BeatAPI model alias.",
+    inputSchema: imageGenerationInput,
+    annotations: write
+  },
+  {
+    name: "beatapi_create_video",
+    title: "Create BeatAPI video",
+    description: "Paid mutation: create one asynchronous model-specific video task.",
+    inputSchema: videoGenerationInput,
+    annotations: write
+  },
+  {
+    name: "beatapi_list_effects",
+    title: "List BeatAPI Effects",
+    description: "List active published Effects. Authentication is not required.",
+    inputSchema: external_exports.object({
+      output_type: external_exports.enum(["image", "video"]).optional(),
+      category: external_exports.string().trim().min(1).optional()
+    }).strict(),
+    annotations: readOnly
+  },
+  {
+    name: "beatapi_get_effect",
+    title: "Get BeatAPI Effect",
+    description: "Read one published Effect and its current immutable input contract. Authentication is not required.",
+    inputSchema: external_exports.object({ effect_id: id }).strict(),
+    annotations: readOnly
+  },
+  {
+    name: "beatapi_create_effect",
+    title: "Create BeatAPI Effect task",
+    description: "Paid mutation: create one versioned Effect task after validating inputs against the published Effect contract.",
+    inputSchema: effectTaskInput,
+    annotations: write
   },
   {
     name: "beatapi_get_usage",

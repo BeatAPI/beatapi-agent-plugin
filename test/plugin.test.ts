@@ -10,6 +10,12 @@ const root = resolve(import.meta.dirname, "..");
 const expectedToolNames = [
   "beatapi_check_setup",
   "beatapi_list_workflows",
+  "beatapi_list_generation_models",
+  "beatapi_create_image",
+  "beatapi_create_video",
+  "beatapi_list_effects",
+  "beatapi_get_effect",
+  "beatapi_create_effect",
   "beatapi_get_usage",
   "beatapi_upload_file",
   "beatapi_create_music_video",
@@ -47,6 +53,9 @@ test("marks read, write, paid, and destructive tools accurately", () => {
   for (const name of [
     "beatapi_check_setup",
     "beatapi_list_workflows",
+    "beatapi_list_generation_models",
+    "beatapi_list_effects",
+    "beatapi_get_effect",
     "beatapi_get_usage",
     "beatapi_get_task",
     "beatapi_wait_for_task",
@@ -59,6 +68,9 @@ test("marks read, write, paid, and destructive tools accurately", () => {
 
   for (const name of [
     "beatapi_create_music_video",
+    "beatapi_create_image",
+    "beatapi_create_video",
+    "beatapi_create_effect",
     "beatapi_edit_music_video_shot",
     "beatapi_compose_music_video",
     "beatapi_create_ecommerce_video",

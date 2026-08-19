@@ -62,6 +62,128 @@ const httpsOrigin = z.string().url().superRefine((value, context) => {
     });
   }
 });
+const generationPrompt = z.string().trim().min(1).max(5000);
+const generationImages = (max: number) => z.array(httpsUrl).min(1).max(max);
+const imageGenerationInput = z.discriminatedUnion("model", [
+  z.object({
+    model: z.literal("nano-banana"),
+    prompt: generationPrompt,
+    aspect_ratio: z.enum(["1:1", "9:16", "16:9", "3:4", "4:3", "3:2", "2:3", "5:4", "4:5", "21:9", "auto"]).optional(),
+    output_format: z.enum(["png", "jpeg"]).optional(),
+  }).strict(),
+  z.object({
+    model: z.literal("nano-banana-pro"),
+    prompt: generationPrompt,
+    images: generationImages(8).optional(),
+    aspect_ratio: z.enum(["1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "21:9", "auto"]).optional(),
+    resolution: z.enum(["1K", "2K", "4K"]).optional(),
+    output_format: z.enum(["png", "jpg"]).optional(),
+  }).strict(),
+  z.object({
+    model: z.literal("gpt-image-2"),
+    prompt: generationPrompt,
+    images: generationImages(16).optional(),
+    aspect_ratio: z.enum(["auto", "1:1", "3:2", "2:3", "4:3", "3:4", "5:4", "4:5", "16:9", "9:16", "2:1", "1:2", "3:1", "1:3", "21:9", "9:21"]).optional(),
+    resolution: z.enum(["1K", "2K", "4K"]).optional(),
+  }).strict(),
+  z.object({
+    model: z.literal("seedream-5-pro"),
+    prompt: generationPrompt,
+    images: generationImages(10).optional(),
+    aspect_ratio: z.enum(["auto", "1:1", "4:3", "3:4", "16:9", "9:16", "3:2", "2:3", "21:9"]).optional(),
+    resolution: z.enum(["1K", "2K"]).optional(),
+    output_format: z.enum(["png", "jpeg"]).optional(),
+  }).strict(),
+]);
+
+const videoAspectRatio = z.enum(["adaptive", "21:9", "16:9", "4:3", "1:1", "3:4", "9:16"]);
+function seedanceInput(
+  model: "seedance-2" | "seedance-2-fast" | "seedance-2-mini" | "minimax-h3",
+  resolutions: readonly [string, ...string[]],
+) {
+  return z.object({
+    model: z.literal(model),
+    prompt: generationPrompt,
+    images: generationImages(2).optional(),
+    reference_images: generationImages(9).optional(),
+    reference_videos: generationImages(3).optional(),
+    reference_audios: generationImages(3).optional(),
+    duration: z.number().int().min(4).max(15).optional(),
+    aspect_ratio: videoAspectRatio.optional(),
+    resolution: z.enum(resolutions).optional(),
+    ...(model === "seedance-2" || model === "seedance-2-fast"
+      ? { generate_audio: z.boolean().optional() }
+      : {}),
+  }).strict();
+}
+
+const klingShot = z.object({
+  prompt: z.string().trim().min(1).max(500),
+  duration: z.number().int().min(1).max(12),
+}).strict();
+const klingElement = z.object({
+  name: z.string().trim().min(1),
+  description: z.string().optional(),
+  element_input_urls: generationImages(4),
+  element_input_audio_urls: generationImages(1).optional(),
+  start_time: z.number().int().min(0).max(30000).optional(),
+  end_time: z.number().int().min(0).max(30000).optional(),
+}).strict();
+const videoGenerationInput = z.discriminatedUnion("model", [
+  seedanceInput("minimax-h3", ["768P", "2K"]),
+  seedanceInput("seedance-2", ["480p", "720p", "1080p", "4k"]),
+  seedanceInput("seedance-2-fast", ["480p", "720p"]),
+  seedanceInput("seedance-2-mini", ["480p", "720p"]),
+  z.object({
+    model: z.literal("veo-3.1"),
+    prompt: generationPrompt,
+    images: generationImages(2).optional(),
+    reference_images: generationImages(3).optional(),
+    aspect_ratio: z.enum(["16:9", "9:16", "auto"]).optional(),
+    quality: z.enum(["Quality", "Fast", "Lite"]).optional(),
+    watermark: z.string().optional(),
+    enable_translation: z.boolean().optional(),
+  }).strict(),
+  z.object({
+    model: z.literal("seedance-2.5"),
+    prompt: generationPrompt,
+    images: generationImages(2).optional(),
+    reference_images: generationImages(30).optional(),
+    reference_videos: generationImages(10).optional(),
+    reference_audios: generationImages(10).optional(),
+    duration: z.number().int().min(4).max(30).optional(),
+    aspect_ratio: videoAspectRatio.optional(),
+    resolution: z.literal("720p").optional(),
+    generate_audio: z.boolean().optional(),
+    seed: z.number().int().min(-1).max(4294967295).optional(),
+  }).strict(),
+  z.object({
+    model: z.literal("kling-3"),
+    prompt: generationPrompt,
+    images: generationImages(2).optional(),
+    duration: z.number().int().min(3).max(15).optional(),
+    aspect_ratio: z.enum(["16:9", "9:16", "1:1"]).optional(),
+    resolution: z.enum(["std", "pro", "4K"]).optional(),
+    sound: z.boolean().optional(),
+    multi_shots: z.boolean().optional(),
+    multi_prompt: z.array(klingShot).min(1).max(5).optional(),
+    elements: z.array(klingElement).max(3).optional(),
+  }).strict(),
+]);
+
+const effectTaskInput = z.object({
+  effect_id: id,
+  effect_version: z.number().int().min(1).optional(),
+  images: generationImages(7),
+  options: z.object({
+    aspect_ratio: z.string().optional(),
+    resolution: z.string().optional(),
+    duration: z.number().int().optional(),
+    bgm: z.boolean().optional(),
+    seed: z.number().int().optional(),
+  }).strict().optional(),
+  idempotency_key: z.string().trim().min(1).max(255),
+}).strict();
 
 const musicVideoInput = z
   .object({
@@ -134,6 +256,51 @@ export const toolDefinitions: readonly ToolDefinition[] = [
     description: "List public BeatAPI launch workflows. Authentication is not required.",
     inputSchema: z.object({}).strict(),
     annotations: readOnly,
+  },
+  {
+    name: "beatapi_list_generation_models",
+    title: "List BeatAPI generation models",
+    description: "List stable public BeatAPI image and video model aliases and input modes. Authentication is not required.",
+    inputSchema: z.object({}).strict(),
+    annotations: readOnly,
+  },
+  {
+    name: "beatapi_create_image",
+    title: "Create BeatAPI image",
+    description: "Paid mutation: create one asynchronous image task with a stable BeatAPI model alias.",
+    inputSchema: imageGenerationInput,
+    annotations: write,
+  },
+  {
+    name: "beatapi_create_video",
+    title: "Create BeatAPI video",
+    description: "Paid mutation: create one asynchronous model-specific video task.",
+    inputSchema: videoGenerationInput,
+    annotations: write,
+  },
+  {
+    name: "beatapi_list_effects",
+    title: "List BeatAPI Effects",
+    description: "List active published Effects. Authentication is not required.",
+    inputSchema: z.object({
+      output_type: z.enum(["image", "video"]).optional(),
+      category: z.string().trim().min(1).optional(),
+    }).strict(),
+    annotations: readOnly,
+  },
+  {
+    name: "beatapi_get_effect",
+    title: "Get BeatAPI Effect",
+    description: "Read one published Effect and its current immutable input contract. Authentication is not required.",
+    inputSchema: z.object({ effect_id: id }).strict(),
+    annotations: readOnly,
+  },
+  {
+    name: "beatapi_create_effect",
+    title: "Create BeatAPI Effect task",
+    description: "Paid mutation: create one versioned Effect task after validating inputs against the published Effect contract.",
+    inputSchema: effectTaskInput,
+    annotations: write,
   },
   {
     name: "beatapi_get_usage",
