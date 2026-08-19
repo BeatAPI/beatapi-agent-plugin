@@ -22,6 +22,7 @@ const output = result.outputFiles?.[0]?.contents;
 if (!output) throw new Error("esbuild did not produce the MCP server bundle.");
 
 function bundleMismatchDetails(current, generated) {
+  generated = Buffer.from(generated);
   const limit = Math.min(current.length, generated.length);
   let offset = 0;
   while (offset < limit && current[offset] === generated[offset]) offset += 1;
