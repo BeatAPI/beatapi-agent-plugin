@@ -122,6 +122,45 @@
         "Does not claim browser media success from ready status"
       ],
       "files": []
+    },
+    {
+      "id": 10,
+      "prompt": "Use Nano Banana Pro and these two reference images to generate a 16:9 campaign still. Go ahead and create it.",
+      "expected_output": "Should discover the current generation catalog, select the stable nano-banana-pro alias, validate the two HTTPS or uploaded image references against that model's request schema, check USD balance and concurrency, create one image task, poll it, and report only hosted image output.",
+      "assertions": [
+        "Discovers generation models",
+        "Uses the stable nano-banana-pro alias",
+        "Validates model-specific image inputs",
+        "Treats generation as a paid mutation",
+        "Requires hosted image output before success"
+      ],
+      "files": ["reference-one.png", "reference-two.png"]
+    },
+    {
+      "id": 11,
+      "prompt": "Make a 10-second Seedance 2.5 video using these image and audio references.",
+      "expected_output": "Should select seedance-2.5 only after catalog discovery, inspect and upload local references, avoid mixing frame images with reference fields, ensure audio has an accompanying reference image or video, validate the 10-second 720p contract, create one video task, and wait for hosted output.",
+      "assertions": [
+        "Uses the stable seedance-2.5 alias",
+        "Validates reference input combinations",
+        "Keeps duration within the model contract",
+        "Does not expose internal provider routing",
+        "Waits for hosted video output"
+      ],
+      "files": ["character.png", "motion.mp4", "voice.mp3"]
+    },
+    {
+      "id": 12,
+      "prompt": "Show me the current portrait Effects, then run the one I choose on this image.",
+      "expected_output": "Should list active Effects without authentication, present publication-safe choices, wait for the user's Effect selection, read that Effect's current version contract, upload and validate the image, use a stable idempotency key for the paid create call, and poll the shared task endpoint.",
+      "assertions": [
+        "Lists active Effects before creation",
+        "Waits for the user to choose an Effect",
+        "Reads the selected Effect contract",
+        "Uses a stable idempotency key",
+        "Does not infer internal templates or providers"
+      ],
+      "files": ["portrait.png"]
     }
   ]
 }

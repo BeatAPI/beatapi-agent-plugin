@@ -1,23 +1,23 @@
-# Credits and launch limits
+# USD balance and launch limits
 
 Use the bundled OpenAPI contract as the source of truth if these launch values
 change.
 
-## Customer credit rates
+## Customer balance
 
-| Workflow/control | Credits |
-| --- | ---: |
-| Music Video 540p standard | 4 per second |
-| Music Video 720p standard | 5 per second |
-| Music Video 1080p standard | 6 per second |
-| Music Video lip-sync add-on | +2 per second |
-| Music Video 720p high | 16 per second |
-| Music Video 1080p high | 18 per second |
-| Ecommerce Video 1080p | 15 per second |
-| Manual composition | 1 fixed credit |
+Customer balances and usage are USD-denominated. Compatibility fields retain
+names such as `credit_balance`, `credits_reserved`, `credits_charged`,
+`credits_settled`, and `credits_refunded`; 1 Credit = $1 USD. Treat these as
+decimal USD amounts, not integer token counts.
 
-Shot editing uses the selected Music Video quality/resolution rate multiplied
-by shot duration. Default shot duration is 5 seconds.
+Do not use legacy per-second credit tables. Image, video, workflow, Realtime,
+and Effect prices depend on the selected public contract and can change. Check
+the current public documentation, then read the exact reserved/charged amount
+from the accepted task or session. Manual Music Video composition is the one
+fixed public exception at $1 USD.
+
+Each verified new account currently receives a $2 welcome balance that does not
+expire. Do not promise it without checking the current contract.
 
 For Music Video creation, BeatAPI bills detected audio duration. Use the
 request `duration` only as a 10-180 second fallback when duration detection
@@ -41,7 +41,7 @@ local inputs with `beatapi files upload`.
 
 Run `beatapi usage` before paid work. Check:
 
-- `credit_balance`;
+- `credit_balance` as a USD amount;
 - `concurrency.limit`;
 - `concurrency.active`.
 
@@ -54,7 +54,7 @@ counting as active processing.
 - Allowed maximum durations are 15, 60, and 300 seconds.
 - Every create request requires 1-10 exact HTTPS `allowed_origins` and an
   `Idempotency-Key`.
-- Creation reserves credits; billing activates only after the first accepted
+- Creation reserves USD balance; billing activates only after the first accepted
   heartbeat after remote output begins. Inspect `credits.reserved`,
   `credits.settled`, and `credits.refunded` on the session.
 - A Realtime session has its own capacity rules. Treat

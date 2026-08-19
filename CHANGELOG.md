@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added MCP tools for generation-model discovery, image generation, video
+  generation, and versioned Effect discovery and task creation.
+- Synchronized the canonical Skill, typed client runtime, and OpenAPI snapshot
+  with four image models, seven video models, shared task fields, and
+  USD-denominated usage semantics.
+
 ## 0.2.0 - 2026-07-31
 
 - Added Realtime Video session create, read, and close MCP tools.

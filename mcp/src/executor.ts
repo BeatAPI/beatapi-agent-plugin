@@ -16,11 +16,14 @@ import { promisify } from "node:util";
 import {
   BeatAPIClient,
   BeatAPIError,
+  type CreateEffectTaskInput,
   type CreateRealtimeSessionInput,
   type CreateWebhookInput,
   type EcommerceVideoTaskInput,
+  type ImageGenerationTaskInput,
   type MusicVideoShotEditInput,
   type MusicVideoTaskInput,
+  type VideoGenerationTaskInput,
   type UpdateWebhookInput,
 } from "../vendor/client/index.js";
 
@@ -247,6 +250,20 @@ export class BeatAPIExecutor {
     if (name === "beatapi_list_workflows") {
       return sanitize(await this.direct.listWorkflows());
     }
+    if (name === "beatapi_list_generation_models") {
+      return sanitize(await this.direct.listGenerationModels());
+    }
+    if (name === "beatapi_list_effects") {
+      return sanitize(await this.direct.listEffects({
+        ...(typeof input.output_type === "string"
+          ? { outputType: input.output_type as "image" | "video" }
+          : {}),
+        ...(typeof input.category === "string" ? { category: input.category } : {}),
+      }));
+    }
+    if (name === "beatapi_get_effect") {
+      return sanitize(await this.direct.getEffect(stringValue(input, "effect_id")));
+    }
     if (!this.usesDirectClient) return this.executeViaCli(name, input);
     return this.executeDirect(name, input);
   }
@@ -296,6 +313,21 @@ export class BeatAPIExecutor {
     switch (name) {
       case "beatapi_get_usage":
         return sanitize(await this.direct.getUsage());
+      case "beatapi_create_image":
+        return sanitize(
+          await this.direct.createImageTask(input as ImageGenerationTaskInput),
+        );
+      case "beatapi_create_video":
+        return sanitize(
+          await this.direct.createVideoTask(input as VideoGenerationTaskInput),
+        );
+      case "beatapi_create_effect":
+        return sanitize(
+          await this.direct.createEffectTask(
+            without(input, ["idempotency_key"]) as CreateEffectTaskInput,
+            { idempotencyKey: stringValue(input, "idempotency_key") },
+          ),
+        );
       case "beatapi_upload_file": {
         const path = resolve(stringValue(input, "path"));
         const info = await stat(path);
@@ -422,6 +454,28 @@ export class BeatAPIExecutor {
     switch (name) {
       case "beatapi_get_usage":
         result = await runCli(["usage"]);
+        break;
+      case "beatapi_create_image":
+        result = await withJsonFile(input, (path) =>
+          runCli(["images", "create", "--file", path]),
+        );
+        break;
+      case "beatapi_create_video":
+        result = await withJsonFile(input, (path) =>
+          runCli(["videos", "create", "--file", path]),
+        );
+        break;
+      case "beatapi_create_effect":
+        result = await withJsonFile(without(input, ["idempotency_key"]), (path) =>
+          runCli([
+            "effects",
+            "create",
+            "--file",
+            path,
+            "--idempotency-key",
+            stringValue(input, "idempotency_key"),
+          ]),
+        );
         break;
       case "beatapi_upload_file":
         result = await runCli(["files", "upload", resolve(stringValue(input, "path"))]);

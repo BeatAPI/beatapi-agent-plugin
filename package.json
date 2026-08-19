@@ -2,7 +2,7 @@
   "name": "beatapi-codex-plugin",
   "version": "0.2.0",
   "private": true,
-  "description": "Codex plugin for BeatAPI async and realtime AI video APIs.",
+  "description": "Codex plugin for BeatAPI image, video, Effect, workflow, and Realtime APIs.",
   "type": "module",
   "scripts": {
     "build": "node scripts/build-mcp.mjs",

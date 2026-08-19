@@ -1,12 +1,14 @@
 # BeatAPI Codex Plugin
 
-Create and manage BeatAPI asynchronous workflows and Realtime Video sessions
+Create and manage BeatAPI image, video, Effect, workflow, and Realtime APIs
 directly from Codex. The plugin combines the canonical `beatapi-video` Skill
 with a bundled local MCP server and uses the same API key as the BeatAPI CLI.
 
 ## What users can do
 
-- inspect workflows, credits, usage, and concurrency;
+- discover stable image/video model aliases and published Effects;
+- create model-specific image, video, and versioned Effect tasks;
+- inspect workflows, USD balance, usage, and concurrency;
 - upload local images, audio, and SRT files;
 - create automatic or manual Music Video tasks;
 - inspect, edit, materialize, and compose storyboard shots;
@@ -56,7 +58,10 @@ Restart the desktop app after installation. Useful starter requests include:
 
 - “Use `$beatapi-video` to create a music video from my images and audio.”
 - “Turn these product photos into a 15-second 9:16 ad.”
-- “Check my BeatAPI credits and the status of task `task_...`.”
+- “Generate an image with Nano Banana Pro.”
+- “Make a 10-second Seedance 2.5 video with these references.”
+- “List the current Effects and run one on this portrait.”
+- “Check my BeatAPI balance and the status of task `task_...`.”
 - “Create a 60-second Realtime Video session for `https://app.example.com`.”
 
 ## Package layout
