@@ -9,10 +9,11 @@
       "env_vars": [
         "BEATAPI_API_KEY",
         "BEATAPI_BASE_URL",
+        "BEATAPI_TRUST_CUSTOM_BASE_URL",
         "BEATAPI_CLI_PATH",
-        "CODEX_HOME"
+        "BEATAPI_UPLOAD_ROOTS"
       ],
-      "tool_timeout_sec": 900
+      "tool_timeout_sec": 4500
     }
   }
 }
