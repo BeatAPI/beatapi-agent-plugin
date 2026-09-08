@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="400" viewBox="0 0 1200 400" role="img" aria-labelledby="title desc">
+  <title id="title">BeatAPI Agent Plugin</title>
+  <desc id="desc">One API key across Codex, Cursor, Grok Bot, and Grok Build for BeatAPI text, image, video, and workflows.</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#07101f"/><stop offset="1" stop-color="#0b1630"/></linearGradient>
+    <linearGradient id="beam" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#2463ff"/><stop offset="1" stop-color="#7aa2ff"/></linearGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%"><stop stop-color="#2463ff" stop-opacity=".32"/><stop offset="1" stop-color="#2463ff" stop-opacity="0"/></radialGradient>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse"><path d="M32 0H0V32" fill="none" stroke="#8aa7dc" stroke-opacity=".08"/></pattern>
+  </defs>
+  <rect width="1200" height="400" rx="28" fill="url(#background)"/><rect width="1200" height="400" rx="28" fill="url(#grid)"/><circle cx="972" cy="198" r="230" fill="url(#glow)"/>
+  <g font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+    <text x="72" y="72" fill="#6f98ff" font-size="16" font-weight="700" letter-spacing="3">BEATAPI · AGENT TOOLKIT</text>
+    <text x="68" y="162" fill="#ffffff" font-size="58" font-weight="760" letter-spacing="-2">BeatAPI Agent Plugin</text>
+    <text x="72" y="212" fill="#b7c6e3" font-size="22" font-weight="500">One API key for text, image, video, and production workflows.</text>
+    <g transform="translate(72 274)" font-size="13" font-weight="700" letter-spacing="1">
+      <rect width="92" height="38" rx="19" fill="#142348" stroke="#315da8"/><text x="46" y="24" text-anchor="middle" fill="#dce7ff">CODEX</text>
+      <rect x="104" width="102" height="38" rx="19" fill="#142348" stroke="#315da8"/><text x="155" y="24" text-anchor="middle" fill="#dce7ff">CURSOR</text>
+      <rect x="218" width="118" height="38" rx="19" fill="#142348" stroke="#315da8"/><text x="277" y="24" text-anchor="middle" fill="#dce7ff">GROK BOT</text>
+      <rect x="348" width="134" height="38" rx="19" fill="#142348" stroke="#315da8"/><text x="415" y="24" text-anchor="middle" fill="#dce7ff">GROK BUILD</text>
+    </g>
+    <g transform="translate(760 58)">
+      <rect x="0" y="30" width="124" height="224" rx="26" fill="#0d1a34" stroke="#294a85" stroke-width="2"/><text x="62" y="62" text-anchor="middle" fill="#799eff" font-size="12" font-weight="700" letter-spacing="2">AGENTS</text>
+      <g fill="#dbe6ff" font-size="13" font-weight="650"><text x="62" y="103" text-anchor="middle">Codex</text><text x="62" y="139" text-anchor="middle">Cursor</text><text x="62" y="175" text-anchor="middle">Grok Bot</text><text x="62" y="211" text-anchor="middle">Grok Build</text></g>
+      <path d="M124 142H190" stroke="url(#beam)" stroke-width="7" stroke-linecap="round"/><circle cx="210" cy="142" r="58" fill="#2463ff"/><circle cx="210" cy="142" r="70" fill="none" stroke="#6f98ff" stroke-opacity=".35"/>
+      <text x="210" y="138" text-anchor="middle" fill="#ffffff" font-size="17" font-weight="800">BeatAPI</text><text x="210" y="159" text-anchor="middle" fill="#dce7ff" font-size="10" font-weight="700" letter-spacing="1.5">MCP</text><path d="M280 142H324" stroke="url(#beam)" stroke-width="7" stroke-linecap="round"/>
+      <g transform="translate(324 30)" font-size="12" font-weight="750" letter-spacing="1.4"><rect width="104" height="44" rx="14" fill="#12213f" stroke="#345da4"/><text x="52" y="27" text-anchor="middle" fill="#dce7ff">TEXT</text><rect y="60" width="104" height="44" rx="14" fill="#12213f" stroke="#345da4"/><text x="52" y="87" text-anchor="middle" fill="#dce7ff">IMAGE</text><rect y="120" width="104" height="44" rx="14" fill="#12213f" stroke="#345da4"/><text x="52" y="147" text-anchor="middle" fill="#dce7ff">VIDEO</text><rect y="180" width="104" height="44" rx="14" fill="#12213f" stroke="#345da4"/><text x="52" y="207" text-anchor="middle" fill="#dce7ff">WORKFLOW</text></g>
+    </g>
+  </g>
+</svg>

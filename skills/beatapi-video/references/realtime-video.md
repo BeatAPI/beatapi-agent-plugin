@@ -5,8 +5,10 @@ with the bundled OpenAPI contract.
 
 ## Trust boundary
 
-- Create, read, and close sessions only from a trusted server, CLI, or MCP
-  runtime. Never put a long-lived `sk_` API key in browser JavaScript.
+- Create sessions only from trusted server-side application code. Agent, MCP,
+  and Skills-only CLI flows may inspect or close existing sessions, but must not
+  create one because the response contains a one-time browser secret. Never put
+  a long-lived `sk_` API key in browser JavaScript.
 - `POST /v1/realtime/sessions` may return a one-time, short-lived
   `client_secret`. Pass it to the supported browser SDK through the
   application's authenticated backend; do not repeat it in chat, logs,
@@ -25,14 +27,10 @@ Creation requires:
   logical request;
 - optional string-to-string `metadata`.
 
-With MCP, call `beatapi_create_realtime_session`. With the CLI:
-
-```bash
-beatapi realtime sessions create --duration 60 \
-  --origin https://app.example.com \
-  --metadata customer_id=cus_123 \
-  --idempotency-key rt_customer_123_attempt_1
-```
+Do not run session creation through the agent. Implement the documented
+`POST /v1/realtime/sessions` call in the application's authenticated backend so
+neither the returned `client_secret` nor a retrieval path enters model-visible
+output.
 
 Treat session creation as paid and credit-reserving. A `ready` response means
 the allocation exists; it does not mean the browser connected or received a

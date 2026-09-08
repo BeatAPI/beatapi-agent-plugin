@@ -14,12 +14,15 @@ const dist = resolve(root, "dist");
 const marketplaceRoot = resolve(dist, "marketplace");
 const pluginRoot = resolve(
   marketplaceRoot,
-  "plugins/beatapi-codex-plugin",
+  "plugins/beatapi-agent-plugin",
 );
-const archive = resolve(dist, "beatapi-codex-plugin-marketplace.zip");
+const archive = resolve(dist, "beatapi-agent-plugin-marketplace.zip");
 const requiredPaths = [
   ".codex-plugin",
+  ".cursor-plugin",
+  ".grok-plugin",
   ".mcp.json",
+  "mcp.json",
   "assets",
   "contract",
   "generated",
@@ -52,10 +55,10 @@ writeFileSync(
       interface: { displayName: "BeatAPI" },
       plugins: [
         {
-          name: "beatapi-codex-plugin",
+          name: "beatapi-agent-plugin",
           source: {
             source: "local",
-            path: "./plugins/beatapi-codex-plugin",
+            path: "./plugins/beatapi-agent-plugin",
           },
           policy: {
             installation: "AVAILABLE",
@@ -71,5 +74,5 @@ writeFileSync(
 );
 rmSync(archive, { force: true });
 execFileSync("zip", ["-X", "-q", "-r", archive, "marketplace"], { cwd: dist });
-console.log(`Built local Codex marketplace: ${marketplaceRoot}`);
+console.log(`Built local BeatAPI agent marketplace: ${marketplaceRoot}`);
 console.log(`Built marketplace archive: ${archive}`);

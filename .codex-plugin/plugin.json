@@ -1,14 +1,14 @@
 {
-  "name": "beatapi-codex-plugin",
-  "version": "0.2.0",
-  "description": "Create and manage BeatAPI image, video, Effect, workflow, and realtime APIs from Codex.",
+  "name": "beatapi-agent-plugin",
+  "version": "0.3.0",
+  "description": "Create and manage BeatAPI text, image, video, Effect, workflow, and analysis APIs from Codex.",
   "author": {
     "name": "BeatAPI",
     "email": "support@beatapi.io",
     "url": "https://beatapi.io"
   },
   "homepage": "https://beatapi.io",
-  "repository": "https://github.com/BeatAPI/beatapi-codex-plugin",
+  "repository": "https://github.com/BeatAPI/beatapi-agent-plugin",
   "license": "MIT",
   "keywords": [
     "beatapi",
@@ -18,14 +18,16 @@
     "realtime-video",
     "image-generation",
     "video-generation",
+    "text-generation",
+    "video-analysis",
     "ai-effects"
   ],
   "skills": "./skills/",
   "mcpServers": "./.mcp.json",
   "interface": {
     "displayName": "BeatAPI",
-    "shortDescription": "Manage generation, Effects, workflows, and realtime",
-    "longDescription": "Use one existing BeatAPI account and API key from Codex to discover public models and Effects, upload inputs, check USD balance and concurrency, create image, video, Effect, Music Video, and Ecommerce Video tasks, manage short-lived Realtime Video sessions, monitor progress, retrieve hosted results, and configure webhooks.",
+    "shortDescription": "Manage BeatAPI text, media, and workflows",
+    "longDescription": "Use one existing BeatAPI account and API key from Codex to discover models and Effects, create text responses, upload explicitly approved inputs, check USD balance and concurrency, create image, video, Effect, Video Analysis, Music Video, and Ecommerce Video tasks, monitor progress, retrieve hosted results, and manage existing Realtime sessions and webhooks.",
     "developerName": "BeatAPI",
     "category": "Creativity",
     "capabilities": [
@@ -36,13 +38,9 @@
     "privacyPolicyURL": "https://beatapi.io/privacy-policy",
     "termsOfServiceURL": "https://beatapi.io/terms-of-service",
     "defaultPrompt": [
-      "Use $beatapi-video to create a music video from my images and audio.",
-      "Use $beatapi-video to turn my product images into a vertical ad.",
-      "Use $beatapi-video to generate an image with Nano Banana Pro.",
-      "Use $beatapi-video to create a Seedance 2.5 video.",
-      "Use $beatapi-video to list current Effects for this portrait.",
-      "Use $beatapi-video to create a 60-second realtime session for my web app.",
-      "Use $beatapi-video to check my USD balance and task status."
+      "Use $beatapi-video to turn these product images into a vertical ad.",
+      "Use $beatapi-video to list current models, then generate from this prompt.",
+      "Use $beatapi-video to check my balance and the status of task task_...."
     ],
     "brandColor": "#2563FF",
     "composerIcon": "./assets/icon.png",

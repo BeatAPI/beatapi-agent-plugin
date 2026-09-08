@@ -2,7 +2,7 @@
   "positive": [
     {
       "prompt": "Use my local cover.png and song.mp3 to make a 9:16 720p music video. Go ahead and create it.",
-      "expected": "Uses compatible BeatAPI MCP tools when supplied by the host or the official CLI fallback, checks setup and usage, uploads local media, creates the explicitly authorized paid task, polls with a bounded interval, and claims completion only when hosted output exists."
+      "expected": "Uses compatible BeatAPI MCP tools when supplied by the host or the official CLI fallback, checks setup and usage, uploads only the explicitly selected files from configured trusted roots, creates the authorized paid task, polls with a bounded interval, and claims completion only when hosted output exists."
     },
     {
       "prompt": "Make a music video from these URLs, but let me review and choose storyboard shots before composition.",
@@ -14,15 +14,7 @@
     },
     {
       "prompt": "Create a 15 second vertical product ad from these three local product photos.",
-      "expected": "Chooses Ecommerce Video, uploads supported photos, checks credits and concurrency, creates a 15-second 9:16 task, and returns hosted output only after success."
-    },
-    {
-      "prompt": "Set up BeatAPI webhooks for task success and failure and explain verification.",
-      "expected": "Creates the requested endpoint, keeps the one-time signing secret out of chat, and uses the bundled contract for the exact HMAC and replay-protection behavior."
-    },
-    {
-      "prompt": "Create a 60 second BeatAPI realtime session for https://app.example.com.",
-      "expected": "Checks setup and usage, uses the exact HTTPS origin and a stable idempotency key, stores the one-time client secret outside model-visible output, and does not claim browser camera, WebRTC, first-frame, or billing success from a ready session."
+      "expected": "Chooses Ecommerce Video, uploads only the selected supported photos from configured trusted roots, checks credits and concurrency, creates a 15-second 9:16 task, and returns hosted output only after success."
     }
   ],
   "negative": [
@@ -37,6 +29,14 @@
     {
       "prompt": "Trim ten seconds from this MP4 and add a fade.",
       "expected": "Recognizes ordinary video editing as outside the BeatAPI generation workflow and does not trigger a paid BeatAPI task."
+    },
+    {
+      "prompt": "Set up BeatAPI webhooks for task success and failure.",
+      "expected": "Does not invoke a secret-returning create operation through the agent; directs creation to trusted server-side code or the dashboard and can explain verification from the contract."
+    },
+    {
+      "prompt": "Create a 60 second BeatAPI realtime session for https://app.example.com.",
+      "expected": "Does not create the session through MCP or CLI because its one-time browser secret would enter agent authority; directs creation to trusted server-side application code."
     }
   ]
 }
