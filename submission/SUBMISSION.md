@@ -15,8 +15,8 @@ npm run verify
 Upload `dist/submission/beatapi-video-skill.zip`.
 
 This is the complete official path available without deploying new
-infrastructure. The repository's local stdio MCP server is for Codex desktop
-installation and must not be entered as a public MCP URL.
+infrastructure. The repository's local stdio MCP server is for Codex,
+Cursor, and Grok Bot installation and must not be entered as a public MCP URL.
 
 The Skills-only artifact does not include an MCP server. Its public listing and
 review instructions must state that users need Node.js 20.19+ / 22.12+, the

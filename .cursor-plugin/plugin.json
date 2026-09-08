@@ -1,0 +1,44 @@
+{
+  "name": "beatapi-agent-plugin",
+  "version": "0.3.0",
+  "description": "Use BeatAPI text, image, video, Effects, workflows, analysis, and realtime APIs from Cursor and Grok Bot.",
+  "author": {
+    "name": "BeatAPI",
+    "email": "support@beatapi.io"
+  },
+  "homepage": "https://beatapi.io",
+  "repository": "https://github.com/BeatAPI/beatapi-agent-plugin",
+  "license": "MIT",
+  "keywords": [
+    "beatapi",
+    "agent-toolkit",
+    "ai-video",
+    "ai-image",
+    "text-generation",
+    "video-analysis",
+    "grok-bot"
+  ],
+  "logo": "assets/logo.png",
+  "skills": "./skills/",
+  "mcpServers": "./mcp.json",
+  "variables": {
+    "type": "object",
+    "properties": {
+      "BEATAPI_API_KEY": {
+        "type": "string",
+        "title": "BeatAPI API key",
+        "description": "Create a key at https://beatapi.io/dashboard/apikeys. The value is injected into the local MCP server and is never stored in this repository."
+      },
+      "BEATAPI_BASE_URL": {
+        "type": "string",
+        "title": "BeatAPI base URL",
+        "description": "Optional API base URL override. Keep the default unless BeatAPI support gave you another endpoint.",
+        "default": "https://api.beatapi.io"
+      }
+    },
+    "required": [
+      "BEATAPI_API_KEY"
+    ],
+    "additionalProperties": false
+  }
+}

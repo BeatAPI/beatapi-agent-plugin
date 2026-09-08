@@ -22,5 +22,5 @@ jobs:
         with:
           name: beatapi-plugin-artifacts
           path: |
-            dist/beatapi-codex-plugin-marketplace.zip
+            dist/beatapi-agent-plugin-marketplace.zip
             dist/submission/beatapi-video-skill.zip

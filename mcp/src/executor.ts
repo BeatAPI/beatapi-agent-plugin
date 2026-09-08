@@ -188,7 +188,9 @@ async function preflightSecretPath(
   prefix = "webhook",
 ): Promise<string> {
   const root = resolve(
-    process.env.CODEX_HOME?.trim() || resolve(homedir(), ".codex"),
+    process.env.BEATAPI_DATA_HOME?.trim() ||
+      process.env.CODEX_HOME?.trim() ||
+      resolve(homedir(), ".beatapi-agent-plugin"),
     "beatapi/secrets",
   );
   const filename =

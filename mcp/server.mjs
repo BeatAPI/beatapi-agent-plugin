@@ -31759,7 +31759,7 @@ async function withJsonFile(value, callback) {
 }
 async function preflightSecretPath(requested, prefix = "webhook") {
   const root = resolve(
-    process.env.CODEX_HOME?.trim() || resolve(homedir(), ".codex"),
+    process.env.BEATAPI_DATA_HOME?.trim() || process.env.CODEX_HOME?.trim() || resolve(homedir(), ".beatapi-agent-plugin"),
     "beatapi/secrets"
   );
   const filename = typeof requested === "string" && requested.trim() ? requested.trim() : `${prefix}-${Date.now()}.secret`;
@@ -32624,7 +32624,7 @@ var toolDefinitions = [
 function createServer(executor = new BeatAPIExecutor()) {
   const server = new McpServer({
     name: "beatapi",
-    version: "0.1.0"
+    version: "0.3.0"
   });
   for (const tool of toolDefinitions) {
     server.registerTool(

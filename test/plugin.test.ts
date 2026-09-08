@@ -136,10 +136,19 @@ test("text responses are non-streaming and require explicit BeatAPI intent", () 
 });
 
 test("plugin manifest wires the skill, local MCP, and production assets", async () => {
+  const packageManifest = JSON.parse(
+    await readFile(resolve(root, "package.json"), "utf8"),
+  ) as Record<string, unknown>;
   const manifest = JSON.parse(
     await readFile(resolve(root, ".codex-plugin/plugin.json"), "utf8"),
   ) as Record<string, unknown>;
-  assert.equal(manifest.repository, "https://github.com/BeatAPI/beatapi-codex-plugin");
+  assert.equal(packageManifest.name, "beatapi-agent-plugin");
+  assert.equal(
+    (packageManifest.scripts as Record<string, string>)["validate:cursor"],
+    "node scripts/validate-cursor.mjs",
+  );
+  assert.equal(manifest.name, "beatapi-agent-plugin");
+  assert.equal(manifest.repository, "https://github.com/BeatAPI/beatapi-agent-plugin");
   assert.equal(manifest.skills, "./skills/");
   assert.equal(manifest.mcpServers, "./.mcp.json");
 
@@ -147,4 +156,66 @@ test("plugin manifest wires the skill, local MCP, and production assets", async 
   assert.equal(interfaceBlock.logo, "./assets/logo.png");
   assert.equal(interfaceBlock.logoDark, "./assets/logo-dark.png");
   assert.equal(interfaceBlock.composerIcon, "./assets/icon.png");
+});
+
+test("Cursor manifest wires shared skills and MCP through declared variables", async () => {
+  const manifest = JSON.parse(
+    await readFile(resolve(root, ".cursor-plugin/plugin.json"), "utf8"),
+  ) as Record<string, unknown>;
+  const mcp = JSON.parse(
+    await readFile(resolve(root, "mcp.json"), "utf8"),
+  ) as {
+    mcpServers: Record<
+      string,
+      {
+        type: string;
+        command: string;
+        args: string[];
+        cwd: string;
+        env: Record<string, string>;
+      }
+    >;
+  };
+
+  assert.equal(manifest.name, "beatapi-agent-plugin");
+  assert.equal(manifest.repository, "https://github.com/BeatAPI/beatapi-agent-plugin");
+  assert.equal(manifest.skills, "./skills/");
+  assert.equal(manifest.mcpServers, "./mcp.json");
+
+  const variables = manifest.variables as {
+    properties: Record<string, unknown>;
+    required: string[];
+  };
+  assert.deepEqual(variables.required, ["BEATAPI_API_KEY"]);
+  assert.ok(variables.properties.BEATAPI_API_KEY);
+  assert.ok(variables.properties.BEATAPI_BASE_URL);
+
+  const server = mcp.mcpServers.beatapi;
+  assert.ok(server);
+  assert.equal(server.type, "stdio");
+  assert.equal(server.command, "node");
+  assert.deepEqual(server.args, ["./mcp/server.mjs"]);
+  assert.equal(server.cwd, "${PLUGIN_ROOT}");
+  assert.equal(server.env.BEATAPI_API_KEY, "${BEATAPI_API_KEY}");
+  assert.equal(server.env.BEATAPI_BASE_URL, "${BEATAPI_BASE_URL}");
+  assert.doesNotMatch(JSON.stringify(mcp), /sk_[A-Za-z0-9_-]{6,}/);
+});
+
+test("release builders use the renamed cross-host plugin artifact", async () => {
+  for (const path of [
+    "scripts/build-marketplace.mjs",
+    ".github/workflows/ci.yml",
+    ".github/workflows/release.yml",
+  ]) {
+    const source = await readFile(resolve(root, path), "utf8");
+    assert.match(source, /beatapi-agent-plugin/);
+    assert.doesNotMatch(source, /beatapi-codex-plugin/);
+  }
+
+  const builder = await readFile(
+    resolve(root, "scripts/build-marketplace.mjs"),
+    "utf8",
+  );
+  assert.match(builder, /\.cursor-plugin/);
+  assert.match(builder, /"mcp\.json"/);
 });
