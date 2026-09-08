@@ -16,11 +16,16 @@ import { promisify } from "node:util";
 import {
   BeatAPIClient,
   BeatAPIError,
+  type CreateEffectTaskInput,
   type CreateRealtimeSessionInput,
   type CreateWebhookInput,
   type EcommerceVideoTaskInput,
+  type ImageGenerationTaskInput,
   type MusicVideoShotEditInput,
   type MusicVideoTaskInput,
+  type TextResponseInput,
+  type VideoAnalysisTaskInput,
+  type VideoGenerationTaskInput,
   type UpdateWebhookInput,
 } from "../vendor/client/index.js";
 
@@ -33,6 +38,8 @@ const MIME_TYPES: Readonly<Record<string, string>> = {
   ".m4a": "audio/mp4",
   ".mp3": "audio/mpeg",
   ".png": "image/png",
+  ".mov": "video/quicktime",
+  ".mp4": "video/mp4",
   ".srt": "application/x-subrip",
   ".wav": "audio/wav",
   ".webp": "image/webp",
@@ -49,6 +56,27 @@ function stringValue(input: Input, key: string): string {
 function without<T extends Input>(input: T, keys: string[]): Record<string, unknown> {
   return Object.fromEntries(
     Object.entries(input).filter(([key]) => !keys.includes(key)),
+  );
+}
+
+function nestedObject(input: Input, key: string): Record<string, unknown> {
+  const value = input[key];
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new TypeError(`${key} must be an object.`);
+  }
+  return value as Record<string, unknown>;
+}
+
+function generationBody(input: Input): Record<string, unknown> {
+  return {
+    ...nestedObject(input, "parameters"),
+    model: stringValue(input, "model"),
+  };
+}
+
+function directApiKeyRequired(capability: string): never {
+  throw new Error(
+    `${capability} requires BEATAPI_API_KEY in the plugin Configure screen or host environment. Do not paste the key into chat.`,
   );
 }
 
@@ -247,6 +275,31 @@ export class BeatAPIExecutor {
     if (name === "beatapi_list_workflows") {
       return sanitize(await this.direct.listWorkflows());
     }
+    if (name === "beatapi_list_text_models") {
+      if (!this.usesDirectClient) directApiKeyRequired("Text model discovery");
+      return sanitize(await this.direct.listTextModels());
+    }
+    if (name === "beatapi_list_generation_models") {
+      return sanitize(await this.direct.listGenerationModels());
+    }
+    if (name === "beatapi_list_effects") {
+      return sanitize(await this.direct.listEffects({
+        ...(typeof input.output_type === "string"
+          ? { outputType: input.output_type as "image" | "video" }
+          : {}),
+        ...(typeof input.category === "string" ? { category: input.category } : {}),
+      }));
+    }
+    if (name === "beatapi_get_effect") {
+      return sanitize(await this.direct.getEffect(stringValue(input, "effect_id")));
+    }
+    if (
+      !this.usesDirectClient &&
+      (name === "beatapi_create_text_response" ||
+        name === "beatapi_analyze_video")
+    ) {
+      directApiKeyRequired("This BeatAPI capability");
+    }
     if (!this.usesDirectClient) return this.executeViaCli(name, input);
     return this.executeDirect(name, input);
   }
@@ -272,7 +325,7 @@ export class BeatAPIExecutor {
           auth_source: null,
           setup_reason: "cli_not_installed",
           next_step:
-            "Install the BeatAPI CLI with `npm install --global beatapi`, then run `beatapi auth login` in a terminal. Do not paste the API key into chat.",
+            "Use the plugin Configure action to store BEATAPI_API_KEY, or install the BeatAPI CLI with `npm install --global beatapi` and run `beatapi auth login` in a terminal. Do not paste the API key into chat.",
         };
       }
       if (isMissingCliAuthentication(error)) {
@@ -281,7 +334,7 @@ export class BeatAPIExecutor {
           auth_source: null,
           setup_reason: "authentication_required",
           next_step:
-            "Run `beatapi auth login` in a terminal, then check setup again. Do not paste the API key into chat.",
+            "Use the plugin Configure action to store BEATAPI_API_KEY, or run `beatapi auth login` in a terminal, then check setup again. Do not paste the API key into chat.",
         };
       }
       const detail = cliErrorText(error);
@@ -296,6 +349,44 @@ export class BeatAPIExecutor {
     switch (name) {
       case "beatapi_get_usage":
         return sanitize(await this.direct.getUsage());
+      case "beatapi_create_text_response":
+        return sanitize(
+          await this.direct.createTextResponse({
+            ...nestedObject(input, "request"),
+            model: stringValue(input, "model"),
+            stream: false,
+          } as TextResponseInput),
+        );
+      case "beatapi_create_image":
+        return sanitize(
+          await this.direct.createImageTask(
+            generationBody(input) as ImageGenerationTaskInput,
+          ),
+        );
+      case "beatapi_create_video":
+        return sanitize(
+          await this.direct.createVideoTask(
+            generationBody(input) as VideoGenerationTaskInput,
+          ),
+        );
+      case "beatapi_create_effect":
+        return sanitize(
+          await this.direct.createEffectTask(
+            without(input, ["idempotency_key"]) as CreateEffectTaskInput,
+            { idempotencyKey: stringValue(input, "idempotency_key") },
+          ),
+        );
+      case "beatapi_analyze_video":
+        return sanitize(
+          await this.direct.createVideoAnalysisTask(
+            without(input, ["idempotency_key"]) as VideoAnalysisTaskInput,
+            {
+              ...(typeof input.idempotency_key === "string"
+                ? { idempotencyKey: input.idempotency_key }
+                : {}),
+            },
+          ),
+        );
       case "beatapi_upload_file": {
         const path = resolve(stringValue(input, "path"));
         const info = await stat(path);
@@ -422,6 +513,28 @@ export class BeatAPIExecutor {
     switch (name) {
       case "beatapi_get_usage":
         result = await runCli(["usage"]);
+        break;
+      case "beatapi_create_image":
+        result = await withJsonFile(generationBody(input), (path) =>
+          runCli(["images", "create", "--file", path]),
+        );
+        break;
+      case "beatapi_create_video":
+        result = await withJsonFile(generationBody(input), (path) =>
+          runCli(["videos", "create", "--file", path]),
+        );
+        break;
+      case "beatapi_create_effect":
+        result = await withJsonFile(without(input, ["idempotency_key"]), (path) =>
+          runCli([
+            "effects",
+            "create",
+            "--file",
+            path,
+            "--idempotency-key",
+            stringValue(input, "idempotency_key"),
+          ]),
+        );
         break;
       case "beatapi_upload_file":
         result = await runCli(["files", "upload", resolve(stringValue(input, "path"))]);

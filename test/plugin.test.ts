@@ -10,6 +10,15 @@ const root = resolve(import.meta.dirname, "..");
 const expectedToolNames = [
   "beatapi_check_setup",
   "beatapi_list_workflows",
+  "beatapi_list_text_models",
+  "beatapi_create_text_response",
+  "beatapi_list_generation_models",
+  "beatapi_create_image",
+  "beatapi_create_video",
+  "beatapi_list_effects",
+  "beatapi_get_effect",
+  "beatapi_create_effect",
+  "beatapi_analyze_video",
   "beatapi_get_usage",
   "beatapi_upload_file",
   "beatapi_create_music_video",
@@ -47,6 +56,10 @@ test("marks read, write, paid, and destructive tools accurately", () => {
   for (const name of [
     "beatapi_check_setup",
     "beatapi_list_workflows",
+    "beatapi_list_text_models",
+    "beatapi_list_generation_models",
+    "beatapi_list_effects",
+    "beatapi_get_effect",
     "beatapi_get_usage",
     "beatapi_get_task",
     "beatapi_wait_for_task",
@@ -59,6 +72,11 @@ test("marks read, write, paid, and destructive tools accurately", () => {
 
   for (const name of [
     "beatapi_create_music_video",
+    "beatapi_create_text_response",
+    "beatapi_create_image",
+    "beatapi_create_video",
+    "beatapi_create_effect",
+    "beatapi_analyze_video",
     "beatapi_edit_music_video_shot",
     "beatapi_compose_music_video",
     "beatapi_create_ecommerce_video",
@@ -85,6 +103,36 @@ test("marks read, write, paid, and destructive tools accurately", () => {
       assert.notEqual(tool.annotations.destructiveHint, true, tool.name);
     }
   }
+});
+
+test("generation tools accept current and future model IDs through one stable shape", () => {
+  const byName = new Map(toolDefinitions.map((tool) => [tool.name, tool]));
+  const image = byName.get("beatapi_create_image")?.inputSchema.safeParse({
+    model: "future-image-model",
+    parameters: { prompt: "Editorial still", aspect_ratio: "16:9" },
+  });
+  const video = byName.get("beatapi_create_video")?.inputSchema.safeParse({
+    model: "future-video-model",
+    parameters: { prompt: "Slow dolly in", duration: 7 },
+  });
+
+  assert.equal(image?.success, true);
+  assert.equal(video?.success, true);
+});
+
+test("text responses are non-streaming and require explicit BeatAPI intent", () => {
+  const tool = toolDefinitions.find(
+    (definition) => definition.name === "beatapi_create_text_response",
+  );
+
+  assert.match(tool?.description ?? "", /only.*explicit.*BeatAPI/i);
+  assert.equal(
+    tool?.inputSchema.safeParse({
+      model: "gpt-5.6-sol",
+      request: { input: "Summarize this note", stream: true },
+    }).success,
+    false,
+  );
 });
 
 test("plugin manifest wires the skill, local MCP, and production assets", async () => {
