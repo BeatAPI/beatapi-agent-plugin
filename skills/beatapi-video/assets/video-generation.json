@@ -1,7 +1,4 @@
 {
-  "model": "seedance-2-mini",
-  "prompt": "Replace with the requested video generation instructions.",
-  "duration": 5,
-  "aspect_ratio": "16:9",
-  "resolution": "720p"
+  "model": "replace-with-discovered-model-id",
+  "prompt": "Replace with the requested video generation instructions."
 }

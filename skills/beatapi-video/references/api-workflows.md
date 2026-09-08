@@ -3,7 +3,8 @@
 Base URL: `https://api.beatapi.io`
 
 Authentication: Bearer API key for mutations and account data. Workflow,
-generation-model, and Effect discovery endpoints are anonymous.
+generation-model, and Effect discovery endpoints are anonymous. Text-model
+discovery requires authentication.
 Prefer bundled MCP tools when available. Otherwise use the CLI so credential
 handling and output separation stay consistent.
 
@@ -11,12 +12,15 @@ handling and output separation stay consistent.
 | --- | --- | --- | --- |
 | Check setup | `beatapi_check_setup` | `beatapi auth status` | `GET /v1/usage` |
 | Discover workflows | `beatapi_list_workflows` | `beatapi workflows list` | `GET /v1/workflows` |
+| Discover text models | `beatapi_list_text_models` | Client/OpenAPI | `GET /v1/models` |
+| Create text response | `beatapi_create_text_response` | Client/OpenAPI | `POST /v1/responses` |
 | Discover generation models | `beatapi_list_generation_models` | `beatapi models list` | `GET /v1/media/models` |
 | Create image task | `beatapi_create_image` | `beatapi images create --file INPUT` | `POST /v1/images/tasks` |
 | Create video task | `beatapi_create_video` | `beatapi videos create --file INPUT` | `POST /v1/videos/tasks` |
 | List Effects | `beatapi_list_effects` | `beatapi effects list` | `GET /v1/effects` |
 | Read Effect | `beatapi_get_effect` | `beatapi effects get EFFECT` | `GET /v1/effects/{effect_id}` |
 | Create Effect task | `beatapi_create_effect` | `beatapi effects create --file INPUT` | `POST /v1/effects/tasks` |
+| Analyze video | `beatapi_analyze_video` | Client/OpenAPI | `POST /v1/video-analysis/tasks` |
 | Check usage | `beatapi_get_usage` | `beatapi usage` | `GET /v1/usage` |
 | Upload local media | `beatapi_upload_file` | `beatapi files upload PATH` | `POST /v1/files` |
 | Create Music Video | `beatapi_create_music_video` | `beatapi music-video create --file INPUT` | `POST /v1/music-video/tasks` |

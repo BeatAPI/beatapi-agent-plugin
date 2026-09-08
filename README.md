@@ -7,9 +7,13 @@ with a bundled local MCP server and uses the same API key as the BeatAPI CLI.
 ## What users can do
 
 - discover stable image/video model aliases and published Effects;
-- create model-specific image, video, and versioned Effect tasks;
+- list authenticated text models and create non-streaming text responses only
+  when the user explicitly asks to use BeatAPI for text;
+- create image and video tasks through a model-agnostic request shape, plus
+  versioned Effect tasks;
+- analyze uploaded MP4 or MOV files through the async Video Analysis workflow;
 - inspect workflows, USD balance, usage, and concurrency;
-- upload local images, audio, and SRT files;
+- upload local images, audio, video, and SRT files;
 - create automatic or manual Music Video tasks;
 - inspect, edit, materialize, and compose storyboard shots;
 - create Ecommerce Video tasks;

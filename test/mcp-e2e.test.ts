@@ -11,13 +11,19 @@ import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
 const root = resolve(import.meta.dirname, "..");
 
 test("bundled stdio MCP serves BeatAPI tools and protects credentials", async () => {
-  const requests: Array<{ method: string; path: string; authorization?: string }> = [];
+  const requests: Array<{
+    method: string;
+    path: string;
+    authorization?: string;
+    body?: string;
+  }> = [];
   const httpServer = createServer(async (request, response) => {
     const chunks: Buffer[] = [];
     for await (const chunk of request) chunks.push(Buffer.from(chunk));
     requests.push({
       method: request.method ?? "GET",
       path: request.url ?? "/",
+      body: Buffer.concat(chunks).toString("utf8"),
       ...(request.headers.authorization
         ? { authorization: request.headers.authorization }
         : {}),
@@ -31,6 +37,33 @@ test("bundled stdio MCP serves BeatAPI tools and protects credentials", async ()
             object: "list",
             data: [{ id: "music-video", object: "workflow" }],
           },
+        }),
+      );
+      return;
+    }
+    if (request.url === "/v1/models") {
+      response.end(
+        JSON.stringify({
+          object: "list",
+          data: [
+            {
+              id: "gpt-5.6-sol",
+              object: "model",
+              created: 1,
+              owned_by: "beatapi",
+            },
+          ],
+        }),
+      );
+      return;
+    }
+    if (request.url === "/v1/responses") {
+      response.end(
+        JSON.stringify({
+          id: "resp_test",
+          object: "response",
+          model: "gpt-5.6-sol",
+          output_text: "Launch summary",
         }),
       );
       return;
@@ -117,6 +150,22 @@ test("bundled stdio MCP serves BeatAPI tools and protects credentials", async ()
             request_id: "req_test",
             error_code: null,
             error_message: null,
+          },
+        }),
+      );
+      return;
+    }
+    if (request.url === "/v1/video-analysis/tasks") {
+      response.statusCode = 201;
+      response.end(
+        JSON.stringify({
+          data: {
+            id: "task_video_analysis",
+            object: "task",
+            task_kind: "workflow",
+            capability_id: "video-analysis",
+            capability_version: 1,
+            status: "queued",
           },
         }),
       );
@@ -238,7 +287,7 @@ test("bundled stdio MCP serves BeatAPI tools and protects credentials", async ()
   try {
     await client.connect(transport);
     const listed = await client.listTools();
-    assert.equal(listed.tools.length, 25);
+    assert.equal(listed.tools.length, 28);
     assert.ok(listed.tools.every((tool) => !/api[_-]?key/i.test(JSON.stringify(tool.inputSchema))));
 
     const workflows = await client.callTool({
@@ -248,6 +297,33 @@ test("bundled stdio MCP serves BeatAPI tools and protects credentials", async ()
     assert.equal(
       (workflows.structuredContent as { result: Array<{ id: string }> }).result[0]?.id,
       "music-video",
+    );
+
+    const textModels = await client.callTool({
+      name: "beatapi_list_text_models",
+      arguments: {},
+    });
+    assert.equal(
+      (textModels.structuredContent as { result: Array<{ id: string }> }).result[0]?.id,
+      "gpt-5.6-sol",
+    );
+
+    const textResponse = await client.callTool({
+      name: "beatapi_create_text_response",
+      arguments: {
+        model: "gpt-5.6-sol",
+        request: { input: "Summarize this launch note" },
+      },
+    });
+    assert.equal(
+      (textResponse.structuredContent as { result: { id: string } }).result.id,
+      "resp_test",
+    );
+    assert.equal(
+      JSON.parse(
+        requests.find((request) => request.path === "/v1/responses")?.body ?? "{}",
+      ).stream,
+      false,
     );
 
     const models = await client.callTool({
@@ -261,11 +337,24 @@ test("bundled stdio MCP serves BeatAPI tools and protects credentials", async ()
 
     const imageTask = await client.callTool({
       name: "beatapi_create_image",
-      arguments: { model: "nano-banana", prompt: "Editorial still" },
+      arguments: {
+        model: "future-image-model",
+        parameters: { prompt: "Editorial still", aspect_ratio: "16:9" },
+      },
     });
     assert.equal(
       (imageTask.structuredContent as { result: { id: string } }).result.id,
       "task_images",
+    );
+    assert.deepEqual(
+      JSON.parse(
+        requests.find((request) => request.path === "/v1/images/tasks")?.body ?? "{}",
+      ),
+      {
+        model: "future-image-model",
+        prompt: "Editorial still",
+        aspect_ratio: "16:9",
+      },
     );
 
     const effects = await client.callTool({
@@ -297,6 +386,21 @@ test("bundled stdio MCP serves BeatAPI tools and protects credentials", async ()
     assert.equal(
       (effectTask.structuredContent as { result: { id: string } }).result.id,
       "task_effects",
+    );
+
+    const analysisTask = await client.callTool({
+      name: "beatapi_analyze_video",
+      arguments: {
+        video_url: "https://media.example.com/product-demo.mp4",
+        prompt: "Identify the key scenes",
+        analysis_depth: "deep",
+        max_output_tokens: 2048,
+        idempotency_key: "analysis-mcp-test",
+      },
+    });
+    assert.equal(
+      (analysisTask.structuredContent as { result: { id: string } }).result.id,
+      "task_video_analysis",
     );
 
     const musicTask = await client.callTool({
@@ -571,6 +675,7 @@ test("setup reports a missing CLI login as an actionable configuration state", a
     assert.equal(result.configured, false);
     assert.equal(result.setup_reason, "authentication_required");
     assert.match(result.next_step, /beatapi auth login/);
+    assert.match(result.next_step, /Configure.*BEATAPI_API_KEY/i);
   } finally {
     await client.close().catch(() => undefined);
     await transport.close().catch(() => undefined);

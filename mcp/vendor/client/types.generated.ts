@@ -4,6 +4,106 @@
  */
 
 export interface paths {
+    "/v1/models": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List available text models
+         * @description Returns the text models currently enabled for this BeatAPI environment in OpenAI list format.
+         */
+        get: operations["listTextModels"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/responses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create a text response
+         * @description Recommended OpenAI-compatible surface for reasoning, tools, structured outputs, and streaming.
+         */
+        post: operations["createTextResponse"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/chat/completions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create a text chat completion
+         * @description OpenAI Chat Completions-compatible endpoint for existing SDK integrations.
+         */
+        post: operations["createChatCompletion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create an Anthropic-compatible message
+         * @description Anthropic Messages-compatible endpoint. Send the BeatAPI key with x-api-key or Bearer authentication.
+         */
+        post: operations["createMessage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1beta/models/{model}:{action}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Generate text content with a Gemini-compatible request
+         * @description Gemini-compatible endpoint for generateContent and streamGenerateContent. The BeatAPI key is removed before forwarding.
+         */
+        post: operations["generateGeminiCompatibleContent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/workflows": {
         parameters: {
             query?: never;
@@ -145,6 +245,34 @@ export interface paths {
          *     result is not blindly retried and never switches integrations automatically.
          */
         post: operations["createEffectTask"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/video-analysis/tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Analyze an uploaded video
+         * @description Analyze one MP4 or MOV previously uploaded with `POST /v1/files` by the
+         *     current BeatAPI account. `standard` is the default low-cost route;
+         *     `deep` uses the higher-reasoning route. BeatAPI reserves an estimate from
+         *     verified video duration and the output budget, then settles from actual
+         *     input and output token usage. Standard costs $0.36 per 1M input tokens and
+         *     $1.60 per 1M output tokens; Deep costs $0.72 per 1M input tokens and $5.00
+         *     per 1M output tokens. Each completed task is rounded up to the nearest
+         *     $0.01 because the shared USD balance settles in cents. Save `data.id` and poll the shared Task
+         *     endpoint if the task remains queued for processing capacity.
+         */
+        post: operations["createVideoAnalysisTask"];
         delete?: never;
         options?: never;
         head?: never;
@@ -412,26 +540,32 @@ export interface paths {
         put?: never;
         /**
          * Upload a file for workflow inputs
-         * @description Use file upload when your images, audio, or subtitle files are not
+         * @description Use file upload when your images, videos, audio, or subtitle files are not
          *     already hosted at public HTTPS URLs. The returned HTTPS URL can be used
-         *     directly in `images`, `audio_url`, or `srt_url`.
+         *     directly in `images`, `reference_videos`, `audio_url`, or `srt_url`.
          *
          *     Limits:
-         *     - Maximum file size is 50 MB.
+         *     - Images, audio, and subtitles: maximum 50 MB.
+         *     - Motion videos: maximum 100 MB.
          *     - Images: `png`, `jpg`, `jpeg`, `webp`
          *       (`image/png`, `image/jpeg`, `image/webp`).
          *     - Audio: `mp3`, `wav`, `aac`, `m4a`
          *       (`audio/mpeg`, `audio/wav`, `audio/aac`, `audio/mp4`).
          *     - Audio uploads must be 10-300 seconds. The selected Music Video tier applies its own task limit: Standard 10-180 seconds; Premium 10-300 seconds.
+         *     - Motion videos: `mp4`, `mov` (`video/mp4`, `video/quicktime`), 3-30 seconds. Duration and dimensions are detected during upload.
          *     - Subtitles: `srt` (`application/x-subrip`; multipart uploads may use
          *       `text/plain` only when the filename ends in `.srt`).
-         *     - PDF, generic text files, octet-stream uploads, videos, and zip files
+         *     - PDF, generic text files, octet-stream uploads, Matroska videos, and zip files
          *       are not supported for launch.
          *     - Send either multipart form-data with a `file` field, or send the raw
          *       file body with the asset `Content-Type`.
+         *     - `Content-Length` is required and is validated before BeatAPI buffers
+         *       the request body; chunked uploads without a declared length are rejected.
          *     - Returned URLs are HTTPS and long-lived for launch.
          *     - Uploaded audio files are duration-checked during upload. The response
          *       includes `audio_duration_seconds` when the uploaded asset is audio.
+         *     - Uploaded videos are signature-, duration-, and dimension-checked. The
+         *       response includes `video_duration_seconds`, `width`, and `height`.
          *     - Workflow task inputs still require public HTTPS URLs. Localhost,
          *       private network URLs, and data URLs are not accepted.
          */
@@ -578,12 +712,38 @@ export interface webhooks {
 }
 export interface components {
     schemas: {
+        /** @description Public text model id exposed by BeatAPI. Call GET /v1/models to discover the models enabled for your environment. */
+        TextModelId: string;
+        TextModel: {
+            id: components["schemas"]["TextModelId"];
+            /** @constant */
+            object: "model";
+            /** @example 1788220800 */
+            created: number;
+            /** @constant */
+            owned_by: "beatapi";
+        };
+        TextModelList: {
+            /** @constant */
+            object: "list";
+            data: components["schemas"]["TextModel"][];
+        };
+        /** @description SDK-compatible text request. BeatAPI preserves supported provider-format fields and streams the matching response format back. */
+        TextPassthroughRequest: {
+            model: components["schemas"]["TextModelId"];
+        } & {
+            [key: string]: unknown;
+        };
+        /** @description Response body in the selected SDK-compatible wire format. */
+        TextPassthroughResponse: {
+            [key: string]: unknown;
+        };
         Workflow: {
             /**
              * @example music-video
              * @enum {string}
              */
-            id: "music-video" | "ecommerce-video";
+            id: "music-video" | "ecommerce-video" | "video-analysis";
             /** @enum {string} */
             object: "workflow";
             /** @example Music Video API */
@@ -731,7 +891,7 @@ export interface components {
              * @example music-video
              * @enum {string}
              */
-            workflow?: "music-video" | "ecommerce-video";
+            workflow?: "music-video" | "ecommerce-video" | "video-analysis";
             /**
              * @description Present for Effect tasks; stable selected Effect ID.
              * @example video-muscle-max
@@ -789,6 +949,20 @@ export interface components {
                  * @description Primary BeatAPI-hosted result URL for clients that need one canonical asset.
                  */
                 r2_url: string;
+            } | {
+                /** @description Completed video analysis text. */
+                text: string;
+                /** @description Measured token usage used for final USD settlement. */
+                usage: {
+                    /** @description Tokens consumed by the prompt and video input. */
+                    input_tokens: number;
+                    /** @description Tokens consumed by visible output and model reasoning. */
+                    output_tokens: number;
+                    /** @description Total measured input and output tokens. */
+                    total_tokens: number;
+                };
+                /** @description Upstream-compatible completion reason. */
+                finish_reason: string | null;
             };
             /** @description USD reservation, settlement, refund, and optional billable duration for this task. */
             usage: components["schemas"]["TaskUsage"];
@@ -898,6 +1072,26 @@ export interface components {
              */
             audio_duration_source?: string;
             /**
+             * @description Present for MP4/MOV uploads after server-side container inspection.
+             * @example 15.25
+             */
+            video_duration_seconds?: number;
+            /**
+             * @description Duration and dimension detection method used for the uploaded video.
+             * @example mp4_boxes
+             */
+            video_duration_source?: string;
+            /**
+             * @description Detected pixel width for uploaded images and videos.
+             * @example 720
+             */
+            width?: number;
+            /**
+             * @description Detected pixel height for uploaded images and videos.
+             * @example 1280
+             */
+            height?: number;
+            /**
              * @description File purpose; currently always `input`.
              * @enum {string}
              */
@@ -965,7 +1159,7 @@ export interface components {
         };
         GenerationModel: {
             /** @enum {string} */
-            id: "nano-banana" | "nano-banana-pro" | "gpt-image-2" | "seedream-5-pro" | "minimax-h3" | "seedance-2" | "seedance-2-fast" | "seedance-2-mini" | "veo-3.1" | "seedance-2.5" | "kling-3";
+            id: "nano-banana" | "nano-banana-2" | "nano-banana-2-lite" | "nano-banana-pro" | "gpt-image-2" | "seedream-5-pro" | "grok-imagine-image-2.0" | "minimax-h3" | "grok-imagine-video-1.5" | "seedance-2" | "seedance-2-fast" | "seedance-2-mini" | "veo-3.1" | "seedance-2.5" | "kling-3" | "kling-2.6-motion-control" | "kling-3-motion-control" | "wan-3.0" | "wan-3.0-prime" | "happyhorse-1.0" | "happyhorse-1.1" | "minimax-h3-max" | "minimax-h3-max-turbo";
             /** @enum {string} */
             object: "generation_model";
             name: string;
@@ -981,15 +1175,69 @@ export interface components {
         GenerationModelListResponse: {
             data: components["schemas"]["GenerationModelList"];
         };
-        ImageGenerationTaskCreateRequest: components["schemas"]["NanoBananaImageRequest"] | components["schemas"]["NanoBananaProImageRequest"] | components["schemas"]["GptImage2Request"] | components["schemas"]["Seedream5ProImageRequest"];
+        ImageGenerationTaskCreateRequest: components["schemas"]["NanoBananaImageRequest"] | components["schemas"]["NanoBanana2ImageRequest"] | components["schemas"]["NanoBanana2LiteImageRequest"] | components["schemas"]["NanoBananaProImageRequest"] | components["schemas"]["GptImage2Request"] | components["schemas"]["Seedream5ProImageRequest"] | components["schemas"]["GrokImagineImage20Request"];
         NanoBananaImageRequest: {
             /**
              * @description Must be `nano-banana`. (enum property replaced by openapi-typescript)
              * @enum {string}
              */
             model: "nano-banana";
-            /** @description Generation instructions. */
+            /** @description Generation or image-editing instructions. */
             prompt: string;
+            /** @description Public HTTPS reference-image URLs. Omit for text-to-image. */
+            images?: string[];
+            /**
+             * @description Output image aspect ratio.
+             * @default 1:1
+             * @enum {string}
+             */
+            aspect_ratio: "1:1" | "9:16" | "16:9" | "3:4" | "4:3" | "3:2" | "2:3" | "5:4" | "4:5" | "21:9" | "auto";
+            /**
+             * @description Output image file format.
+             * @default png
+             * @enum {string}
+             */
+            output_format: "png" | "jpeg";
+        };
+        NanoBanana2ImageRequest: {
+            /**
+             * @description Must be `nano-banana-2`. (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            model: "nano-banana-2";
+            /** @description Generation or image-editing instructions. */
+            prompt: string;
+            /** @description Public HTTPS reference-image URLs. Omit for text-to-image. */
+            images?: string[];
+            /**
+             * @description Output image aspect ratio.
+             * @default 1:1
+             * @enum {string}
+             */
+            aspect_ratio: "1:1" | "9:16" | "16:9" | "3:4" | "4:3" | "3:2" | "2:3" | "5:4" | "4:5" | "21:9" | "auto";
+            /**
+             * @description Output resolution tier.
+             * @default 1K
+             * @enum {string}
+             */
+            resolution: "1K" | "2K" | "4K";
+            /**
+             * @description Output image file format.
+             * @default png
+             * @enum {string}
+             */
+            output_format: "png" | "jpeg";
+        };
+        NanoBanana2LiteImageRequest: {
+            /**
+             * @description Must be `nano-banana-2-lite`. (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            model: "nano-banana-2-lite";
+            /** @description Generation or image-editing instructions. */
+            prompt: string;
+            /** @description Public HTTPS reference-image URLs. Omit for text-to-image. */
+            images?: string[];
             /**
              * @description Output image aspect ratio.
              * @default 1:1
@@ -1032,10 +1280,6 @@ export interface components {
              */
             output_format: "png" | "jpg";
         };
-        /**
-         * @description `auto` only supports 1K. `1:1` does not support 4K. At 2K/4K,
-         *     `5:4`, `4:5`, `3:1`, `1:3`, and `9:21` are unavailable.
-         */
         GptImage2Request: {
             /**
              * @description Must be `gpt-image-2`. (enum property replaced by openapi-typescript)
@@ -1047,7 +1291,7 @@ export interface components {
             /** @description Public HTTPS reference-image URLs. Omit for text-to-image. */
             images?: string[];
             /**
-             * @description Output image aspect ratio. Availability also depends on resolution.
+             * @description Output image aspect ratio.
              * @default auto
              * @enum {string}
              */
@@ -1080,7 +1324,7 @@ export interface components {
              * @default 1K
              * @enum {string}
              */
-            resolution: "1K" | "2K";
+            resolution: "1K" | "2K" | "4K";
             /**
              * @description Output image file format.
              * @default png
@@ -1088,8 +1332,26 @@ export interface components {
              */
             output_format: "png" | "jpeg";
         };
-        VideoGenerationTaskCreateRequest: components["schemas"]["MinimaxH3VideoRequest"] | components["schemas"]["Seedance2VideoRequest"] | components["schemas"]["Seedance2FastVideoRequest"] | components["schemas"]["Seedance2MiniVideoRequest"] | components["schemas"]["Veo31VideoRequest"] | components["schemas"]["Seedance25VideoRequest"] | components["schemas"]["Kling3VideoRequest"];
-        /** @description `images` cannot be combined with any `reference_*` input. */
+        /** @description Omit `images` for text-to-image. Supply one to five images for editing; `auto` aspect ratio is available only when images are supplied. */
+        GrokImagineImage20Request: {
+            /**
+             * @description Must be `grok-imagine-image-2.0`. (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            model: "grok-imagine-image-2.0";
+            /** @description Generation or image-editing instructions. */
+            prompt: string;
+            /** @description Public HTTPS reference-image URLs. Omit for text-to-image. */
+            images?: string[];
+            /**
+             * @description Output image aspect ratio. `auto` requires at least one image.
+             * @default 1:1
+             * @enum {string}
+             */
+            aspect_ratio: "1:1" | "2:3" | "3:2" | "16:9" | "9:16" | "auto";
+        };
+        VideoGenerationTaskCreateRequest: components["schemas"]["MinimaxH3VideoRequest"] | components["schemas"]["GrokImagineVideo15Request"] | components["schemas"]["Seedance2VideoRequest"] | components["schemas"]["Seedance2FastVideoRequest"] | components["schemas"]["Seedance2MiniVideoRequest"] | components["schemas"]["Veo31VideoRequest"] | components["schemas"]["Seedance25VideoRequest"] | components["schemas"]["Kling3VideoRequest"] | components["schemas"]["Kling26MotionControlVideoRequest"] | components["schemas"]["Kling3MotionControlVideoRequest"] | components["schemas"]["Wan30VideoRequest"] | components["schemas"]["Wan30PrimeVideoRequest"] | components["schemas"]["HappyHorse10VideoRequest"] | components["schemas"]["HappyHorse11VideoRequest"] | components["schemas"]["MinimaxH3MaxVideoRequest"] | components["schemas"]["MinimaxH3MaxTurboVideoRequest"];
+        /** @description `images` cannot be combined with any `reference_*` input. An audio reference also requires at least one reference image or video. */
         MinimaxH3VideoRequest: {
             /**
              * @description Must be `minimax-h3`. (enum property replaced by openapi-typescript)
@@ -1104,7 +1366,7 @@ export interface components {
             reference_images?: string[];
             /** @description Public HTTPS video references for multimodal reference generation. */
             reference_videos?: string[];
-            /** @description Public HTTPS audio references for multimodal reference generation. */
+            /** @description Public HTTPS audio references for multimodal reference generation. Audio also requires at least one reference image or video. */
             reference_audios?: string[];
             /**
              * @description Requested output duration in seconds.
@@ -1112,17 +1374,47 @@ export interface components {
              */
             duration: number;
             /**
-             * @description Output video aspect ratio.
-             * @default adaptive
+             * @description Text mode defaults to 16:9 and does not accept adaptive. Frame mode always uses adaptive. Reference mode defaults to adaptive and also accepts a concrete ratio.
              * @enum {string}
              */
-            aspect_ratio: "adaptive" | "21:9" | "16:9" | "4:3" | "1:1" | "3:4" | "9:16";
+            aspect_ratio?: "adaptive" | "21:9" | "16:9" | "4:3" | "1:1" | "3:4" | "9:16";
             /**
              * @description Output resolution tier.
              * @default 768P
              * @enum {string}
              */
             resolution: "768P" | "2K";
+        };
+        /** @description `images` accepts one first frame and cannot be combined with `reference_images`. Omit `aspect_ratio` when `images` is supplied. 1080p accepts at most one image. */
+        GrokImagineVideo15Request: {
+            /**
+             * @description Must be `grok-imagine-video-1.5`. (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            model: "grok-imagine-video-1.5";
+            /** @description Video generation instructions. */
+            prompt: string;
+            /** @description One first-frame image as a public HTTPS URL. */
+            images?: string[];
+            /** @description One to seven public HTTPS reference images. */
+            reference_images?: string[];
+            /**
+             * @description Requested output duration in seconds.
+             * @default 8
+             */
+            duration: number;
+            /**
+             * @description Output video aspect ratio. Omit when one first-frame image is supplied.
+             * @default 16:9
+             * @enum {string}
+             */
+            aspect_ratio: "1:1" | "16:9" | "9:16" | "3:2" | "2:3" | "auto";
+            /**
+             * @description Output resolution tier. 1080p accepts at most one image.
+             * @default 480p
+             * @enum {string}
+             */
+            resolution: "480p" | "720p" | "1080p";
         };
         /** @description `images` cannot be combined with any `reference_*` input. An audio reference also requires at least one reference image or video. */
         Seedance2VideoRequest: {
@@ -1153,11 +1445,11 @@ export interface components {
              */
             aspect_ratio: "adaptive" | "21:9" | "16:9" | "4:3" | "1:1" | "3:4" | "9:16";
             /**
-             * @description Output resolution tier.
+             * @description Output resolution tier. 4k and 4K are equivalent. 1080p is not supported with reference images.
              * @default 720p
              * @enum {string}
              */
-            resolution: "480p" | "720p" | "1080p" | "4k";
+            resolution: "480p" | "720p" | "1080p" | "4k" | "4K";
             /**
              * @description Generate synchronized audio with the video.
              * @default true
@@ -1248,7 +1540,7 @@ export interface components {
         };
         /**
          * @description Veo 3.1 text or first/last-frame generation. Output is fixed at 8 seconds
-         *     and defaults to the Quality tier.
+         *     and defaults to Quality at 720p. Price depends on quality and resolution.
          */
         Veo31TextOrFrameVideoRequest: {
             /**
@@ -1267,6 +1559,12 @@ export interface components {
              */
             aspect_ratio: "16:9" | "9:16" | "auto";
             /**
+             * @description Output video resolution. 4k and 4K are equivalent. Price depends on quality and resolution.
+             * @default 720p
+             * @enum {string}
+             */
+            resolution: "720p" | "1080p" | "4k" | "4K";
+            /**
              * @description Text or frame generation tier.
              * @default Quality
              * @enum {string}
@@ -1279,7 +1577,8 @@ export interface components {
         };
         /**
          * @description Veo 3.1 reference-image generation. Output is fixed at 8 seconds and
-         *     supports the Fast or Lite tier, defaulting to Fast.
+         *     supports the Fast or Lite tier, defaulting to Fast at 720p. Price depends
+         *     on quality and resolution.
          */
         Veo31ReferenceVideoRequest: {
             /**
@@ -1298,6 +1597,12 @@ export interface components {
              */
             aspect_ratio: "16:9" | "9:16" | "auto";
             /**
+             * @description Output video resolution. 4k and 4K are equivalent. Price depends on quality and resolution.
+             * @default 720p
+             * @enum {string}
+             */
+            resolution: "720p" | "1080p" | "4k" | "4K";
+            /**
              * @description Reference-image generation tier.
              * @default Fast
              * @enum {string}
@@ -1308,7 +1613,7 @@ export interface components {
             /** @description Allow prompt translation before generation. */
             enable_translation?: boolean;
         };
-        /** @description `images` cannot be combined with any `reference_*` input. An audio reference also requires at least one reference image or video. */
+        /** @description `images` cannot be combined with any `reference_*` input. Audio-only reference generation is supported. */
         Seedance25VideoRequest: {
             /**
              * @description Must be `seedance-2.5`. (enum property replaced by openapi-typescript)
@@ -1323,7 +1628,7 @@ export interface components {
             reference_images?: string[];
             /** @description Public HTTPS video references for multimodal reference generation. */
             reference_videos?: string[];
-            /** @description Public HTTPS audio references. Audio also requires at least one reference image or video. */
+            /** @description Public HTTPS audio references. Audio-only reference generation is supported. */
             reference_audios?: string[];
             /**
              * @description Requested output duration in seconds.
@@ -1337,11 +1642,11 @@ export interface components {
              */
             aspect_ratio: "adaptive" | "21:9" | "16:9" | "4:3" | "1:1" | "3:4" | "9:16";
             /**
-             * @description Seedance 2.5 currently returns 720p output.
+             * @description Output resolution tier. 480p and 1080p are priced separately; see the pricing page.
              * @default 720p
-             * @constant
+             * @enum {string}
              */
-            resolution: "720p";
+            resolution: "480p" | "720p" | "1080p";
             /**
              * @description Generate synchronized audio with the video.
              * @default true
@@ -1413,6 +1718,251 @@ export interface components {
             /** @description Up to three reusable subject or object references. */
             elements?: components["schemas"]["KlingElement"][];
         };
+        /**
+         * @description Transfer motion from one uploaded 3–30 second MP4/MOV video to one
+         *     uploaded character image. Both URLs must come from `/v1/files` for the
+         *     current BeatAPI account. BeatAPI detects the reference-video duration
+         *     server-side and reserves USD at the selected per-second rate, rounding
+         *     fractional seconds up. The image must be 10 MB or smaller; the video
+         *     may be up to 100 MB.
+         */
+        Kling26MotionControlVideoRequest: {
+            /**
+             * @description Must be `kling-2.6-motion-control`. (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            model: "kling-2.6-motion-control";
+            /** @description Optional motion or scene guidance. */
+            prompt?: string;
+            /** @description Exactly one character-image URL returned by the current account's `/v1/files` upload. */
+            images: string[];
+            /** @description Exactly one 3–30 second MP4/MOV URL returned by the current account's `/v1/files` upload. Its detected duration determines billing. */
+            reference_videos: string[];
+            /**
+             * @description Output resolution and per-second price tier.
+             * @default 720p
+             * @enum {string}
+             */
+            resolution: "720p" | "1080p";
+            /**
+             * @description Image orientation supports motion videos up to 10 seconds; video orientation supports up to 30 seconds.
+             * @default image
+             * @enum {string}
+             */
+            character_orientation: "image" | "video";
+        };
+        /**
+         * @description Kling 3.0 motion transfer using exactly one uploaded image and one
+         *     uploaded 3–30 second MP4/MOV. Both assets must exceed 340 px in width
+         *     and height and use an aspect ratio from 2:5 to 5:2. BeatAPI detects the
+         *     reference-video duration server-side and reserves USD at the selected
+         *     per-second rate, rounding fractional seconds up.
+         */
+        Kling3MotionControlVideoRequest: {
+            /**
+             * @description Must be `kling-3-motion-control`. (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            model: "kling-3-motion-control";
+            /** @description Optional motion or scene guidance. */
+            prompt?: string;
+            /** @description Exactly one character-image URL returned by the current account's `/v1/files` upload; maximum 10 MB. */
+            images: string[];
+            /** @description Exactly one 3–30 second MP4/MOV URL returned by the current account's `/v1/files` upload; maximum 100 MB. Its detected duration determines billing. */
+            reference_videos: string[];
+            /**
+             * @description Output resolution and per-second price tier.
+             * @default 720p
+             * @enum {string}
+             */
+            resolution: "720p" | "1080p";
+            /**
+             * @description Image orientation supports motion videos up to 10 seconds; video orientation supports up to 30 seconds.
+             * @default image
+             * @enum {string}
+             */
+            character_orientation: "image" | "video";
+            /**
+             * @description Preserve the background from the motion video or character image.
+             * @default input_video
+             * @enum {string}
+             */
+            background_source: "input_video" | "input_image";
+        };
+        /** @description Renders 2–30 seconds in a single pass. `images` starts the render from a picture; reference videos and audio travel alongside it. */
+        Wan30VideoRequest: {
+            /**
+             * @description Must be `wan-3.0`. (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            model: "wan-3.0";
+            /** @description Video generation instructions. */
+            prompt: string;
+            /** @description Public HTTPS images. One starts an image-to-video render; more are used as visual references. */
+            images?: string[];
+            /** @description Public HTTPS video references. A request that carries one is billed at 1.5x. */
+            reference_videos?: string[];
+            /** @description Public HTTPS audio references. */
+            reference_audios?: string[];
+            /**
+             * @description Requested output duration in seconds. Any whole number in range; there is no long-clip surcharge.
+             * @default 5
+             */
+            duration: number;
+            /**
+             * @description Output video aspect ratio.
+             * @default 16:9
+             * @enum {string}
+             */
+            aspect_ratio: "16:9" | "9:16" | "1:1" | "4:3" | "3:4";
+            /**
+             * @description Output resolution tier. Price scales with it.
+             * @default 720p
+             * @enum {string}
+             */
+            resolution: "480p" | "720p" | "1080p";
+        };
+        /** @description Renders 2–30 seconds in a single pass. `images` starts the render from a picture; reference videos and audio travel alongside it. */
+        Wan30PrimeVideoRequest: {
+            /**
+             * @description Must be `wan-3.0-prime`. (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            model: "wan-3.0-prime";
+            /** @description Video generation instructions. */
+            prompt: string;
+            /** @description Public HTTPS images. One starts an image-to-video render; more are used as visual references. */
+            images?: string[];
+            /** @description Public HTTPS video references. A request that carries one is billed at 1.5x. */
+            reference_videos?: string[];
+            /** @description Public HTTPS audio references. */
+            reference_audios?: string[];
+            /**
+             * @description Requested output duration in seconds. Any whole number in range; there is no long-clip surcharge.
+             * @default 5
+             */
+            duration: number;
+            /**
+             * @description Output video aspect ratio.
+             * @default 16:9
+             * @enum {string}
+             */
+            aspect_ratio: "16:9" | "9:16" | "1:1" | "4:3" | "3:4";
+            /**
+             * @description Output resolution tier. Price scales with it.
+             * @default 720p
+             * @enum {string}
+             */
+            resolution: "480p" | "720p" | "1080p";
+        };
+        /** @description Image to video only — this model publishes no text-to-video mode, so `images` is required. */
+        HappyHorse10VideoRequest: {
+            /**
+             * @description Must be `happyhorse-1.0`. (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            model: "happyhorse-1.0";
+            /** @description What should happen in the shot — the motion, the expression, the camera. */
+            prompt: string;
+            /** @description Source images as public HTTPS URLs. At least one is required. */
+            images: string[];
+            /**
+             * @description Requested output duration in seconds.
+             * @default 5
+             */
+            duration: number;
+            /**
+             * @description Output video aspect ratio.
+             * @default 16:9
+             * @enum {string}
+             */
+            aspect_ratio: "16:9" | "9:16" | "1:1" | "4:3" | "3:4";
+            /**
+             * @description Output resolution tier. Price scales with it.
+             * @default 720p
+             * @enum {string}
+             */
+            resolution: "720p" | "1080p";
+        };
+        /** @description Image to video only — this model publishes no text-to-video mode, so `images` is required. */
+        HappyHorse11VideoRequest: {
+            /**
+             * @description Must be `happyhorse-1.1`. (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            model: "happyhorse-1.1";
+            /** @description What should happen in the shot — the motion, the expression, the camera. */
+            prompt: string;
+            /** @description Source images as public HTTPS URLs. At least one is required. */
+            images: string[];
+            /**
+             * @description Requested output duration in seconds.
+             * @default 5
+             */
+            duration: number;
+            /**
+             * @description Output video aspect ratio.
+             * @default 16:9
+             * @enum {string}
+             */
+            aspect_ratio: "16:9" | "9:16" | "1:1" | "4:3" | "3:4";
+            /**
+             * @description Output resolution tier. Price scales with it.
+             * @default 720p
+             * @enum {string}
+             */
+            resolution: "720p" | "1080p";
+        };
+        /** @description Text to video, or image to video when `images` carries a first frame. A second image becomes the last frame. Output tops out at 768P — MiniMax H3 renders 2K for less per second. */
+        MinimaxH3MaxVideoRequest: {
+            /**
+             * @description Must be `minimax-h3-max`. (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            model: "minimax-h3-max";
+            /** @description What should happen in the shot — the motion, the expression, the camera. */
+            prompt: string;
+            /** @description Public HTTPS images. One starts the render from a first frame; a second becomes the last frame, in first-to-last order. */
+            images?: string[];
+            /**
+             * @description Requested output duration in seconds. Billed per second at the rate for the chosen resolution. If a duration is unsupported, the API returns `400`.
+             * @default 5
+             */
+            duration: number;
+            /**
+             * @description Output resolution. Upper-case P, and the only two values this model accepts. Price scales with it.
+             * @default 768P
+             * @enum {string}
+             */
+            resolution: "480P" | "768P";
+            /** @description Reuse a seed to re-render the same motion. A random seed is chosen when omitted. */
+            seed?: number;
+        };
+        /** @description H3 Max on a faster stack — the same request contract and the same modes, roughly 2.5x quicker, at half the per-second rate. */
+        MinimaxH3MaxTurboVideoRequest: {
+            /**
+             * @description Must be `minimax-h3-max-turbo`. (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            model: "minimax-h3-max-turbo";
+            /** @description What should happen in the shot — the motion, the expression, the camera. */
+            prompt: string;
+            /** @description Public HTTPS images. One starts the render from a first frame; a second becomes the last frame, in first-to-last order. */
+            images?: string[];
+            /**
+             * @description Requested output duration in seconds. Billed per second at the rate for the chosen resolution. If a duration is unsupported, the API returns `400`.
+             * @default 5
+             */
+            duration: number;
+            /**
+             * @description Output resolution. Upper-case P, and the only two values this model accepts. Price scales with it.
+             * @default 768P
+             * @enum {string}
+             */
+            resolution: "480P" | "768P";
+            /** @description Reuse a seed to re-render the same motion. A random seed is chosen when omitted. */
+            seed?: number;
+        };
         TaskResponse: {
             /** @description Accepted or current BeatAPI task state. */
             data: components["schemas"]["Task"];
@@ -1439,7 +1989,7 @@ export interface components {
             /** @description Compatibility view containing workflow tasks only. Image, video, and Effect tasks are reported under by_capability instead. */
             by_workflow: {
                 /** @enum {string} */
-                workflow: "music-video" | "ecommerce-video";
+                workflow: "music-video" | "ecommerce-video" | "video-analysis";
                 tasks: number;
                 /** Format: double */
                 credits_settled: number;
@@ -1482,6 +2032,26 @@ export interface components {
         };
         UsageResponse: {
             data: components["schemas"]["Usage"];
+        };
+        VideoAnalysisTaskCreateRequest: {
+            /**
+             * Format: uri
+             * @description BeatAPI-hosted MP4 or MOV input URL returned by POST /v1/files for the current account. Maximum verified duration is 600 seconds.
+             */
+            video_url: string;
+            /** @description Analysis instruction. Ask for timestamped output when temporal precision matters. */
+            prompt: string;
+            /**
+             * @description Standard is the default low-cost route; deep uses the higher-reasoning route.
+             * @default standard
+             * @enum {string}
+             */
+            analysis_depth: "standard" | "deep";
+            /**
+             * @description Requested answer budget. Provider-reported output usage can include hidden reasoning tokens above this value; BeatAPI records the variance for audit and settles actual reported usage within the task reservation.
+             * @default 2048
+             */
+            max_output_tokens: number;
         };
         MusicVideoTaskCreateRequest: components["schemas"]["StandardMusicVideoTaskCreateRequest"] | components["schemas"]["PremiumMusicVideoTaskCreateRequest"];
         StandardMusicVideoTaskCreateRequest: {
@@ -1860,6 +2430,371 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    listTextModels: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OpenAI-compatible model list */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "object": "list",
+                     *       "data": [
+                     *         {
+                     *           "id": "gpt-5.6-sol",
+                     *           "object": "model",
+                     *           "created": 1788220800,
+                     *           "owned_by": "beatapi"
+                     *         },
+                     *         {
+                     *           "id": "gpt-5.6-terra",
+                     *           "object": "model",
+                     *           "created": 1788220800,
+                     *           "owned_by": "beatapi"
+                     *         },
+                     *         {
+                     *           "id": "gpt-5.6-luna",
+                     *           "object": "model",
+                     *           "created": 1788220800,
+                     *           "owned_by": "beatapi"
+                     *         },
+                     *         {
+                     *           "id": "claude-fable-5-1",
+                     *           "object": "model",
+                     *           "created": 1788220800,
+                     *           "owned_by": "beatapi"
+                     *         }
+                     *       ]
+                     *     }
+                     */
+                    "application/json": components["schemas"]["TextModelList"];
+                };
+            };
+            /** @description Invalid or missing BeatAPI API key */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Text API is not enabled for this environment */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Request rate limit exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createTextResponse: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "model": "gpt-5.6-sol",
+                 *       "input": "Design a resilient webhook retry strategy for a payments API.",
+                 *       "reasoning": {
+                 *         "effort": "medium"
+                 *       },
+                 *       "stream": true
+                 *     }
+                 */
+                "application/json": components["schemas"]["TextPassthroughRequest"];
+            };
+        };
+        responses: {
+            /** @description OpenAI-compatible JSON response or server-sent event stream */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TextPassthroughResponse"];
+                    "text/event-stream": string;
+                };
+            };
+            /** @description Invalid or missing BeatAPI API key */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Insufficient BeatAPI USD balance */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Rate limit or settlement backlog */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Text gateway could not complete the request */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Text service is temporarily unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createChatCompletion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "model": "gpt-5.6-terra",
+                 *       "messages": [
+                 *         {
+                 *           "role": "user",
+                 *           "content": "Summarize the attached product requirements into an implementation plan."
+                 *         }
+                 *       ],
+                 *       "stream": true
+                 *     }
+                 */
+                "application/json": components["schemas"]["TextPassthroughRequest"];
+            };
+        };
+        responses: {
+            /** @description OpenAI-compatible JSON response or server-sent event stream */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TextPassthroughResponse"];
+                    "text/event-stream": string;
+                };
+            };
+            /** @description Invalid or missing BeatAPI API key */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Insufficient BeatAPI USD balance */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Rate limit or settlement backlog */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Text gateway could not complete the request */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Text service is temporarily unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createMessage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "model": "gpt-5.6-luna",
+                 *       "max_tokens": 1024,
+                 *       "messages": [
+                 *         {
+                 *           "role": "user",
+                 *           "content": "Classify this support request and return JSON."
+                 *         }
+                 *       ]
+                 *     }
+                 */
+                "application/json": components["schemas"]["TextPassthroughRequest"];
+            };
+        };
+        responses: {
+            /** @description Anthropic-compatible JSON response or server-sent event stream */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TextPassthroughResponse"];
+                    "text/event-stream": string;
+                };
+            };
+            /** @description Invalid or missing BeatAPI API key */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Insufficient BeatAPI USD balance */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Rate limit or settlement backlog */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Text gateway could not complete the request */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Text service is temporarily unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    generateGeminiCompatibleContent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                model: components["schemas"]["TextModelId"];
+                action: "generateContent" | "streamGenerateContent";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "contents": [
+                 *         {
+                 *           "role": "user",
+                 *           "parts": [
+                 *             {
+                 *               "text": "Explain this architecture decision in three concise bullets."
+                 *             }
+                 *           ]
+                 *         }
+                 *       ]
+                 *     }
+                 */
+                "application/json": {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        responses: {
+            /** @description Gemini-compatible JSON response or server-sent event stream */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TextPassthroughResponse"];
+                    "text/event-stream": string;
+                };
+            };
+            /** @description Invalid or missing BeatAPI API key */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Insufficient BeatAPI USD balance */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Rate limit or settlement backlog */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Text gateway could not complete the request */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Text service is temporarily unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     listWorkflows: {
         parameters: {
             query?: never;
@@ -1891,6 +2826,12 @@ export interface operations {
                      *             "object": "workflow",
                      *             "name": "Ecommerce Video API",
                      *             "description": "Generate product ad videos from product images and a short creative brief."
+                     *           },
+                     *           {
+                     *             "id": "video-analysis",
+                     *             "object": "workflow",
+                     *             "name": "Video Analysis API",
+                     *             "description": "Analyze an uploaded video with timestamp-aware multimodal reasoning."
                      *           }
                      *         ]
                      *       }
@@ -2176,6 +3117,85 @@ export interface operations {
             };
             /** @description Effect or requested version is unavailable. */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Idempotency key conflicts with another request body. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            429: components["responses"]["RateLimited"];
+        };
+    };
+    createVideoAnalysisTask: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Optional retry key. Reusing the same key with the same normalized request returns the accepted task.
+                 * @example video-analysis-cus_123-01
+                 */
+                "Idempotency-Key"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VideoAnalysisTaskCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Analysis accepted for asynchronous processing. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "data": {
+                     *         "id": "task_va8K2qA",
+                     *         "object": "task",
+                     *         "task_kind": "workflow",
+                     *         "capability_id": "video-analysis",
+                     *         "capability_version": 1,
+                     *         "workflow": "video-analysis",
+                     *         "status": "queued",
+                     *         "stage": "queued",
+                     *         "created_at": 1787385600,
+                     *         "updated_at": 1787385600,
+                     *         "completed_at": null,
+                     *         "output": null,
+                     *         "usage": {
+                     *           "credits_reserved": 0.01,
+                     *           "credits_charged": 0.01,
+                     *           "billable_duration_seconds": 60,
+                     *           "credits_settled": 0,
+                     *           "credits_refunded": 0
+                     *         },
+                     *         "request_id": "req_va123",
+                     *         "error_code": null,
+                     *         "error_message": null
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["TaskResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            /** @description Account balance is not sufficient for the reserved analysis envelope. */
+            402: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2921,7 +3941,10 @@ export interface operations {
     uploadFile: {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                /** @description Exact request-body length in bytes. For multipart uploads this includes multipart framing overhead. */
+                "Content-Length": number;
+            };
             path?: never;
             cookie?: never;
         };
@@ -2940,6 +3963,8 @@ export interface operations {
                 "audio/wav": string;
                 "audio/aac": string;
                 "audio/mp4": string;
+                "video/mp4": string;
+                "video/quicktime": string;
                 "application/x-subrip": string;
             };
         };

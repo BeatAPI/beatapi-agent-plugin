@@ -1,6 +1,4 @@
 {
-  "model": "nano-banana",
-  "prompt": "Replace with the requested image generation instructions.",
-  "aspect_ratio": "1:1",
-  "output_format": "png"
+  "model": "replace-with-discovered-model-id",
+  "prompt": "Replace with the requested image generation instructions."
 }

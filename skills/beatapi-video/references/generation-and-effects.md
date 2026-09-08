@@ -1,37 +1,23 @@
 # Generation models and Effects
 
-Use stable BeatAPI aliases only. Discover the current catalog before choosing a
-model; never expose or invent internal provider routes.
+Use stable BeatAPI model IDs only. Discover the current catalog before choosing
+a model; never expose or invent internal provider routes.
 
-## Image models
+## Image and video models
 
-| Alias | Public modes | Important request rule |
-| --- | --- | --- |
-| `nano-banana` | text | Prompt only; no reference images |
-| `nano-banana-pro` | text, reference | Up to 8 public HTTPS images |
-| `gpt-image-2` | text, reference | Up to 16 public HTTPS images; aspect-ratio availability depends on resolution |
-| `seedream-5-pro` | text, reference | Up to 10 public HTTPS images |
+Call `beatapi_list_generation_models` or `GET /v1/media/models` before
+generation. Choose only an ID from the current response, then consult
+`beatapi.openapi.yaml` for the exact request variant and validation rules.
 
-## Video models
+Model availability evolves independently from this Skill. Do not hardcode a
+closed model list in agent logic, and do not substitute a similar model without
+the user's approval. Preserve the selected model ID exactly.
 
-| Alias | Public modes | Important request rule |
-| --- | --- | --- |
-| `minimax-h3` | text, frames, reference | 4-15 seconds; frame inputs cannot be mixed with reference inputs |
-| `seedance-2` | text, frames, reference | 4-15 seconds; supports generated audio |
-| `seedance-2-fast` | text, frames, reference | 4-15 seconds; 480p or 720p |
-| `seedance-2-mini` | text, frames, reference | Low-cost 4-15 second route; generated audio is unavailable |
-| `veo-3.1` | text, frames, reference | Fixed 8 seconds; frame and reference-image inputs cannot be mixed |
-| `seedance-2.5` | text, frames, reference | 4-30 seconds; current output is 720p |
-| `kling-3` | text, frames, reference | 3-15 seconds; multi-shot mode requires `multi_prompt` |
-
-Run `beatapi models list` or call `beatapi_list_generation_models` before
-generation. Then copy `assets/image-generation.json` or
-`assets/video-generation.json`, select exactly one model alias, and retain only
-fields in that model's schema in `beatapi.openapi.yaml`.
-
-Do not combine `images` with `reference_*` fields when the selected video model
-forbids it. Audio references require at least one reference image or video for
-the Seedance routes. Reject unknown fields instead of forwarding them.
+Copy `assets/image-generation.json` or `assets/video-generation.json` to a
+temporary request. Add only fields accepted by that model's schema. In
+particular, do not combine frame images with reference inputs when the selected
+model forbids it, and satisfy any audio-reference dependency before creating a
+paid task.
 
 ## Effects
 
