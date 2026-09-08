@@ -2,11 +2,16 @@
 
 ## Unreleased
 
-- Added MCP tools for generation-model discovery, image generation, video
-  generation, and versioned Effect discovery and task creation.
+- Added MCP tools for text-model discovery, non-streaming text responses,
+  generation-model discovery, generic image/video generation, versioned
+  Effects, and Video Analysis.
 - Synchronized the canonical Skill, typed client runtime, and OpenAPI snapshot
-  with four image models, seven video models, shared task fields, and
-  USD-denominated usage semantics.
+  with the complete 29-operation contract and USD-denominated usage semantics.
+- Replaced hardcoded image/video model unions with a stable `model` plus
+  `parameters` interface so newly published model IDs do not require a plugin
+  release.
+- Added host Configure guidance for `BEATAPI_API_KEY` and kept credentials out
+  of tool arguments and model-visible results.
 
 ## 0.2.0 - 2026-07-31
 

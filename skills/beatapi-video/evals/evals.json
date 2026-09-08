@@ -125,11 +125,11 @@
     },
     {
       "id": 10,
-      "prompt": "Use Nano Banana Pro and these two reference images to generate a 16:9 campaign still. Go ahead and create it.",
-      "expected_output": "Should discover the current generation catalog, select the stable nano-banana-pro alias, validate the two HTTPS or uploaded image references against that model's request schema, check USD balance and concurrency, create one image task, poll it, and report only hosted image output.",
+      "prompt": "Use a current BeatAPI image model and these two reference images to generate a 16:9 campaign still. Go ahead and create it.",
+      "expected_output": "Should discover the current generation catalog, let the selected model contract determine the accepted fields, upload or validate both references, check USD balance and concurrency, create one image task, poll it, and report only hosted image output.",
       "assertions": [
         "Discovers generation models",
-        "Uses the stable nano-banana-pro alias",
+        "Uses a current returned model ID",
         "Validates model-specific image inputs",
         "Treats generation as a paid mutation",
         "Requires hosted image output before success"
@@ -138,12 +138,12 @@
     },
     {
       "id": 11,
-      "prompt": "Make a 10-second Seedance 2.5 video using these image and audio references.",
-      "expected_output": "Should select seedance-2.5 only after catalog discovery, inspect and upload local references, avoid mixing frame images with reference fields, ensure audio has an accompanying reference image or video, validate the 10-second 720p contract, create one video task, and wait for hosted output.",
+      "prompt": "Use a current BeatAPI video model to make a 10-second video using these image and audio references.",
+      "expected_output": "Should discover the current catalog, select only a returned model ID, inspect and upload local references, validate the exact model request variant and reference dependencies, create one video task, and wait for hosted output.",
       "assertions": [
-        "Uses the stable seedance-2.5 alias",
+        "Discovers generation models",
+        "Uses a current returned model ID",
         "Validates reference input combinations",
-        "Keeps duration within the model contract",
         "Does not expose internal provider routing",
         "Waits for hosted video output"
       ],
@@ -161,6 +161,32 @@
         "Does not infer internal templates or providers"
       ],
       "files": ["portrait.png"]
+    },
+    {
+      "id": 13,
+      "prompt": "I explicitly asked for BeatAPI text. List the available text models and use one to summarize this launch note.",
+      "expected_output": "Should verify authentication, list BeatAPI text models, choose only a returned ID, call the non-streaming BeatAPI Responses surface, and return the provider-compatible response. It must not activate for ordinary writing requests without explicit BeatAPI intent.",
+      "assertions": [
+        "Requires explicit BeatAPI text intent",
+        "Lists authenticated text models",
+        "Uses only a returned model ID",
+        "Forces stream false",
+        "Does not expose the API key"
+      ],
+      "files": []
+    },
+    {
+      "id": 14,
+      "prompt": "Analyze this product-demo video with BeatAPI and identify the key scenes and usability issues.",
+      "expected_output": "Should upload a local video or validate its public HTTPS URL, check setup and usage, create a Video Analysis task with the user's prompt, wait on the shared task endpoint, and report analysis only from a succeeded task.",
+      "assertions": [
+        "Chooses BeatAPI Video Analysis",
+        "Uses a public HTTPS video URL",
+        "Treats analysis as a paid mutation",
+        "Waits for the shared task result",
+        "Preserves request and error IDs on failure"
+      ],
+      "files": ["product-demo.mp4"]
     }
   ]
 }
