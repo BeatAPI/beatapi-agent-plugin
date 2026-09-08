@@ -1,8 +1,9 @@
-# BeatAPI Codex Plugin
+# BeatAPI Agent Plugin
 
-Create and manage BeatAPI image, video, Effect, workflow, and Realtime APIs
-directly from Codex. The plugin combines the canonical `beatapi-video` Skill
-with a bundled local MCP server and uses the same API key as the BeatAPI CLI.
+Create and manage BeatAPI text, image, video, Effect, workflow, analysis, and
+Realtime APIs from Codex, Cursor, and Grok Bot. One repository ships
+host-specific manifests over the same canonical `beatapi-video` Skill, locked
+OpenAPI contract, typed client, and bundled local MCP server.
 
 ## What users can do
 
@@ -21,15 +22,35 @@ with a bundled local MCP server and uses the same API key as the BeatAPI CLI.
 - poll asynchronous tasks until a terminal or actionable state;
 - create, inspect, update, and delete webhook endpoints.
 
-The plugin does not put API keys in prompts or MCP tool arguments. It first uses
-`BEATAPI_API_KEY`; otherwise its local MCP server invokes the installed
-`beatapi` CLI, which reads the key saved by `beatapi auth login` from the
-operating-system credential manager.
+The plugin does not put API keys in prompts or MCP tool arguments. Cursor and
+Grok Bot users bind `BEATAPI_API_KEY` through Plugins → Configure. Codex can use
+the process environment or the installed `beatapi` CLI, which reads the key
+saved by `beatapi auth login` from the operating-system credential manager.
 
 Realtime creation stores the one-time browser `client_secret` in a local file
 with mode `0600`; it is never returned to the model. The agent manages only the
 server-side session. Camera permission, WebRTC, and rendering remain in the
 browser SDK.
+
+## Install for Cursor or Grok Bot
+
+Prerequisites:
+
+- Node.js 20.19+ or 22.12+;
+- a BeatAPI account and API key from
+  [Dashboard → API Keys](https://beatapi.io/dashboard/apikeys).
+
+For local testing, link this checkout as a local Cursor plugin, reload Cursor,
+then open Customize → Plugins and configure `BEATAPI_API_KEY`:
+
+```bash
+ln -s /absolute/path/to/beatapi-agent-plugin \
+  ~/.cursor/plugins/local/beatapi-agent-plugin
+```
+
+The repository is ready for Cursor Marketplace review, but marketplace
+submission is a separate owner action. Never paste the API key into a prompt,
+commit it, or add it to `mcp.json`.
 
 ## Install for Codex desktop
 
@@ -45,7 +66,7 @@ From a source checkout:
 npm ci
 npm run verify
 codex plugin marketplace add ./dist/marketplace
-codex plugin add beatapi-codex-plugin@beatapi-local
+codex plugin add beatapi-agent-plugin@beatapi-local
 ```
 
 Then authenticate once in a terminal:
@@ -71,7 +92,10 @@ Restart the desktop app after installation. Useful starter requests include:
 ## Package layout
 
 - `.codex-plugin/plugin.json` — Codex presentation and component manifest.
+- `.cursor-plugin/plugin.json` — Cursor/Grok Bot presentation, components, and
+  variable declarations.
 - `.mcp.json` — local stdio MCP configuration.
+- `mcp.json` — Cursor/Grok Bot stdio configuration with variable placeholders.
 - `mcp/server.mjs` — dependency-free bundled MCP runtime.
 - `skills/beatapi-video/` — synchronized canonical BeatAPI Skill.
 - `contract/` — locked BeatAPI OpenAPI snapshot.
@@ -87,11 +111,14 @@ npm run runtime:sync
 
 ## Publishing paths
 
-This repository supports two distinct release paths:
+This repository supports three distinct release paths:
 
 1. **Codex desktop/local marketplace.** `npm run marketplace:build` creates a
    complete installable marketplace and ZIP under `dist/`.
-2. **Public OpenAI Plugin Directory.** `npm run submission:build` creates a
+2. **Cursor Marketplace / Grok Bot.** `.cursor-plugin/plugin.json` and the root
+   `mcp.json` form the reviewable plugin. Submit the public repository URL only
+   after owner review at <https://cursor.com/marketplace/publish>.
+3. **Public OpenAI Plugin Directory.** `npm run submission:build` creates a
    Skills-only ZIP that can be uploaded to the official submission portal.
    This artifact contains the Skill but not the local MCP server, so users need
    the globally installed `beatapi` CLI unless their host supplies compatible

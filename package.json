@@ -1,8 +1,8 @@
 {
-  "name": "beatapi-codex-plugin",
-  "version": "0.2.0",
+  "name": "beatapi-agent-plugin",
+  "version": "0.3.0",
   "private": true,
-  "description": "Codex plugin for BeatAPI image, video, Effect, workflow, and Realtime APIs.",
+  "description": "Cross-host agent plugin for BeatAPI text, media, workflow, and realtime APIs.",
   "type": "module",
   "scripts": {
     "build": "node scripts/build-mcp.mjs",
@@ -14,10 +14,11 @@
     "skill:sync": "node scripts/sync-skill.mjs --write",
     "skill:check": "node scripts/sync-skill.mjs --check",
     "marketplace:build": "node scripts/build-marketplace.mjs",
+    "validate:cursor": "node scripts/validate-cursor.mjs",
     "typecheck": "tsc --noEmit",
     "test": "node --import tsx --test test/*.test.ts",
     "submission:build": "node scripts/build-submission.mjs",
-    "verify": "npm run contract:check && npm run skill:check && npm run runtime:check && npm run typecheck && npm test && npm run build:check && npm run marketplace:build && npm run submission:build"
+    "verify": "npm run contract:check && npm run skill:check && npm run runtime:check && npm run validate:cursor && npm run typecheck && npm test && npm run build:check && npm run marketplace:build && npm run submission:build"
   },
   "engines": {
     "node": ">=20.19.0 <21 || >=22.12.0"

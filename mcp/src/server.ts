@@ -9,7 +9,7 @@ import { toolDefinitions } from "./tools.js";
 export function createServer(executor = new BeatAPIExecutor()): McpServer {
   const server = new McpServer({
     name: "beatapi",
-    version: "0.1.0",
+    version: "0.3.0",
   });
 
   for (const tool of toolDefinitions) {

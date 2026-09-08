@@ -24,7 +24,7 @@ writeFileSync(
     "Submission type: Skills only",
     "Upload: beatapi-video-skill.zip",
     "Portal: https://platform.openai.com/plugins",
-    "The local Codex plugin also includes a stdio MCP server. Public MCP review",
+    "The cross-host agent plugin also includes a local stdio MCP server. Public MCP review",
     "requires a separately deployed HTTPS MCP server and is intentionally not",
     "claimed by this Skills-only package.",
     "",

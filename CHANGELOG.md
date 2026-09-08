@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Renamed the repository and package to `beatapi-agent-plugin`.
+- Added a Cursor/Grok Bot manifest and root `mcp.json` alongside the existing
+  Codex manifest, sharing the same Skill and MCP runtime.
+- Declared `BEATAPI_API_KEY` as a required Cursor plugin variable so users bind
+  it through Plugins → Configure instead of chat or repository files.
 - Added MCP tools for text-model discovery, non-streaming text responses,
   generation-model discovery, generic image/video generation, versioned
   Effects, and Video Analysis.

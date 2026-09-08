@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "beatapi": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "./mcp/server.mjs"
+      ],
+      "cwd": "${PLUGIN_ROOT}",
+      "env": {
+        "BEATAPI_API_KEY": "${BEATAPI_API_KEY}",
+        "BEATAPI_BASE_URL": "${BEATAPI_BASE_URL}"
+      }
+    }
+  }
+}

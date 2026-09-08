@@ -10,6 +10,7 @@
         "BEATAPI_API_KEY",
         "BEATAPI_BASE_URL",
         "BEATAPI_CLI_PATH",
+        "BEATAPI_DATA_HOME",
         "CODEX_HOME"
       ],
       "tool_timeout_sec": 900
