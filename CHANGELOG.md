@@ -11,12 +11,17 @@
   generation-model discovery, generic image/video generation, versioned
   Effects, and Video Analysis.
 - Synchronized the canonical Skill, typed client runtime, and OpenAPI snapshot
-  with the complete 29-operation contract and USD-denominated usage semantics.
+  with the complete 30-operation contract and USD-denominated usage semantics.
 - Replaced hardcoded image/video model unions with a stable `model` plus
   `parameters` interface so newly published model IDs do not require a plugin
   release.
 - Added host Configure guidance for `BEATAPI_API_KEY` and kept credentials out
   of tool arguments and model-visible results.
+- Confined uploads to configured trusted roots, rejected credential material in
+  open-ended parameters, validated custom API origins, reduced CLI environment
+  inheritance, and pinned release workflow dependencies.
+- Removed Realtime-session and webhook creation from agent-visible surfaces
+  until hosts provide an opaque secret broker.
 
 ## 0.2.0 - 2026-07-31
 

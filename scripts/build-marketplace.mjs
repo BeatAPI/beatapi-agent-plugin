@@ -20,6 +20,7 @@ const archive = resolve(dist, "beatapi-agent-plugin-marketplace.zip");
 const requiredPaths = [
   ".codex-plugin",
   ".cursor-plugin",
+  ".grok-plugin",
   ".mcp.json",
   "mcp.json",
   "assets",

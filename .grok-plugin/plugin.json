@@ -1,0 +1,22 @@
+{
+  "name": "beatapi-agent-plugin",
+  "version": "0.3.0",
+  "description": "Use BeatAPI text, image, video, Effects, workflows, and analysis APIs from Grok Build.",
+  "author": {
+    "name": "BeatAPI",
+    "url": "https://beatapi.io"
+  },
+  "homepage": "https://beatapi.io",
+  "repository": "https://github.com/BeatAPI/beatapi-agent-plugin",
+  "license": "MIT",
+  "keywords": [
+    "beatapi",
+    "beatapi agent toolkit",
+    "beatapi video",
+    "beatapi image",
+    "beatapi workflows"
+  ],
+  "logo": "./assets/logo.png",
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json"
+}

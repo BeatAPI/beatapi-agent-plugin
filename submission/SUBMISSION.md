@@ -20,8 +20,9 @@ Cursor, and Grok Bot installation and must not be entered as a public MCP URL.
 
 The Skills-only artifact does not include an MCP server. Its public listing and
 review instructions must state that users need Node.js 20.19+ / 22.12+, the
-globally installed `beatapi` CLI, and one-time `beatapi auth login`, unless the
-host already supplies compatible BeatAPI MCP tools.
+globally installed `beatapi@0.2.0` CLI, one-time `beatapi auth login`, and an
+absolute `BEATAPI_CLI_PATH`, unless the host already supplies compatible
+BeatAPI MCP tools.
 
 ## Listing
 
@@ -32,8 +33,9 @@ host already supplies compatible BeatAPI MCP tools.
 - Short description: **Manage async and realtime AI video APIs**
 - Long description: **Use one BeatAPI account and API key to prepare media,
   check credits and concurrency, create asynchronous Music Video and Ecommerce
-  Video tasks, manage Realtime Video sessions and storyboard shots, monitor
-  progress, retrieve hosted results, and configure webhooks. This Skills-only release uses compatible
+  Video tasks, manage storyboard shots, monitor progress, retrieve hosted
+  results, and inspect or close existing Realtime sessions and webhooks. This
+  Skills-only release uses compatible
   BeatAPI MCP tools supplied by the host or the official BeatAPI CLI installed
   on the user's machine.**
 - Website: <https://beatapi.io>
@@ -51,8 +53,7 @@ host already supplies compatible BeatAPI MCP tools.
 1. Use `$beatapi-video` to create a music video from my images and audio.
 2. Use `$beatapi-video` to turn my product images into a vertical ad.
 3. Use `$beatapi-video` to check my credits and task status.
-4. Use `$beatapi-video` to create a 60-second Realtime Video session for
-   `https://app.example.com`.
+4. Use `$beatapi-video` to inspect and close my existing Realtime Video session.
 
 ## Required owner-side portal steps
 
@@ -63,7 +64,8 @@ These are account and legal actions, not repository work:
 3. Complete individual or business identity verification as **BeatAPI**.
 4. Confirm country availability and policy attestations.
 5. Upload the Skill ZIP, logo, test cases, and release notes.
-6. Include the standalone CLI prerequisite in the reviewer setup instructions.
+6. Include the pinned standalone CLI prerequisite and the one-time-secret
+   creation exclusion in the reviewer setup instructions.
 7. Submit for review and respond to reviewer feedback.
 
 ## Future MCP-backed public submission
