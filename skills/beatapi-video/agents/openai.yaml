@@ -1,7 +1,7 @@
 interface:
-  display_name: "BeatAPI Video"
-  short_description: "Manage BeatAPI async and realtime video APIs"
-  default_prompt: "Use $beatapi-video to create an AI video and return the verified hosted result."
+  display_name: "BeatAPI Agent Toolkit"
+  short_description: "Manage BeatAPI text, media, workflow, and realtime APIs"
+  default_prompt: "Use $beatapi-video to choose the current BeatAPI capability, execute the requested work, and return a verified result."
 
 policy:
   allow_implicit_invocation: true

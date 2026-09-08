@@ -62,6 +62,50 @@ const httpsOrigin = z.string().url().superRefine((value, context) => {
     });
   }
 });
+const generationImages = (max: number) => z.array(httpsUrl).min(1).max(max);
+const generationParameters = z
+  .record(z.string(), z.unknown())
+  .refine((value) => !("model" in value), {
+    message: "model is a top-level field and must not appear in parameters.",
+  });
+const generationTaskInput = z
+  .object({
+    model: id.describe(
+      "A current public model ID returned by beatapi_list_generation_models.",
+    ),
+    parameters: generationParameters.describe(
+      "Model-specific request fields from the bundled OpenAPI contract, excluding model.",
+    ),
+  })
+  .strict();
+
+const textRequest = z
+  .record(z.string(), z.unknown())
+  .superRefine((value, context) => {
+    for (const reserved of ["model", "stream"]) {
+      if (reserved in value) {
+        context.addIssue({
+          code: "custom",
+          path: [reserved],
+          message: `${reserved} is managed by the plugin and must not appear in request.`,
+        });
+      }
+    }
+  });
+
+const effectTaskInput = z.object({
+  effect_id: id,
+  effect_version: z.number().int().min(1).optional(),
+  images: generationImages(7),
+  options: z.object({
+    aspect_ratio: z.string().optional(),
+    resolution: z.string().optional(),
+    duration: z.number().int().optional(),
+    bgm: z.boolean().optional(),
+    seed: z.number().int().optional(),
+  }).strict().optional(),
+  idempotency_key: z.string().trim().min(1).max(255),
+}).strict();
 
 const musicVideoInput = z
   .object({
@@ -134,6 +178,92 @@ export const toolDefinitions: readonly ToolDefinition[] = [
     description: "List public BeatAPI launch workflows. Authentication is not required.",
     inputSchema: z.object({}).strict(),
     annotations: readOnly,
+  },
+  {
+    name: "beatapi_list_text_models",
+    title: "List BeatAPI text models",
+    description:
+      "List the text model IDs currently enabled for this authenticated BeatAPI account.",
+    inputSchema: z.object({}).strict(),
+    annotations: readOnly,
+  },
+  {
+    name: "beatapi_create_text_response",
+    title: "Create BeatAPI text response",
+    description:
+      "Paid mutation: create one non-streaming text response. Call only when the user explicitly asks for BeatAPI text generation or names a BeatAPI text model.",
+    inputSchema: z
+      .object({
+        model: id.describe(
+          "A current text model ID returned by beatapi_list_text_models.",
+        ),
+        request: textRequest.describe(
+          "OpenAI Responses-compatible fields excluding model and stream.",
+        ),
+      })
+      .strict(),
+    annotations: write,
+  },
+  {
+    name: "beatapi_list_generation_models",
+    title: "List BeatAPI generation models",
+    description: "List stable public BeatAPI image and video model aliases and input modes. Authentication is not required.",
+    inputSchema: z.object({}).strict(),
+    annotations: readOnly,
+  },
+  {
+    name: "beatapi_create_image",
+    title: "Create BeatAPI image",
+    description: "Paid mutation: create one asynchronous image task with a stable BeatAPI model alias.",
+    inputSchema: generationTaskInput,
+    annotations: write,
+  },
+  {
+    name: "beatapi_create_video",
+    title: "Create BeatAPI video",
+    description: "Paid mutation: create one asynchronous model-specific video task.",
+    inputSchema: generationTaskInput,
+    annotations: write,
+  },
+  {
+    name: "beatapi_list_effects",
+    title: "List BeatAPI Effects",
+    description: "List active published Effects. Authentication is not required.",
+    inputSchema: z.object({
+      output_type: z.enum(["image", "video"]).optional(),
+      category: z.string().trim().min(1).optional(),
+    }).strict(),
+    annotations: readOnly,
+  },
+  {
+    name: "beatapi_get_effect",
+    title: "Get BeatAPI Effect",
+    description: "Read one published Effect and its current immutable input contract. Authentication is not required.",
+    inputSchema: z.object({ effect_id: id }).strict(),
+    annotations: readOnly,
+  },
+  {
+    name: "beatapi_create_effect",
+    title: "Create BeatAPI Effect task",
+    description: "Paid mutation: create one versioned Effect task after validating inputs against the published Effect contract.",
+    inputSchema: effectTaskInput,
+    annotations: write,
+  },
+  {
+    name: "beatapi_analyze_video",
+    title: "Analyze video with BeatAPI",
+    description:
+      "Paid mutation: create one asynchronous Video Analysis task for a BeatAPI-hosted MP4 or MOV.",
+    inputSchema: z
+      .object({
+        video_url: httpsUrl,
+        prompt: z.string().trim().min(1).max(12000),
+        analysis_depth: z.enum(["standard", "deep"]).optional(),
+        max_output_tokens: z.number().int().min(256).max(8192).optional(),
+        idempotency_key: z.string().trim().min(1).max(255).optional(),
+      })
+      .strict(),
+    annotations: write,
   },
   {
     name: "beatapi_get_usage",

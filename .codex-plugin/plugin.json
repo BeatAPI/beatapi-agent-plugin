@@ -1,7 +1,7 @@
 {
   "name": "beatapi-codex-plugin",
   "version": "0.2.0",
-  "description": "Create and manage BeatAPI async and realtime AI video APIs from Codex.",
+  "description": "Create and manage BeatAPI image, video, Effect, workflow, and realtime APIs from Codex.",
   "author": {
     "name": "BeatAPI",
     "email": "support@beatapi.io",
@@ -15,14 +15,17 @@
     "ai-video",
     "music-video",
     "ecommerce-video",
-    "realtime-video"
+    "realtime-video",
+    "image-generation",
+    "video-generation",
+    "ai-effects"
   ],
   "skills": "./skills/",
   "mcpServers": "./.mcp.json",
   "interface": {
     "displayName": "BeatAPI",
-    "shortDescription": "Manage async and realtime AI video APIs",
-    "longDescription": "Use one existing BeatAPI account and API key from Codex to upload inputs, check credits and concurrency, create asynchronous Music Video and Ecommerce Video tasks, manage short-lived Realtime Video sessions, monitor progress, retrieve hosted results, and configure webhooks.",
+    "shortDescription": "Manage generation, Effects, workflows, and realtime",
+    "longDescription": "Use one existing BeatAPI account and API key from Codex to discover public models and Effects, upload inputs, check USD balance and concurrency, create image, video, Effect, Music Video, and Ecommerce Video tasks, manage short-lived Realtime Video sessions, monitor progress, retrieve hosted results, and configure webhooks.",
     "developerName": "BeatAPI",
     "category": "Creativity",
     "capabilities": [
@@ -35,8 +38,11 @@
     "defaultPrompt": [
       "Use $beatapi-video to create a music video from my images and audio.",
       "Use $beatapi-video to turn my product images into a vertical ad.",
+      "Use $beatapi-video to generate an image with Nano Banana Pro.",
+      "Use $beatapi-video to create a Seedance 2.5 video.",
+      "Use $beatapi-video to list current Effects for this portrait.",
       "Use $beatapi-video to create a 60-second realtime session for my web app.",
-      "Use $beatapi-video to check my credits and task status."
+      "Use $beatapi-video to check my USD balance and task status."
     ],
     "brandColor": "#2563FF",
     "composerIcon": "./assets/icon.png",
