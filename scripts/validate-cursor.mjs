@@ -83,7 +83,10 @@ if (
 }
 if (
   server.env?.BEATAPI_API_KEY !== "${BEATAPI_API_KEY}" ||
-  server.env?.BEATAPI_BASE_URL !== "${BEATAPI_BASE_URL}"
+  server.env?.BEATAPI_BASE_URL !== "${BEATAPI_BASE_URL}" ||
+  server.env?.BEATAPI_TRUST_CUSTOM_BASE_URL !==
+    "${BEATAPI_TRUST_CUSTOM_BASE_URL}" ||
+  server.env?.BEATAPI_UPLOAD_ROOTS !== "${BEATAPI_UPLOAD_ROOTS}"
 ) {
   fail("Cursor MCP environment must use declared variable placeholders.");
 }

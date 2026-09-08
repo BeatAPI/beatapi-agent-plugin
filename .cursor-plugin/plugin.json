@@ -1,7 +1,7 @@
 {
   "name": "beatapi-agent-plugin",
   "version": "0.3.0",
-  "description": "Use BeatAPI text, image, video, Effects, workflows, analysis, and realtime APIs from Cursor and Grok Bot.",
+  "description": "Use BeatAPI text, image, video, Effects, workflows, and analysis APIs from Cursor and Grok Bot.",
   "author": {
     "name": "BeatAPI",
     "email": "support@beatapi.io"
@@ -34,6 +34,16 @@
         "title": "BeatAPI base URL",
         "description": "Optional API base URL override. Keep the default unless BeatAPI support gave you another endpoint.",
         "default": "https://api.beatapi.io"
+      },
+      "BEATAPI_TRUST_CUSTOM_BASE_URL": {
+        "type": "string",
+        "title": "Trust custom API origin",
+        "description": "Leave empty for the official API. Set exactly 1 only when BeatAPI support gave you the custom HTTPS origin above."
+      },
+      "BEATAPI_UPLOAD_ROOTS": {
+        "type": "string",
+        "title": "Approved upload directories",
+        "description": "Optional path-list of directories containing files you explicitly want the plugin to upload. Use colon separators on macOS/Linux and semicolons on Windows."
       }
     },
     "required": [

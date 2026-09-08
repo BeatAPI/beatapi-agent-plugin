@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createServer } from "node:http";
-import { mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { mkdtemp, rm, symlink, truncate, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import test from "node:test";
@@ -267,9 +267,6 @@ test("bundled stdio MCP serves BeatAPI tools and protects credentials", async ()
   );
   const address = httpServer.address();
   assert.ok(address && typeof address === "object");
-  const codeHome = await mkdtemp(resolve(tmpdir(), "beatapi-mcp-test-"));
-  const secretPath = resolve(codeHome, "beatapi", "secrets", "webhook.secret");
-
   const transport = new StdioClientTransport({
     command: process.execPath,
     args: [resolve(root, "mcp/server.mjs")],
@@ -278,7 +275,7 @@ test("bundled stdio MCP serves BeatAPI tools and protects credentials", async ()
       ...process.env,
       BEATAPI_API_KEY: "test_plugin_api_key",
       BEATAPI_BASE_URL: `http://127.0.0.1:${address.port}`,
-      CODEX_HOME: codeHome,
+      BEATAPI_ALLOW_INSECURE_LOCALHOST: "1",
     } as Record<string, string>,
     stderr: "pipe",
   });
@@ -287,7 +284,7 @@ test("bundled stdio MCP serves BeatAPI tools and protects credentials", async ()
   try {
     await client.connect(transport);
     const listed = await client.listTools();
-    assert.equal(listed.tools.length, 28);
+    assert.equal(listed.tools.length, 26);
     assert.ok(listed.tools.every((tool) => !/api[_-]?key/i.test(JSON.stringify(tool.inputSchema))));
 
     const workflows = await client.callTool({
@@ -356,6 +353,22 @@ test("bundled stdio MCP serves BeatAPI tools and protects credentials", async ()
         aspect_ratio: "16:9",
       },
     );
+    const imageRequestCount = requests.filter(
+      (request) => request.path === "/v1/images/tasks",
+    ).length;
+    const credentialInput = await client.callTool({
+      name: "beatapi_create_image",
+      arguments: {
+        model: "future-image-model",
+        parameters: { metadata: { api_key: "sk_must_not_leave_the_host" } },
+      },
+    });
+    assert.equal(credentialInput.isError, true);
+    assert.doesNotMatch(JSON.stringify(credentialInput), /sk_must_not_leave/);
+    assert.equal(
+      requests.filter((request) => request.path === "/v1/images/tasks").length,
+      imageRequestCount,
+    );
 
     const effects = await client.callTool({
       name: "beatapi_list_effects",
@@ -418,37 +431,6 @@ test("bundled stdio MCP serves BeatAPI tools and protects credentials", async ()
       "task_test",
     );
 
-    const realtimeSecretPath = resolve(
-      codeHome,
-      "beatapi",
-      "secrets",
-      "realtime.secret",
-    );
-    const realtimeSession = await client.callTool({
-      name: "beatapi_create_realtime_session",
-      arguments: {
-        max_duration_seconds: 60,
-        allowed_origins: ["https://app.example.com"],
-        idempotency_key: "rt_mcp_test",
-        client_secret_file_name: "realtime.secret",
-      },
-    });
-    const realtimeSerialized = JSON.stringify(realtimeSession);
-    assert.doesNotMatch(realtimeSerialized, /brt_secret_must_never/);
-    assert.equal(
-      (
-        realtimeSession.structuredContent as {
-          result: { client_secret_file: string };
-        }
-      ).result.client_secret_file,
-      realtimeSecretPath,
-    );
-    assert.equal(
-      (await readFile(realtimeSecretPath, "utf8")).trim(),
-      "brt_secret_must_never_reach_the_model",
-    );
-    assert.equal((await stat(realtimeSecretPath)).mode & 0o777, 0o600);
-
     const currentRealtimeSession = await client.callTool({
       name: "beatapi_get_realtime_session",
       arguments: { session_id: "brt_test" },
@@ -473,45 +455,6 @@ test("bundled stdio MCP serves BeatAPI tools and protects credentials", async ()
         }
       ).result.status,
       "closed",
-    );
-
-    const webhook = await client.callTool({
-      name: "beatapi_create_webhook",
-      arguments: {
-        url: "https://example.com/webhooks/beatapi",
-        events: ["task.succeeded", "task.failed"],
-        secret_file_name: "webhook.secret",
-      },
-    });
-    const serialized = JSON.stringify(webhook);
-    assert.doesNotMatch(serialized, /whsec_this_value/);
-    assert.equal(
-      (webhook.structuredContent as { result: { secret_file: string } }).result
-        .secret_file,
-      secretPath,
-    );
-    assert.equal(
-      (await readFile(secretPath, "utf8")).trim(),
-      "whsec_this_value_must_never_reach_the_model",
-    );
-    assert.equal((await stat(secretPath)).mode & 0o777, 0o600);
-
-    const duplicateSecretFile = await client.callTool({
-      name: "beatapi_create_webhook",
-      arguments: {
-        url: "https://example.com/webhooks/beatapi-second",
-        events: ["task.succeeded"],
-        secret_file_name: "webhook.secret",
-      },
-    });
-    assert.equal(duplicateSecretFile.isError, true);
-    assert.equal(
-      requests.filter(
-        (request) =>
-          request.path === "/v1/webhooks" && request.method === "POST",
-      ).length,
-      1,
-      "an existing secret file must fail before creating another webhook",
     );
 
     const authenticatedRequests = requests.filter(
@@ -550,7 +493,6 @@ test("bundled stdio MCP serves BeatAPI tools and protects credentials", async ()
     await new Promise<void>((resolveClosed, reject) =>
       httpServer.close((error) => (error ? reject(error) : resolveClosed())),
     );
-    await rm(codeHome, { recursive: true, force: true });
   }
 });
 
@@ -563,9 +505,9 @@ test("bundled MCP reuses the API key saved by the BeatAPI CLI", async () => {
       "const args = process.argv.slice(2);",
       "if (args.join(' ') === 'auth status') {",
       "  process.stdout.write('Authenticated via credential-store.\\n');",
-      "  process.stdout.write(JSON.stringify({ object: 'usage', credit_balance: 321, total_tasks: 0, credits_settled: 0, credits_refunded: 0, concurrency: { limit: 1, active: 0 }, by_workflow: [] }));",
+      "  process.stdout.write(JSON.stringify({ object: 'usage', credit_balance: 321, total_tasks: 0, credits_settled: 0, credits_refunded: 0, concurrency: { limit: 1, active: 0 }, by_workflow: [], saw_unrelated_secret: Boolean(process.env.TEST_UNRELATED_SECRET) }));",
       "} else if (args.join(' ') === 'usage') {",
-      "  process.stdout.write(JSON.stringify({ object: 'usage', credit_balance: 321, total_tasks: 0, credits_settled: 0, credits_refunded: 0, concurrency: { limit: 1, active: 0 }, by_workflow: [] }));",
+      "  process.stdout.write(JSON.stringify({ object: 'usage', credit_balance: 321, total_tasks: 0, credits_settled: 0, credits_refunded: 0, concurrency: { limit: 1, active: 0 }, by_workflow: [], saw_unrelated_secret: Boolean(process.env.TEST_UNRELATED_SECRET) }));",
       "} else {",
       "  process.stderr.write(`unexpected fake CLI args: ${args.join(' ')}\\n`);",
       "  process.exitCode = 2;",
@@ -581,6 +523,7 @@ test("bundled MCP reuses the API key saved by the BeatAPI CLI", async () => {
   ) as Record<string, string>;
   environment.BEATAPI_CLI_PATH = fakeCli;
   environment.CODEX_HOME = directory;
+  environment.TEST_UNRELATED_SECRET = "must_not_reach_the_cli";
 
   const transport = new StdioClientTransport({
     command: process.execPath,
@@ -601,13 +544,14 @@ test("bundled MCP reuses the API key saved by the BeatAPI CLI", async () => {
         result: {
           configured: boolean;
           auth_source: string;
-          usage: { credit_balance: number };
+          usage: { credit_balance: number; saw_unrelated_secret: boolean };
         };
       }
     ).result;
     assert.equal(setupResult.configured, true);
     assert.equal(setupResult.auth_source, "beatapi-cli-keychain");
     assert.equal(setupResult.usage.credit_balance, 321);
+    assert.equal(setupResult.usage.saw_unrelated_secret, false);
 
     const usage = await client.callTool({
       name: "beatapi_get_usage",
@@ -622,6 +566,83 @@ test("bundled MCP reuses the API key saved by the BeatAPI CLI", async () => {
     await client.close().catch(() => undefined);
     await transport.close().catch(() => undefined);
     await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test("video upload preflight follows the public 100 MB contract limit", async () => {
+  const directory = await mkdtemp(resolve(tmpdir(), "beatapi-video-limit-test-"));
+  const videoPath = resolve(directory, "too-large.mp4");
+  await writeFile(videoPath, "");
+  await truncate(videoPath, 100 * 1024 * 1024 + 1);
+
+  const transport = new StdioClientTransport({
+    command: process.execPath,
+    args: [resolve(root, "mcp/server.mjs")],
+    cwd: root,
+    env: {
+      ...process.env,
+      BEATAPI_API_KEY: "test_plugin_api_key",
+      BEATAPI_BASE_URL: "http://127.0.0.1:9",
+      BEATAPI_ALLOW_INSECURE_LOCALHOST: "1",
+      BEATAPI_UPLOAD_ROOTS: directory,
+    } as Record<string, string>,
+    stderr: "pipe",
+  });
+  const client = new Client({ name: "beatapi-video-limit-test", version: "0.1.0" });
+
+  try {
+    await client.connect(transport);
+    const result = await client.callTool({
+      name: "beatapi_upload_file",
+      arguments: { path: videoPath },
+    });
+    assert.equal(result.isError, true);
+    assert.match(JSON.stringify(result), /100 MB/);
+  } finally {
+    await client.close().catch(() => undefined);
+    await transport.close().catch(() => undefined);
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test("upload rejects paths outside configured roots and symlink escapes", async () => {
+  const approved = await mkdtemp(resolve(tmpdir(), "beatapi-approved-root-"));
+  const outside = await mkdtemp(resolve(tmpdir(), "beatapi-outside-root-"));
+  const outsideFile = resolve(outside, "private.png");
+  const linkedFile = resolve(approved, "linked.png");
+  await writeFile(outsideFile, "private");
+  await symlink(outsideFile, linkedFile);
+
+  const transport = new StdioClientTransport({
+    command: process.execPath,
+    args: [resolve(root, "mcp/server.mjs")],
+    cwd: root,
+    env: {
+      ...process.env,
+      BEATAPI_API_KEY: "test_plugin_api_key",
+      BEATAPI_BASE_URL: "http://127.0.0.1:9",
+      BEATAPI_ALLOW_INSECURE_LOCALHOST: "1",
+      BEATAPI_UPLOAD_ROOTS: approved,
+    } as Record<string, string>,
+    stderr: "pipe",
+  });
+  const client = new Client({ name: "beatapi-upload-root-test", version: "0.1.0" });
+
+  try {
+    await client.connect(transport);
+    for (const path of [outsideFile, linkedFile]) {
+      const result = await client.callTool({
+        name: "beatapi_upload_file",
+        arguments: { path },
+      });
+      assert.equal(result.isError, true);
+      assert.match(JSON.stringify(result), /approved upload root|symbolic link/i);
+    }
+  } finally {
+    await client.close().catch(() => undefined);
+    await transport.close().catch(() => undefined);
+    await rm(approved, { recursive: true, force: true });
+    await rm(outside, { recursive: true, force: true });
   }
 });
 
@@ -680,6 +701,42 @@ test("setup reports a missing CLI login as an actionable configuration state", a
     await client.close().catch(() => undefined);
     await transport.close().catch(() => undefined);
     await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test("setup requires an absolute reviewed CLI path for keychain mode", async () => {
+  const environment = Object.fromEntries(
+    Object.entries(process.env).filter(
+      ([key, value]) =>
+        key !== "BEATAPI_API_KEY" && key !== "BEATAPI_CLI_PATH" && value !== undefined,
+    ),
+  ) as Record<string, string>;
+  const transport = new StdioClientTransport({
+    command: process.execPath,
+    args: [resolve(root, "mcp/server.mjs")],
+    cwd: root,
+    env: environment,
+    stderr: "pipe",
+  });
+  const client = new Client({ name: "beatapi-cli-path-test", version: "0.1.0" });
+
+  try {
+    await client.connect(transport);
+    const setup = await client.callTool({
+      name: "beatapi_check_setup",
+      arguments: {},
+    });
+    const result = (
+      setup.structuredContent as {
+        result: { configured: boolean; setup_reason: string; next_step: string };
+      }
+    ).result;
+    assert.equal(result.configured, false);
+    assert.equal(result.setup_reason, "cli_path_required");
+    assert.match(result.next_step, /BEATAPI_CLI_PATH.*absolute/i);
+  } finally {
+    await client.close().catch(() => undefined);
+    await transport.close().catch(() => undefined);
   }
 });
 

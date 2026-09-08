@@ -3874,49 +3874,49 @@ var require_fast_uri = __commonJS({
       schemelessOptions.skipEscape = true;
       return serialize(resolved, schemelessOptions);
     }
-    function resolveComponent(base, relative, options, skipNormalization) {
+    function resolveComponent(base, relative2, options, skipNormalization) {
       const target = {};
       if (!skipNormalization) {
         base = parse3(serialize(base, options), options);
-        relative = parse3(serialize(relative, options), options);
+        relative2 = parse3(serialize(relative2, options), options);
       }
       options = options || {};
-      if (!options.tolerant && relative.scheme) {
-        target.scheme = relative.scheme;
-        target.userinfo = relative.userinfo;
-        target.host = relative.host;
-        target.port = relative.port;
-        target.path = removeDotSegments(relative.path || "");
-        target.query = relative.query;
+      if (!options.tolerant && relative2.scheme) {
+        target.scheme = relative2.scheme;
+        target.userinfo = relative2.userinfo;
+        target.host = relative2.host;
+        target.port = relative2.port;
+        target.path = removeDotSegments(relative2.path || "");
+        target.query = relative2.query;
       } else {
-        if (relative.userinfo !== void 0 || relative.host !== void 0 || relative.port !== void 0) {
-          target.userinfo = relative.userinfo;
-          target.host = relative.host;
-          target.port = relative.port;
-          target.path = removeDotSegments(relative.path || "");
-          target.query = relative.query;
+        if (relative2.userinfo !== void 0 || relative2.host !== void 0 || relative2.port !== void 0) {
+          target.userinfo = relative2.userinfo;
+          target.host = relative2.host;
+          target.port = relative2.port;
+          target.path = removeDotSegments(relative2.path || "");
+          target.query = relative2.query;
         } else {
-          if (!relative.path) {
+          if (!relative2.path) {
             target.path = base.path;
-            if (relative.query !== void 0) {
-              target.query = relative.query;
+            if (relative2.query !== void 0) {
+              target.query = relative2.query;
             } else {
               target.query = base.query;
             }
           } else {
-            if (relative.path[0] === "/") {
-              target.path = removeDotSegments(relative.path);
+            if (relative2.path[0] === "/") {
+              target.path = removeDotSegments(relative2.path);
             } else {
               if ((base.userinfo !== void 0 || base.host !== void 0 || base.port !== void 0) && !base.path) {
-                target.path = "/" + relative.path;
+                target.path = "/" + relative2.path;
               } else if (!base.path) {
-                target.path = relative.path;
+                target.path = relative2.path;
               } else {
-                target.path = base.path.slice(0, base.path.lastIndexOf("/") + 1) + relative.path;
+                target.path = base.path.slice(0, base.path.lastIndexOf("/") + 1) + relative2.path;
               }
               target.path = removeDotSegments(target.path);
             }
-            target.query = relative.query;
+            target.query = relative2.query;
           }
           target.userinfo = base.userinfo;
           target.host = base.host;
@@ -3924,7 +3924,7 @@ var require_fast_uri = __commonJS({
         }
         target.scheme = base.scheme;
       }
-      target.fragment = relative.fragment;
+      target.fragment = relative2.fragment;
       return target;
     }
     function equal(uriA, uriB, options) {
@@ -12445,8 +12445,8 @@ function emoji() {
 }
 var ipv4 = /^(?:(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])$/;
 var ipv6 = /^(([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:))$/;
-var mac = (delimiter) => {
-  const escapedDelim = escapeRegex(delimiter ?? ":");
+var mac = (delimiter2) => {
+  const escapedDelim = escapeRegex(delimiter2 ?? ":");
   return new RegExp(`^(?:[0-9A-F]{2}${escapedDelim}){5}[0-9A-F]{2}$|^(?:[0-9a-f]{2}${escapedDelim}){5}[0-9a-f]{2}$`);
 };
 var cidrv4 = /^((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\/([0-9]|[1-2][0-9]|3[0-2])$/;
@@ -31286,17 +31286,24 @@ var StdioServerTransport = class {
 // mcp/src/executor.ts
 import { execFile } from "node:child_process";
 import {
-  access,
   chmod,
-  mkdir,
+  lstat,
   mkdtemp,
-  readFile,
+  open,
+  realpath,
   rm,
-  stat,
   writeFile
 } from "node:fs/promises";
-import { homedir, tmpdir } from "node:os";
-import { basename, extname, resolve } from "node:path";
+import { tmpdir } from "node:os";
+import {
+  basename,
+  delimiter,
+  extname,
+  isAbsolute,
+  relative,
+  resolve,
+  sep
+} from "node:path";
 import { promisify } from "node:util";
 
 // mcp/vendor/client/errors.ts
@@ -31325,6 +31332,29 @@ var ACTIONABLE_OR_TERMINAL_STATUSES = /* @__PURE__ */ new Set([
   "failed"
 ]);
 var RETRYABLE_STATUS_CODES = /* @__PURE__ */ new Set([429, 500, 502, 503, 504]);
+function validatedBaseUrl(value, options) {
+  let parsed;
+  try {
+    parsed = new URL(value);
+  } catch {
+    throw new TypeError("BeatAPI base URL must be an exact HTTPS origin.");
+  }
+  const isLoopback = ["localhost", "127.0.0.1", "[::1]"].includes(
+    parsed.hostname
+  );
+  const insecureTestOrigin = options.allowInsecureLocalhost === true && isLoopback;
+  if (parsed.protocol !== "https:" && !insecureTestOrigin || parsed.username || parsed.password || parsed.pathname !== "/" || parsed.search || parsed.hash) {
+    throw new TypeError(
+      "BeatAPI base URL must be an exact HTTPS origin without credentials, path, query, or fragment."
+    );
+  }
+  if (parsed.origin !== "https://api.beatapi.io" && !insecureTestOrigin && options.trustCustomBaseUrl !== true) {
+    throw new TypeError(
+      "A custom BeatAPI HTTPS origin requires an explicit trusted operator setting."
+    );
+  }
+  return parsed.origin;
+}
 function assertPositiveInteger(value, label) {
   if (!Number.isInteger(value) || value <= 0) {
     throw new TypeError(`${label} must be a positive integer.`);
@@ -31384,9 +31414,9 @@ var BeatAPIClient = class {
   random;
   constructor(options = {}) {
     this.apiKey = options.apiKey;
-    this.baseUrl = (options.baseUrl || "https://api.beatapi.io").replace(
-      /\/+$/,
-      ""
+    this.baseUrl = validatedBaseUrl(
+      options.baseUrl || "https://api.beatapi.io",
+      options
     );
     const fetchImpl = options.fetch ?? globalThis.fetch;
     if (typeof fetchImpl !== "function") {
@@ -31645,7 +31675,8 @@ var BeatAPIClient = class {
 
 // mcp/src/executor.ts
 var execFileAsync = promisify(execFile);
-var MAX_UPLOAD_BYTES = 50 * 1024 * 1024;
+var MAX_STANDARD_UPLOAD_BYTES = 50 * 1024 * 1024;
+var MAX_VIDEO_UPLOAD_BYTES = 100 * 1024 * 1024;
 var MIME_TYPES = {
   ".aac": "audio/aac",
   ".jpeg": "image/jpeg",
@@ -31659,6 +31690,46 @@ var MIME_TYPES = {
   ".wav": "audio/wav",
   ".webp": "image/webp"
 };
+var FORBIDDEN_CREDENTIAL_KEYS = /* @__PURE__ */ new Set([
+  "apikey",
+  "authorization",
+  "bearer",
+  "clientsecret",
+  "secret",
+  "signingsecret",
+  "webhooksecret",
+  "accesstoken",
+  "refreshtoken"
+]);
+var CREDENTIAL_VALUE_PATTERNS = [
+  /\bsk_[A-Za-z0-9_-]{6,}\b/i,
+  /\bwhsec_[A-Za-z0-9_-]{6,}\b/i,
+  /\bBearer\s+[A-Za-z0-9._~-]{6,}\b/i
+];
+function assertNoCredentialMaterial(value, path = "input") {
+  if (typeof value === "string") {
+    if (CREDENTIAL_VALUE_PATTERNS.some((pattern) => pattern.test(value))) {
+      throw new Error(
+        `Credentials must be configured in the host, never passed through ${path}.`
+      );
+    }
+    return;
+  }
+  if (Array.isArray(value)) {
+    value.forEach(
+      (child, index) => assertNoCredentialMaterial(child, `${path}[${index}]`)
+    );
+    return;
+  }
+  if (!value || typeof value !== "object") return;
+  for (const [key, child] of Object.entries(value)) {
+    const normalized = key.replace(/[^a-z0-9]/gi, "").toLowerCase();
+    if (FORBIDDEN_CREDENTIAL_KEYS.has(normalized)) {
+      throw new Error(`Credential field ${path}.${key} is not accepted.`);
+    }
+    assertNoCredentialMaterial(child, `${path}.${key}`);
+  }
+}
 function stringValue(input, key) {
   const value = input[key];
   if (typeof value !== "string" || !value) throw new TypeError(`${key} is required.`);
@@ -31713,16 +31784,49 @@ function parseCliJson(stdout) {
 }
 function cliCommand(args) {
   const configured = process.env.BEATAPI_CLI_PATH?.trim();
-  if (!configured) return { file: "beatapi", args };
+  if (!configured) {
+    throw new Error(
+      "BEATAPI_CLI_PATH must point to the absolute path of the reviewed BeatAPI CLI."
+    );
+  }
+  if (!isAbsolute(configured)) {
+    throw new Error("BEATAPI_CLI_PATH must be an absolute trusted path.");
+  }
   if (/\.(?:mjs|cjs|js)$/i.test(configured)) {
     return { file: process.execPath, args: [configured, ...args] };
   }
   return { file: configured, args };
 }
+function cliEnvironment() {
+  const allowed = [
+    "PATH",
+    "Path",
+    "HOME",
+    "USERPROFILE",
+    "APPDATA",
+    "LOCALAPPDATA",
+    "XDG_CONFIG_HOME",
+    "XDG_DATA_HOME",
+    "TMPDIR",
+    "TMP",
+    "TEMP",
+    "SystemRoot",
+    "ComSpec",
+    "PATHEXT",
+    "BEATAPI_BASE_URL",
+    "BEATAPI_TRUST_CUSTOM_BASE_URL"
+  ];
+  return Object.fromEntries(
+    allowed.flatMap((key) => {
+      const value = process.env[key];
+      return value === void 0 ? [] : [[key, value]];
+    })
+  );
+}
 async function runCli(args, timeout = 15 * 60 * 1e3) {
   const command = cliCommand(args);
   const result = await execFileAsync(command.file, command.args, {
-    env: process.env,
+    env: cliEnvironment(),
     encoding: "utf8",
     timeout,
     maxBuffer: 8 * 1024 * 1024
@@ -31735,7 +31839,7 @@ function cliErrorText(error51) {
   return [cliError.stderr, cliError.stdout, cliError.message].filter((value) => Boolean(value?.trim())).map((value) => value.trim()).join("\n");
 }
 function isMissingCli(error51) {
-  return error51 instanceof Error && error51.code === "ENOENT";
+  return error51 instanceof Error && (error51.code === "ENOENT" || /BEATAPI_CLI_PATH must point/.test(error51.message));
 }
 function isMissingCliAuthentication(error51) {
   if (!(error51 instanceof Error)) return false;
@@ -31757,77 +31861,81 @@ async function withJsonFile(value, callback) {
     await rm(directory, { recursive: true, force: true });
   }
 }
-async function preflightSecretPath(requested, prefix = "webhook") {
-  const root = resolve(
-    process.env.BEATAPI_DATA_HOME?.trim() || process.env.CODEX_HOME?.trim() || resolve(homedir(), ".beatapi-agent-plugin"),
-    "beatapi/secrets"
-  );
-  const filename = typeof requested === "string" && requested.trim() ? requested.trim() : `${prefix}-${Date.now()}.secret`;
-  if (!/^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/.test(filename)) {
+async function prepareUpload(requestedPath) {
+  const configuredRoots = (process.env.BEATAPI_UPLOAD_ROOTS ?? "").split(delimiter).map((value) => value.trim()).filter(Boolean);
+  if (configuredRoots.length === 0) {
     throw new Error(
-      "secret_file_name must be a simple filename containing only letters, numbers, dot, underscore, or hyphen."
+      "File upload is disabled until BEATAPI_UPLOAD_ROOTS is configured with one or more trusted absolute directories."
     );
   }
-  const path = resolve(root, filename);
-  await mkdir(root, { recursive: true, mode: 448 });
-  try {
-    await access(path);
-    throw new Error(`Secret file already exists: ${path}`);
-  } catch (error51) {
-    if (error51.code !== "ENOENT") throw error51;
+  if (configuredRoots.some((root) => !isAbsolute(root))) {
+    throw new Error("Every BEATAPI_UPLOAD_ROOTS entry must be an absolute path.");
   }
-  return path;
+  const requested = resolve(requestedPath);
+  const requestedInfo = await lstat(requested);
+  if (requestedInfo.isSymbolicLink()) {
+    throw new Error("Symbolic links are not accepted for BeatAPI uploads.");
+  }
+  const canonicalPath = await realpath(requested);
+  const canonicalRoots = await Promise.all(configuredRoots.map((root) => realpath(root)));
+  const approved = canonicalRoots.some((root) => {
+    const child = relative(root, canonicalPath);
+    return child === "" || child !== ".." && !child.startsWith(`..${sep}`) && !isAbsolute(child);
+  });
+  if (!approved) {
+    throw new Error(
+      "The selected file is outside every approved upload root in BEATAPI_UPLOAD_ROOTS."
+    );
+  }
+  const mimeType = MIME_TYPES[extname(canonicalPath).toLowerCase()];
+  if (!mimeType) {
+    throw new Error(
+      `Unsupported file extension: ${extname(canonicalPath) || "(none)"}.`
+    );
+  }
+  const maxUploadBytes = mimeType.startsWith("video/") ? MAX_VIDEO_UPLOAD_BYTES : MAX_STANDARD_UPLOAD_BYTES;
+  const file2 = await open(canonicalPath, "r");
+  try {
+    const info = await file2.stat();
+    if (!info.isFile()) throw new Error(`${canonicalPath} is not a file.`);
+    if (info.size > maxUploadBytes) {
+      throw new Error(
+        `BeatAPI ${mimeType.startsWith("video/") ? "video " : ""}uploads are limited to ${maxUploadBytes / 1024 / 1024} MB.`
+      );
+    }
+    return {
+      bytes: await file2.readFile(),
+      filename: basename(canonicalPath),
+      mimeType
+    };
+  } finally {
+    await file2.close();
+  }
 }
-async function saveRealtimeClientSecret(session, path, rollback) {
-  const secret = session.client_secret;
-  if (typeof secret !== "string" || !secret) {
-    await rollback().catch(() => void 0);
-    throw new Error("BeatAPI did not return a usable Realtime client secret.");
-  }
+async function withPreparedUploadFile(upload, callback) {
+  const directory = await mkdtemp(resolve(tmpdir(), "beatapi-upload-"));
+  await chmod(directory, 448);
+  const path = resolve(directory, upload.filename);
   try {
-    await writeFile(path, `${secret}
-`, { mode: 384, flag: "wx" });
-    await chmod(path, 384);
-  } catch (error51) {
-    await rollback().catch(() => void 0);
-    throw new Error(
-      "Unable to store the one-time Realtime client secret; the session was closed.",
-      { cause: error51 }
-    );
+    await writeFile(path, upload.bytes, { mode: 384, flag: "wx" });
+    return await callback(path);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
   }
-  const clean = sanitize(session);
-  return { ...clean, client_secret_file: path };
-}
-async function saveWebhookSecret(endpoint, path, rollback) {
-  const secret = endpoint.secret;
-  if (typeof secret !== "string" || !secret || secret.includes("masked")) {
-    await rollback().catch(() => void 0);
-    throw new Error("BeatAPI did not return a usable one-time webhook secret.");
-  }
-  try {
-    await writeFile(path, `${secret}
-`, { mode: 384, flag: "wx" });
-    await chmod(path, 384);
-  } catch (error51) {
-    await rollback().catch(() => void 0);
-    throw new Error(
-      "Unable to store the one-time webhook secret; the webhook was rolled back.",
-      { cause: error51 }
-    );
-  }
-  const clean = sanitize(endpoint);
-  return { ...clean, secret_file: path };
 }
 var BeatAPIExecutor = class {
   apiKey = process.env.BEATAPI_API_KEY?.trim();
   direct = new BeatAPIClient({
     apiKey: this.apiKey,
-    baseUrl: process.env.BEATAPI_BASE_URL
+    baseUrl: process.env.BEATAPI_BASE_URL,
+    allowInsecureLocalhost: process.env.BEATAPI_ALLOW_INSECURE_LOCALHOST === "1",
+    trustCustomBaseUrl: process.env.BEATAPI_TRUST_CUSTOM_BASE_URL === "1"
   });
   get usesDirectClient() {
     return Boolean(this.apiKey);
   }
   async execute(name, input) {
+    assertNoCredentialMaterial(input);
     if (name === "beatapi_check_setup") return this.checkSetup();
     if (name === "beatapi_list_workflows") {
       return sanitize(await this.direct.listWorkflows());
@@ -31873,8 +31981,8 @@ var BeatAPIExecutor = class {
         return {
           configured: false,
           auth_source: null,
-          setup_reason: "cli_not_installed",
-          next_step: "Use the plugin Configure action to store BEATAPI_API_KEY, or install the BeatAPI CLI with `npm install --global beatapi` and run `beatapi auth login` in a terminal. Do not paste the API key into chat."
+          setup_reason: "cli_path_required",
+          next_step: "Use the plugin Configure action to store BEATAPI_API_KEY, or install the reviewed CLI with `npm install --global beatapi@0.2.0`, set BEATAPI_CLI_PATH to its absolute executable path, and run `beatapi auth login` in a terminal. Do not paste the API key into chat."
         };
       }
       if (isMissingCliAuthentication(error51)) {
@@ -31933,16 +32041,11 @@ var BeatAPIExecutor = class {
           )
         );
       case "beatapi_upload_file": {
-        const path = resolve(stringValue(input, "path"));
-        const info = await stat(path);
-        if (!info.isFile()) throw new Error(`${path} is not a file.`);
-        if (info.size > MAX_UPLOAD_BYTES) throw new Error("BeatAPI uploads are limited to 50 MB.");
-        const mimeType = MIME_TYPES[extname(path).toLowerCase()];
-        if (!mimeType) throw new Error(`Unsupported file extension: ${extname(path) || "(none)"}.`);
+        const upload = await prepareUpload(stringValue(input, "path"));
         return sanitize(
-          await this.direct.uploadFile(await readFile(path), {
-            filename: basename(path),
-            mimeType,
+          await this.direct.uploadFile(upload.bytes, {
+            filename: upload.filename,
+            mimeType: upload.mimeType,
             purpose: "input"
           })
         );
@@ -31981,25 +32084,6 @@ var BeatAPIExecutor = class {
             input
           )
         );
-      case "beatapi_create_realtime_session": {
-        const secretPath = await preflightSecretPath(
-          input.client_secret_file_name,
-          "realtime"
-        );
-        const session = await this.direct.createRealtimeSession(
-          without(input, [
-            "idempotency_key",
-            "client_secret_file_name"
-          ]),
-          { idempotencyKey: stringValue(input, "idempotency_key") }
-        );
-        const sessionId = String(session.id || "");
-        return saveRealtimeClientSecret(
-          session,
-          secretPath,
-          () => this.direct.closeRealtimeSession(sessionId)
-        );
-      }
       case "beatapi_get_realtime_session":
         return sanitize(
           await this.direct.getRealtimeSession(
@@ -32023,18 +32107,6 @@ var BeatAPIExecutor = class {
         );
       case "beatapi_list_webhooks":
         return sanitize(await this.direct.listWebhooks());
-      case "beatapi_create_webhook": {
-        const secretPath = await preflightSecretPath(input.secret_file_name);
-        const endpoint = await this.direct.createWebhook(
-          without(input, ["secret_file_name"])
-        );
-        const endpointId = String(endpoint.id || "");
-        return saveWebhookSecret(
-          endpoint,
-          secretPath,
-          () => this.direct.deleteWebhook(endpointId)
-        );
-      }
       case "beatapi_get_webhook":
         return sanitize(
           await this.direct.getWebhook(stringValue(input, "webhook_id"))
@@ -32087,9 +32159,14 @@ var BeatAPIExecutor = class {
           ])
         );
         break;
-      case "beatapi_upload_file":
-        result = await runCli(["files", "upload", resolve(stringValue(input, "path"))]);
+      case "beatapi_upload_file": {
+        const upload = await prepareUpload(stringValue(input, "path"));
+        result = await withPreparedUploadFile(
+          upload,
+          (path) => runCli(["files", "upload", path])
+        );
         break;
+      }
       case "beatapi_create_music_video":
         result = await withJsonFile(
           input,
@@ -32133,34 +32210,6 @@ var BeatAPIExecutor = class {
           (path) => runCli(["ecommerce-video", "create", "--file", path])
         );
         break;
-      case "beatapi_create_realtime_session": {
-        const secretPath = await preflightSecretPath(
-          input.client_secret_file_name,
-          "realtime"
-        );
-        const result2 = await runCli([
-          "realtime",
-          "sessions",
-          "create",
-          "--duration",
-          String(input.max_duration_seconds),
-          ...input.allowed_origins.flatMap((origin) => [
-            "--origin",
-            origin
-          ]),
-          ...Object.entries(
-            input.metadata ?? {}
-          ).flatMap(([key, value]) => ["--metadata", `${key}=${value}`]),
-          "--idempotency-key",
-          stringValue(input, "idempotency_key")
-        ]);
-        const sessionId = String(result2.id || "");
-        return saveRealtimeClientSecret(
-          result2,
-          secretPath,
-          () => runCli(["realtime", "sessions", "close", sessionId])
-        );
-      }
       case "beatapi_get_realtime_session":
         result = await runCli([
           "realtime",
@@ -32197,19 +32246,6 @@ var BeatAPIExecutor = class {
       case "beatapi_list_webhooks":
         result = await runCli(["webhooks", "list"]);
         break;
-      case "beatapi_create_webhook": {
-        const secretPath = await preflightSecretPath(input.secret_file_name);
-        const endpoint = await withJsonFile(
-          without(input, ["secret_file_name"]),
-          (path) => runCli(["webhooks", "create", "--file", path])
-        );
-        const endpointId = String(endpoint.id || "");
-        return saveWebhookSecret(
-          endpoint,
-          secretPath,
-          () => runCli(["webhooks", "delete", endpointId])
-        );
-      }
       case "beatapi_get_webhook":
         result = await runCli(["webhooks", "get", stringValue(input, "webhook_id")]);
         break;
@@ -32272,20 +32308,57 @@ var resolution = external_exports.enum(["540p", "720p", "1080p"]);
 var language = external_exports.enum(["en", "zh"]);
 var uri = external_exports.string().url();
 var webhookEvents = external_exports.array(external_exports.enum(["task.succeeded", "task.failed"]));
-var secretFileName = external_exports.string().trim().regex(/^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/).optional();
-var httpsOrigin = external_exports.string().url().superRefine((value, context) => {
-  const parsed = new URL(value);
-  if (parsed.protocol !== "https:" || parsed.pathname !== "/" || parsed.search || parsed.hash || parsed.username || parsed.password) {
-    context.addIssue({
-      code: "custom",
-      message: "An exact HTTPS origin without path, query, or fragment is required."
-    });
+var forbiddenCredentialKeys = /* @__PURE__ */ new Set([
+  "apikey",
+  "authorization",
+  "bearer",
+  "clientsecret",
+  "secret",
+  "signingsecret",
+  "webhooksecret",
+  "accesstoken",
+  "refreshtoken"
+]);
+var credentialValuePatterns = [
+  /\bsk_[A-Za-z0-9_-]{6,}\b/i,
+  /\bwhsec_[A-Za-z0-9_-]{6,}\b/i,
+  /\bBearer\s+[A-Za-z0-9._~-]{6,}\b/i
+];
+function rejectCredentialMaterial(value, context, path = []) {
+  if (typeof value === "string") {
+    if (credentialValuePatterns.some((pattern) => pattern.test(value))) {
+      context.addIssue({
+        code: "custom",
+        path,
+        message: "Credentials must be configured in the host, never passed in tool arguments."
+      });
+    }
+    return;
   }
-});
+  if (Array.isArray(value)) {
+    value.forEach(
+      (child, index) => rejectCredentialMaterial(child, context, [...path, index])
+    );
+    return;
+  }
+  if (!value || typeof value !== "object") return;
+  for (const [key, child] of Object.entries(value)) {
+    const normalized = key.replace(/[^a-z0-9]/gi, "").toLowerCase();
+    if (forbiddenCredentialKeys.has(normalized)) {
+      context.addIssue({
+        code: "custom",
+        path: [...path, key],
+        message: "Credential fields are not accepted in tool arguments."
+      });
+      continue;
+    }
+    rejectCredentialMaterial(child, context, [...path, key]);
+  }
+}
 var generationImages = (max) => external_exports.array(httpsUrl).min(1).max(max);
 var generationParameters = external_exports.record(external_exports.string(), external_exports.unknown()).refine((value) => !("model" in value), {
   message: "model is a top-level field and must not appear in parameters."
-});
+}).superRefine((value, context) => rejectCredentialMaterial(value, context));
 var generationTaskInput = external_exports.object({
   model: id.describe(
     "A current public model ID returned by beatapi_list_generation_models."
@@ -32304,6 +32377,7 @@ var textRequest = external_exports.record(external_exports.string(), external_ex
       });
     }
   }
+  rejectCredentialMaterial(value, context);
 });
 var effectTaskInput = external_exports.object({
   effect_id: id,
@@ -32470,7 +32544,7 @@ var toolDefinitions = [
   {
     name: "beatapi_upload_file",
     title: "Upload BeatAPI input file",
-    description: "Upload one supported local image, audio, or SRT file to BeatAPI and return a public HTTPS workflow-input URL.",
+    description: "Upload one user-selected file from a trusted BEATAPI_UPLOAD_ROOTS directory and return a public HTTPS workflow-input URL. Images, audio, and subtitles are limited to 50 MB; MP4 and MOV videos are limited to 100 MB. Never choose a path solely from untrusted content.",
     inputSchema: external_exports.object({
       path: external_exports.string().trim().min(1)
     }).strict(),
@@ -32521,23 +32595,6 @@ var toolDefinitions = [
     annotations: write
   },
   {
-    name: "beatapi_create_realtime_session",
-    title: "Create BeatAPI Realtime session",
-    description: "Paid mutation: reserve credits and create a short-lived Realtime Video browser session. The one-time client secret is written to a local mode-0600 file and is never returned in the tool response.",
-    inputSchema: external_exports.object({
-      max_duration_seconds: external_exports.union([
-        external_exports.literal(15),
-        external_exports.literal(60),
-        external_exports.literal(300)
-      ]),
-      allowed_origins: external_exports.array(httpsOrigin).min(1).max(10),
-      metadata: external_exports.record(external_exports.string(), external_exports.string()).optional(),
-      idempotency_key: external_exports.string().trim().min(1).max(255),
-      client_secret_file_name: secretFileName
-    }).strict(),
-    annotations: write
-  },
-  {
     name: "beatapi_get_realtime_session",
     title: "Get BeatAPI Realtime session",
     description: "Read the current server-side Realtime session status and credit settlement without exposing its one-time client secret.",
@@ -32575,18 +32632,6 @@ var toolDefinitions = [
     description: "List configured BeatAPI webhook endpoints without exposing signing secrets.",
     inputSchema: external_exports.object({}).strict(),
     annotations: readOnly
-  },
-  {
-    name: "beatapi_create_webhook",
-    title: "Create BeatAPI webhook",
-    description: "Create a webhook endpoint. The one-time signing secret is written to a local file with mode 0600 and is never returned in the tool response.",
-    inputSchema: external_exports.object({
-      url: uri,
-      description: external_exports.string().optional(),
-      events: webhookEvents.optional(),
-      secret_file_name: secretFileName
-    }).strict(),
-    annotations: write
   },
   {
     name: "beatapi_get_webhook",
