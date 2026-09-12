@@ -130,6 +130,8 @@ source for each model's supported fields and constraints.
 
 - discover text models, image/video model aliases, workflows, and published
   Effects;
+- search, inspect, and run provider-neutral Model, Social Data, and Workflow
+  capabilities through the unified capability tools;
 - create non-streaming text responses when the user explicitly requests
   BeatAPI text generation;
 - create image, video, Effect, Video Analysis, Music Video, and Ecommerce Video
@@ -141,6 +143,11 @@ source for each model's supported fields and constraints.
 - poll asynchronous tasks until a terminal or actionable state;
 - inspect USD balance, usage, and active concurrency;
 - inspect, update, and delete existing webhook endpoints.
+
+Social Data uses the same `capabilities_search` → `capabilities_inspect` →
+`capabilities_run` flow as every other capability. Use `data:<action-id>`
+references from the public catalog; provider-native routes and credentials are
+never required.
 
 The MCP server exposes 26 focused tools. Paid mutations are labeled as such;
 read-only and destructive annotations are set independently.

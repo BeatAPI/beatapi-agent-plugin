@@ -23,6 +23,13 @@ short user intent
 
 Search is not a substitute for Inspect. A capability with `validation.state: partial` has documented contract gaps; do not invent missing output fields.
 
+## Social Data
+
+Social Data actions use the same capability surface as Models and Workflows. Search
+for `kind=data`, inspect the returned `data:<action-id>` reference, then run it.
+Read [social-data.md](social-data.md) for action parameters, normalized output,
+errors, and credit behavior.
+
 ## REST example
 
 ```bash
