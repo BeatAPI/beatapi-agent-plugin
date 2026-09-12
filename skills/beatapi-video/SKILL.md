@@ -1,6 +1,6 @@
 ---
 name: beatapi-video
-description: Create, monitor, and troubleshoot BeatAPI text, image, video, Effect, Music Video, Ecommerce Video, Video Analysis, and Realtime tasks through bundled BeatAPI MCP tools when available or the official BeatAPI CLI as a fallback. Use when a user explicitly wants a BeatAPI model or needs to generate media, run a published Effect, analyze video, upload media, inspect tasks, check balance and concurrency, configure webhooks, or diagnose a BeatAPI API error.
+description: Use when a user asks an agent to call BeatAPI Model, Social Data, or Workflow capabilities. Prefer bundled MCP tools when available or the official CLI as a fallback; covers text, image, video, social-data actions, Effects, Music Video, Ecommerce Video, Video Analysis, Realtime sessions, task monitoring, usage, webhooks, and API errors.
 ---
 
 # BeatAPI Agent Toolkit
@@ -16,6 +16,7 @@ For Model, Data, or Workflow work, prefer the three provider-neutral capability 
 Capability references use `model:<id>`, `data:<id>`, and `workflow:<id>`. Do not guess an action or parameter from a name. Inspect first when the contract is unknown. Existing `beatapi_*` tools and CLI commands remain compatible for hosts that have not upgraded.
 
 Read [capabilities.md](references/capabilities.md) for the REST, MCP, CLI, and idempotency examples.
+Read [social-data.md](references/social-data.md) before selecting or running a Social Data action.
 
 Treat the bundled OpenAPI snapshot as the exact API contract.
 
