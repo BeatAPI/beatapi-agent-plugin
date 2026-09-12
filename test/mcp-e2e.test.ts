@@ -284,7 +284,7 @@ test("bundled stdio MCP serves BeatAPI tools and protects credentials", async ()
   try {
     await client.connect(transport);
     const listed = await client.listTools();
-    assert.equal(listed.tools.length, 26);
+    assert.equal(listed.tools.length, 29);
     assert.ok(listed.tools.every((tool) => !/api[_-]?key/i.test(JSON.stringify(tool.inputSchema))));
 
     const workflows = await client.callTool({

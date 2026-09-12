@@ -438,6 +438,24 @@ export class BeatAPIExecutor {
 
   private async executeDirect(name: string, input: Input): Promise<unknown> {
     switch (name) {
+      case "capabilities_search":
+        return sanitize(await this.direct.searchCapabilities({
+          ...(typeof input.query === "string" ? { query: input.query } : {}),
+          ...(typeof input.kind === "string" ? { kind: input.kind as "model" | "data" | "workflow" } : {}),
+          ...(typeof input.platform === "string" ? { platform: input.platform } : {}),
+          ...(typeof input.limit === "number" ? { limit: input.limit } : {}),
+          ...(typeof input.cursor === "string" ? { cursor: input.cursor } : {}),
+        }));
+      case "capabilities_inspect":
+        return sanitize(await this.direct.inspectCapability(stringValue(input, "reference")));
+      case "capabilities_run":
+        return sanitize(await this.direct.runCapability({
+          reference: stringValue(input, "reference"),
+          operation: stringValue(input, "operation") as "start" | "status",
+          ...(input.input && typeof input.input === "object" && !Array.isArray(input.input) ? { input: input.input as Record<string, unknown> } : {}),
+          ...(typeof input.task_id === "string" ? { task_id: input.task_id } : {}),
+          ...(typeof input.idempotency_key === "string" ? { idempotency_key: input.idempotency_key } : {}),
+        }));
       case "beatapi_get_usage":
         return sanitize(await this.direct.getUsage());
       case "beatapi_create_text_response":
@@ -570,6 +588,30 @@ export class BeatAPIExecutor {
   private async executeViaCli(name: string, input: Input): Promise<unknown> {
     let result: unknown;
     switch (name) {
+      case "capabilities_search": {
+        const args = ["capabilities", "search"];
+        if (typeof input.query === "string") args.push("--query", input.query);
+        if (typeof input.kind === "string") args.push("--kind", input.kind);
+        if (typeof input.platform === "string") args.push("--platform", input.platform);
+        if (typeof input.limit === "number") args.push("--limit", String(input.limit));
+        if (typeof input.cursor === "string") args.push("--cursor", input.cursor);
+        result = await runCli(args);
+        break;
+      }
+      case "capabilities_inspect":
+        result = await runCli(["capabilities", "inspect", stringValue(input, "reference")]);
+        break;
+      case "capabilities_run": {
+        const args = ["capabilities", "run", "--reference", stringValue(input, "reference"), "--operation", stringValue(input, "operation")];
+        if (typeof input.task_id === "string") args.push("--task-id", input.task_id);
+        if (typeof input.idempotency_key === "string") args.push("--idempotency-key", input.idempotency_key);
+        if (input.input && typeof input.input === "object" && !Array.isArray(input.input)) {
+          result = await withJsonFile(input.input, (path) => runCli([...args, "--file", path]));
+        } else {
+          result = await runCli(args);
+        }
+        break;
+      }
       case "beatapi_get_usage":
         result = await runCli(["usage"]);
         break;

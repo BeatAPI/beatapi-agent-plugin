@@ -198,6 +198,42 @@ const shotEditInput = z
 
 export const toolDefinitions: readonly ToolDefinition[] = [
   {
+    name: "capabilities_search",
+    title: "Search BeatAPI capabilities",
+    description: "Search provider-neutral Model, Data, and Workflow capabilities without executing a task.",
+    inputSchema: z.object({
+      query: z.string().trim().optional(),
+      kind: z.enum(["model", "data", "workflow"]).optional(),
+      platform: z.string().trim().optional(),
+      limit: z.number().int().min(1).max(50).optional(),
+      cursor: z.string().trim().optional(),
+    }).strict(),
+    annotations: readOnly,
+  },
+  {
+    name: "capabilities_inspect",
+    title: "Inspect BeatAPI capability",
+    description: "Read the complete public input, output, pagination, limits, execution, and validation contract for one capability.",
+    inputSchema: z.object({ reference: id }).strict(),
+    annotations: readOnly,
+  },
+  {
+    name: "capabilities_run",
+    title: "Run BeatAPI capability",
+    description: "Start a selected capability or query an asynchronous task status. Use Inspect before an unfamiliar capability.",
+    inputSchema: z.object({
+      reference: id,
+      operation: z.enum(["start", "status"]),
+      input: z.record(z.string(), z.unknown()).optional(),
+      task_id: id.optional(),
+      idempotency_key: z.string().trim().min(1).max(255).optional(),
+    }).strict().superRefine((value, context) => {
+      if (value.operation === "status" && !value.task_id) context.addIssue({ code: "custom", path: ["task_id"], message: "task_id is required for status." });
+      rejectCredentialMaterial(value.input, context, ["input"]);
+    }),
+    annotations: write,
+  },
+  {
     name: "beatapi_check_setup",
     title: "Check BeatAPI setup",
     description:
