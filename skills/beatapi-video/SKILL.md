@@ -5,6 +5,18 @@ description: Create, monitor, and troubleshoot BeatAPI text, image, video, Effec
 
 # BeatAPI Agent Toolkit
 
+## Use the unified capability surface
+
+For Model, Data, or Workflow work, prefer the three provider-neutral capability tools when the host supplies them:
+
+1. `capabilities_search` — find a small candidate page;
+2. `capabilities_inspect` — read the exact input, output, pagination, limits, execution mode, and validation state;
+3. `capabilities_run` — start the selected capability or query a task with `operation: "status"`.
+
+Capability references use `model:<id>`, `data:<id>`, and `workflow:<id>`. Do not guess an action or parameter from a name. Inspect first when the contract is unknown. Existing `beatapi_*` tools and CLI commands remain compatible for hosts that have not upgraded.
+
+Read [capabilities.md](references/capabilities.md) for the REST, MCP, CLI, and idempotency examples.
+
 Treat the bundled OpenAPI snapshot as the exact API contract.
 
 ## Choose the execution adapter

@@ -9,6 +9,9 @@ import { BeatAPIClient } from "../mcp/vendor/client/index.js";
 const root = resolve(import.meta.dirname, "..");
 
 const expectedToolNames = [
+  "capabilities_search",
+  "capabilities_inspect",
+  "capabilities_run",
   "beatapi_check_setup",
   "beatapi_list_workflows",
   "beatapi_list_text_models",

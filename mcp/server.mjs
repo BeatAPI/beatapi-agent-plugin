@@ -31496,6 +31496,23 @@ var BeatAPIClient = class {
       code: "retry_exhausted"
     });
   }
+  searchCapabilities(input = {}) {
+    return this.request(
+      "/v1/capabilities/search",
+      { method: "POST", body: input }
+    ).then((result) => result.data);
+  }
+  inspectCapability(reference) {
+    return this.request("/v1/capabilities/inspect", {
+      method: "POST",
+      body: { reference }
+    });
+  }
+  runCapability(input) {
+    const path = input.operation === "status" ? "/v1/capabilities/run/status" : "/v1/capabilities/run";
+    const headers = input.idempotency_key ? { "Idempotency-Key": input.idempotency_key } : void 0;
+    return this.request(path, { method: "POST", body: input, headers });
+  }
   listWorkflows() {
     return this.request(
       "/v1/workflows",
@@ -32002,6 +32019,24 @@ var BeatAPIExecutor = class {
   }
   async executeDirect(name, input) {
     switch (name) {
+      case "capabilities_search":
+        return sanitize(await this.direct.searchCapabilities({
+          ...typeof input.query === "string" ? { query: input.query } : {},
+          ...typeof input.kind === "string" ? { kind: input.kind } : {},
+          ...typeof input.platform === "string" ? { platform: input.platform } : {},
+          ...typeof input.limit === "number" ? { limit: input.limit } : {},
+          ...typeof input.cursor === "string" ? { cursor: input.cursor } : {}
+        }));
+      case "capabilities_inspect":
+        return sanitize(await this.direct.inspectCapability(stringValue(input, "reference")));
+      case "capabilities_run":
+        return sanitize(await this.direct.runCapability({
+          reference: stringValue(input, "reference"),
+          operation: stringValue(input, "operation"),
+          ...input.input && typeof input.input === "object" && !Array.isArray(input.input) ? { input: input.input } : {},
+          ...typeof input.task_id === "string" ? { task_id: input.task_id } : {},
+          ...typeof input.idempotency_key === "string" ? { idempotency_key: input.idempotency_key } : {}
+        }));
       case "beatapi_get_usage":
         return sanitize(await this.direct.getUsage());
       case "beatapi_create_text_response":
@@ -32131,6 +32166,30 @@ var BeatAPIExecutor = class {
   async executeViaCli(name, input) {
     let result;
     switch (name) {
+      case "capabilities_search": {
+        const args = ["capabilities", "search"];
+        if (typeof input.query === "string") args.push("--query", input.query);
+        if (typeof input.kind === "string") args.push("--kind", input.kind);
+        if (typeof input.platform === "string") args.push("--platform", input.platform);
+        if (typeof input.limit === "number") args.push("--limit", String(input.limit));
+        if (typeof input.cursor === "string") args.push("--cursor", input.cursor);
+        result = await runCli(args);
+        break;
+      }
+      case "capabilities_inspect":
+        result = await runCli(["capabilities", "inspect", stringValue(input, "reference")]);
+        break;
+      case "capabilities_run": {
+        const args = ["capabilities", "run", "--reference", stringValue(input, "reference"), "--operation", stringValue(input, "operation")];
+        if (typeof input.task_id === "string") args.push("--task-id", input.task_id);
+        if (typeof input.idempotency_key === "string") args.push("--idempotency-key", input.idempotency_key);
+        if (input.input && typeof input.input === "object" && !Array.isArray(input.input)) {
+          result = await withJsonFile(input.input, (path) => runCli([...args, "--file", path]));
+        } else {
+          result = await runCli(args);
+        }
+        break;
+      }
       case "beatapi_get_usage":
         result = await runCli(["usage"]);
         break;
@@ -32441,6 +32500,42 @@ var shotEditInput = external_exports.object({
   }
 });
 var toolDefinitions = [
+  {
+    name: "capabilities_search",
+    title: "Search BeatAPI capabilities",
+    description: "Search provider-neutral Model, Data, and Workflow capabilities without executing a task.",
+    inputSchema: external_exports.object({
+      query: external_exports.string().trim().optional(),
+      kind: external_exports.enum(["model", "data", "workflow"]).optional(),
+      platform: external_exports.string().trim().optional(),
+      limit: external_exports.number().int().min(1).max(50).optional(),
+      cursor: external_exports.string().trim().optional()
+    }).strict(),
+    annotations: readOnly
+  },
+  {
+    name: "capabilities_inspect",
+    title: "Inspect BeatAPI capability",
+    description: "Read the complete public input, output, pagination, limits, execution, and validation contract for one capability.",
+    inputSchema: external_exports.object({ reference: id }).strict(),
+    annotations: readOnly
+  },
+  {
+    name: "capabilities_run",
+    title: "Run BeatAPI capability",
+    description: "Start a selected capability or query an asynchronous task status. Use Inspect before an unfamiliar capability.",
+    inputSchema: external_exports.object({
+      reference: id,
+      operation: external_exports.enum(["start", "status"]),
+      input: external_exports.record(external_exports.string(), external_exports.unknown()).optional(),
+      task_id: id.optional(),
+      idempotency_key: external_exports.string().trim().min(1).max(255).optional()
+    }).strict().superRefine((value, context) => {
+      if (value.operation === "status" && !value.task_id) context.addIssue({ code: "custom", path: ["task_id"], message: "task_id is required for status." });
+      rejectCredentialMaterial(value.input, context, ["input"]);
+    }),
+    annotations: write
+  },
   {
     name: "beatapi_check_setup",
     title: "Check BeatAPI setup",
