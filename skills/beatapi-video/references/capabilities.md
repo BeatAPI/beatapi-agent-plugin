@@ -41,3 +41,17 @@ curl https://api.beatapi.io/v1/capabilities/run \
 ```
 
 Use the same idempotency key only for the same request. Never put an API key in a prompt, URL, source file, or tool argument.
+
+## Optional onboarding status
+
+API users can skip MCP and Skill installation entirely. Agent hosts may use these authenticated endpoints to persist setup state:
+
+```text
+GET/PUT /v1/onboarding/preferences
+POST    /v1/onboarding/keys
+GET     /v1/onboarding/connection-status
+POST    /v1/onboarding/connection-check
+GET     /v1/onboarding/completion-status
+```
+
+Preferences affect recommendations only; they do not grant or remove capability access. Name a key before creating it. The plaintext key is returned once and must remain in the host's secure configuration. A setup flow is complete only after `first_call_succeeded` is true.
