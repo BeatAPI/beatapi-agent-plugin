@@ -1,7 +1,7 @@
 {
   "name": "beatapi-agent-plugin",
   "version": "0.3.0",
-  "description": "Create and manage BeatAPI text, image, video, Effect, workflow, and analysis APIs from Codex.",
+  "description": "Use BeatAPI models, Social Data, Effects, and workflows from Codex.",
   "author": {
     "name": "BeatAPI",
     "email": "support@beatapi.io",
@@ -12,6 +12,8 @@
   "license": "MIT",
   "keywords": [
     "beatapi",
+    "agent-toolkit",
+    "social-data",
     "ai-video",
     "music-video",
     "ecommerce-video",
@@ -26,8 +28,8 @@
   "mcpServers": "./.mcp.json",
   "interface": {
     "displayName": "BeatAPI",
-    "shortDescription": "Manage BeatAPI text, media, and workflows",
-    "longDescription": "Use one existing BeatAPI account and API key from Codex to discover models and Effects, create text responses, upload explicitly approved inputs, check USD balance and concurrency, create image, video, Effect, Video Analysis, Music Video, and Ecommerce Video tasks, monitor progress, retrieve hosted results, and manage existing Realtime sessions and webhooks.",
+    "shortDescription": "Use BeatAPI models, data, and workflows",
+    "longDescription": "Use one existing BeatAPI account and API key from Codex to discover current Model, Social Data, Effect, and Workflow capabilities; create text responses; upload explicitly approved inputs; check USD balance and concurrency; create image, video, Effect, Video Analysis, Music Video, and Ecommerce Video tasks; monitor progress; retrieve hosted results; and manage existing Realtime sessions and webhooks.",
     "developerName": "BeatAPI",
     "category": "Creativity",
     "capabilities": [

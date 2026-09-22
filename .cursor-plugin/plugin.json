@@ -1,7 +1,7 @@
 {
   "name": "beatapi-agent-plugin",
   "version": "0.3.0",
-  "description": "Use BeatAPI text, image, video, Effects, workflows, and analysis APIs from Cursor and Grok Bot.",
+  "description": "Use BeatAPI models, Social Data, Effects, and workflows from Cursor and Grok Bot.",
   "author": {
     "name": "BeatAPI",
     "email": "support@beatapi.io"
@@ -12,6 +12,7 @@
   "keywords": [
     "beatapi",
     "agent-toolkit",
+    "social-data",
     "ai-video",
     "ai-image",
     "text-generation",

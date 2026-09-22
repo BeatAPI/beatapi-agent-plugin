@@ -16,9 +16,15 @@ For a host-independent onboarding prompt, use
 mirrors that setup contract; the detailed installable Skill remains under
 `skills/beatapi-video/`.
 
-A cross-host Agent Toolkit plugin for discovering live BeatAPI models and
-running text, image, video, Effect, analysis, and production workflow
-APIs through one local MCP interface.
+A cross-host Agent Toolkit plugin for discovering live BeatAPI Model, Social
+Data, and Workflow capabilities and running text, image, video, Effect,
+analysis, and production APIs through one local MCP interface.
+
+For hosts that support remote MCP, BeatAPI also provides the stable Hosted MCP
+endpoint `https://beatapi.io/mcp` with three provider-neutral tools:
+`capabilities_search`, `capabilities_inspect`, and `capabilities_run`. The
+bundled local MCP keeps focused workflow, upload, account, and task tools for
+host-native use; both surfaces discover model IDs dynamically.
 
 The repository packages the same canonical `beatapi-video` Skill, bundled MCP
 server, typed client, and locked OpenAPI contract for four agent surfaces:
@@ -82,13 +88,13 @@ grok plugin install .
 The recommended credential path is the operating-system credential manager:
 
 ```bash
-npm install --global beatapi@0.2.0
+npm install --global beatapi@0.3.0
 beatapi auth login
 export BEATAPI_CLI_PATH="$(command -v beatapi)"
 ```
 
-The reviewed npm integrity for `beatapi@0.2.0` is
-`sha512-7a7XF/tCc5u2p/ZnonSkLq1JF4OPpv3yaj7mFqnQcK9/HjOtj5hMny5bax4VcTbjgHRfDc1QlFXSbF3tzIL19Q==`.
+The reviewed npm integrity for `beatapi@0.3.0` is
+`sha512-zqWqP2CSYbbPLdy3qo8umEE4U4YiMgKrtt5pnOw14ErcaMUSTU5cmxvLw02Lkkn+7mS3w+pTvxuAHTFiqAafkA==`.
 
 Alternatively, export the key only in the shell that launches Grok Build:
 
@@ -126,6 +132,11 @@ Model IDs are discovered at runtime rather than hardcoded into the plugin:
 | Effects | Public list and detail endpoints | Versioned Effect task creation |
 | Workflows | Public `GET /v1/workflows` | Music Video, Ecommerce Video, Video Analysis, and Realtime tools |
 
+The provider-neutral capability catalog unifies those surfaces with Social
+Data. As verified on 2026-09-22, full pagination returned 60 Model
+capabilities, 1,000+ Data actions, and three Workflows. These are dated catalog
+observations, not plugin constants; always Search and Inspect again.
+
 The generic image and video tools accept a current model ID plus its
 model-specific `parameters`. New models can therefore appear in discovery
 without requiring a new plugin release. The bundled OpenAPI snapshot remains the
@@ -135,6 +146,8 @@ source for each model's supported fields and constraints.
 
 - discover text models, image/video model aliases, workflows, and published
   Effects;
+- search and inspect Model, Social Data, and Workflow contracts through the
+  Hosted MCP or official CLI when a provider-neutral catalog flow is needed;
 - create non-streaming text responses when the user explicitly requests
   BeatAPI text generation;
 - create image, video, Effect, Video Analysis, Music Video, and Ecommerce Video
@@ -147,8 +160,9 @@ source for each model's supported fields and constraints.
 - inspect USD balance, usage, and active concurrency;
 - inspect, update, and delete existing webhook endpoints.
 
-The MCP server exposes 26 focused tools. Paid mutations are labeled as such;
-read-only and destructive annotations are set independently.
+The bundled local MCP server exposes 26 focused tools. Paid mutations are
+labeled as such; read-only and destructive annotations are set independently.
+This is intentionally distinct from the Hosted MCP's three meta-tools.
 
 Realtime-session and webhook creation return one-time secrets. Those two create
 operations are intentionally not exposed to an agent until a host secret broker
@@ -219,6 +233,11 @@ Do not edit synchronized Skill or client files directly. Refresh them through
    installable marketplace and ZIP under `dist/`.
 4. **OpenAI Plugin Directory:** `npm run submission:build` creates the separate
    Skills-only review artifact. It does not claim a hosted HTTPS MCP server.
+
+For Muse and other remote-MCP hosts, connect to the Hosted MCP endpoint rather
+than installing this local plugin. A runnable Muse setup guide lives in the
+[`beatapi-examples`](https://github.com/BeatAPI/beatapi-examples/tree/main/integrations/muse)
+repository. Documentation does not imply an approved directory listing.
 
 See [submission/SUBMISSION.md](submission/SUBMISSION.md) for the separate public
 directory review boundary.

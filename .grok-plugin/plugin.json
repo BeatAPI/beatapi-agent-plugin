@@ -1,7 +1,7 @@
 {
   "name": "beatapi-agent-plugin",
   "version": "0.3.0",
-  "description": "Use BeatAPI text, image, video, Effects, workflows, and analysis APIs from Grok Build.",
+  "description": "Use BeatAPI models, Social Data, Effects, and workflows from Grok Build.",
   "author": {
     "name": "BeatAPI",
     "url": "https://beatapi.io"
@@ -12,6 +12,7 @@
   "keywords": [
     "beatapi",
     "beatapi agent toolkit",
+    "beatapi social data",
     "beatapi video",
     "beatapi image",
     "beatapi workflows"

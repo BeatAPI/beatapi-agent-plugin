@@ -1,11 +1,27 @@
 ---
 name: beatapi-video
-description: Create, monitor, and troubleshoot BeatAPI text, image, video, Effect, Music Video, Ecommerce Video, Video Analysis, and Realtime tasks through bundled BeatAPI MCP tools when available or the official BeatAPI CLI as a fallback. Use when a user explicitly wants a BeatAPI model or needs to generate media, run a published Effect, analyze video, upload media, inspect tasks, check balance and concurrency, configure webhooks, or diagnose a BeatAPI API error.
+description: Use when a user asks an agent to call BeatAPI Model, Social Data, or Workflow capabilities. Prefer bundled MCP tools when available or the official CLI as a fallback; covers text, image, video, social-data actions, Effects, Music Video, Ecommerce Video, Video Analysis, Realtime sessions, task monitoring, usage, webhooks, and API errors.
 ---
 
 # BeatAPI Agent Toolkit
 
-Treat the bundled OpenAPI snapshot as the exact API contract.
+## Use the unified capability surface
+
+For Model, Data, or Workflow work, prefer the three provider-neutral capability tools when the host supplies them:
+
+1. `capabilities_search` — find a small candidate page;
+2. `capabilities_inspect` — read the exact input, output, pagination, limits, execution mode, and validation state;
+3. `capabilities_run` — start the selected capability or query a task with `operation: "status"`.
+
+Capability references use `model:<id>`, `data:<id>`, and `workflow:<id>`. Do not guess an action or parameter from a name. Inspect first when the contract is unknown. Existing `beatapi_*` tools and CLI commands remain compatible for hosts that have not upgraded.
+
+Read [capabilities.md](references/capabilities.md) for the REST, MCP, CLI, and idempotency examples.
+Read [social-data.md](references/social-data.md) before selecting or running a Social Data action.
+
+Use the bundled OpenAPI as a versioned reference. Current official API contracts
+take precedence if the deployed capability differs. If Inspect returns only
+`input_modes` or an incomplete schema, read the selected capability's documentation
+before constructing input. Never guess missing fields.
 
 ## Choose the execution adapter
 
@@ -16,7 +32,10 @@ for the same operation.
 When BeatAPI MCP tools are unavailable, fall back to the official `beatapi` CLI
 for commands it supports, or use the bundled OpenAPI contract from trusted
 server-side code. The Skills-only distribution requires Node.js 20.19+ or
-22.12+ and the reviewed `npm install --global beatapi@0.2.0` release.
+22.12+. Check `beatapi --version` and `beatapi --help` before selecting commands.
+The 0.2.0 release lacks unified capability commands. The published 0.3.0 CLI
+adds `capabilities search`, `inspect`, `run` and `status`. If those commands are
+absent from installed help, use MCP or REST rather than inventing CLI flags.
 
 ## Protect the account
 
@@ -38,7 +57,11 @@ server-side code. The Skills-only distribution requires Node.js 20.19+ or
 
 ## Establish readiness
 
-1. With MCP, call `beatapi_check_setup`. If configured, use its usage result;
+1. With the remote three-tool MCP, initialize and list tools, then Search and
+   Inspect a real returned reference. The MCP endpoint requires authentication.
+   For REST, validate the key with `GET /v1/usage`; anonymous Search does not
+   prove authentication. Follow <https://beatapi.io/SKILL.md> for setup.
+   With the legacy plugin, call `beatapi_check_setup`. If configured, use its usage result;
    otherwise follow its exact next step.
 2. If the host shows a plugin **Configure** action, store `BEATAPI_API_KEY`
    there. This keeps the secret outside chat and repository
