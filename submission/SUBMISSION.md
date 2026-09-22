@@ -20,7 +20,7 @@ Cursor, and Grok Bot installation and must not be entered as a public MCP URL.
 
 The Skills-only artifact does not include an MCP server. Its public listing and
 review instructions must state that users need Node.js 20.19+ / 22.12+, the
-globally installed `beatapi@0.2.0` CLI, one-time `beatapi auth login`, and an
+globally installed `beatapi@0.3.0` CLI, one-time `beatapi auth login`, and an
 absolute `BEATAPI_CLI_PATH`, unless the host already supplies compatible
 BeatAPI MCP tools.
 
@@ -30,7 +30,7 @@ BeatAPI MCP tools.
 - Submission type: **Skills only**
 - Category: **Creativity**
 - Developer: **BeatAPI**
-- Short description: **Manage async and realtime AI video APIs**
+- Short description: **Use BeatAPI models, Social Data, and workflows**
 - Long description: **Use one BeatAPI account and API key to prepare media,
   check credits and concurrency, create asynchronous Music Video and Ecommerce
   Video tasks, manage storyboard shots, monitor progress, retrieve hosted

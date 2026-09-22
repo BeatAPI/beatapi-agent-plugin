@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Synchronized the locked public OpenAPI contract with current capability,
+  Social Data, onboarding, model, media, Effect, Workflow, and Realtime routes.
+- Distinguished the stable three-tool Hosted MCP from the plugin's 26 focused
+  local MCP tools and documented the current Model/Data/Workflow catalog shape.
+- Updated Skill and CLI references to the published 0.3.0 capability interface.
+
 - Renamed the repository and package to `beatapi-agent-plugin`.
 - Added a Cursor/Grok Bot manifest and root `mcp.json` alongside the existing
   Codex manifest, sharing the same Skill and MCP runtime.

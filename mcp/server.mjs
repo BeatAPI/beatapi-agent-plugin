@@ -31324,6 +31324,11 @@ var BeatAPIError = class extends Error {
   }
 };
 
+// mcp/vendor/client/capabilities.ts
+function assertCapabilityReference(reference) {
+  if (!/^(model|data|workflow):\S+$/.test(reference)) throw new TypeError("Expected a reference returned by Search: model:<id>, data:<id> or workflow:<id>.");
+}
+
 // mcp/vendor/client/client.ts
 var ACTIONABLE_OR_TERMINAL_STATUSES = /* @__PURE__ */ new Set([
   "storyboard_ready",
@@ -31458,6 +31463,7 @@ var BeatAPIClient = class {
         const response = await this.fetchImpl(`${this.baseUrl}${path}`, {
           method,
           headers,
+          ...path.startsWith("/v1/capabilities/") ? { redirect: "error", signal: AbortSignal.timeout(35e3) } : {},
           ...body === void 0 ? {} : { body }
         });
         const payload = await readPayload(response);
@@ -31495,6 +31501,26 @@ var BeatAPIClient = class {
     throw new BeatAPIError("BeatAPI request exhausted its retry budget.", {
       code: "retry_exhausted"
     });
+  }
+  searchCapabilities(input = {}) {
+    if (input.limit !== void 0 && (!Number.isInteger(input.limit) || input.limit < 1 || input.limit > 50)) throw new TypeError("limit must be an integer from 1 to 50.");
+    if (input.kind !== void 0 && !["model", "data", "workflow"].includes(input.kind)) throw new TypeError("Invalid capability kind.");
+    return this.request("/v1/capabilities/search", { method: "POST", body: input, authenticated: false });
+  }
+  inspectCapability(reference) {
+    assertCapabilityReference(reference);
+    return this.request("/v1/capabilities/inspect", { method: "POST", body: { reference }, authenticated: false });
+  }
+  runCapability(reference, input, options) {
+    assertCapabilityReference(reference);
+    if (!input || typeof input !== "object" || Array.isArray(input)) throw new TypeError("input must be a JSON object.");
+    if (!options.idempotencyKey.trim() || options.idempotencyKey.length > 255 || /[\r\n]/.test(options.idempotencyKey)) throw new TypeError("idempotencyKey must contain 1-255 characters without newlines.");
+    return this.request("/v1/capabilities/run", { method: "POST", body: { reference, operation: "start", input, idempotency_key: options.idempotencyKey }, headers: { "idempotency-key": options.idempotencyKey }, retry: options.retry });
+  }
+  getCapabilityStatus(reference, taskId) {
+    assertCapabilityReference(reference);
+    if (!taskId.trim()) throw new TypeError("task_id is required.");
+    return this.request("/v1/capabilities/run", { method: "POST", body: { reference, operation: "status", task_id: taskId }, retry: { maxAttempts: 3 } });
   }
   listWorkflows() {
     return this.request(

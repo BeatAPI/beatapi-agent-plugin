@@ -13,7 +13,7 @@ Unified generation and Effect API update.
   composition, task polling, usage checks, and existing webhook management.
 - Prefers compatible BeatAPI MCP tools supplied by the host and otherwise uses
   the official CLI without placing credentials in conversations.
-- Requires the reviewed globally installed `beatapi@0.2.0` CLI for Skills-only
+- Requires the reviewed globally installed `beatapi@0.3.0` CLI for Skills-only
   hosts that do not supply BeatAPI MCP tools.
 - Matches the current BeatAPI OpenAPI `1.0.0-launch` unified API baseline.
 - Includes model, Effect, workflow, Realtime, security, and recovery review cases.

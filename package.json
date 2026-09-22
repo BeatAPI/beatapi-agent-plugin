@@ -2,7 +2,7 @@
   "name": "beatapi-agent-plugin",
   "version": "0.3.0",
   "private": true,
-  "description": "Cross-host agent plugin for BeatAPI text, media, workflow, and realtime APIs.",
+  "description": "Cross-host Agent Toolkit plugin for BeatAPI models, Social Data, and workflows.",
   "type": "module",
   "scripts": {
     "build": "node scripts/build-mcp.mjs",

@@ -1,6 +1,6 @@
 interface:
   display_name: "BeatAPI Agent Toolkit"
-  short_description: "Manage BeatAPI text, media, workflow, and realtime APIs"
+  short_description: "Use BeatAPI models, Social Data, and workflows"
   default_prompt: "Use $beatapi-video to choose the current BeatAPI capability, execute the requested work, and return a verified result."
 
 policy:

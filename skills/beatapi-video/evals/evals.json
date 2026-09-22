@@ -187,6 +187,19 @@
         "Preserves request and error IDs on failure"
       ],
       "files": ["product-demo.mp4"]
+    },
+    {
+      "id": 15,
+      "prompt": "Connect to BeatAPI through Muse, show me a few current Twitter search capabilities, and explain their inputs. Do not run a paid call.",
+      "expected_output": "Should use the configured Hosted MCP connection, verify the three BeatAPI tools, Search Data with platform twitter, Inspect actual returned references, and stop before capabilities_run start. It must keep the API key in Muse's credential surface and distinguish connection, discovery, and paid execution.",
+      "assertions": [
+        "Uses capabilities_search and capabilities_inspect",
+        "Uses only actual returned Data references",
+        "Does not start a paid capability",
+        "Keeps the API key outside the conversation",
+        "Distinguishes a working connection from completed execution"
+      ],
+      "files": []
     }
   ]
 }
