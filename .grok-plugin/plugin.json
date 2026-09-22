@@ -1,7 +1,7 @@
 {
   "name": "beatapi-agent-plugin",
   "version": "0.3.0",
-  "description": "Use BeatAPI models, Social Data, Effects, and workflows from Grok Build.",
+  "description": "Route Model, Data, Tool, and Workspace capabilities through BeatAPI from Grok Build.",
   "author": {
     "name": "BeatAPI",
     "url": "https://beatapi.io"

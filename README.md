@@ -1,30 +1,47 @@
 <p align="center">
-  <img src="assets/readme/cover.svg" alt="BeatAPI Agent Plugin connects Codex, Cursor, Grok Bot, and Grok Build to BeatAPI text, image, video, and workflow APIs" width="100%" />
+  <img src="assets/readme/cover.svg" alt="BeatAPI Agent Plugin — connect Agent hosts to Model, Data, Tool, and Workspace capabilities" width="100%" />
 </p>
 
 <p align="center">
+  <a href="https://beatapi.io/"><strong>Explore BeatAPI</strong></a> ·
+  <a href="https://beatapi.io/dashboard/apikeys">Create an API key</a> ·
+  <a href="https://docs.beatapi.io/">Docs</a> ·
   <a href="#quick-start">Quick start</a> ·
-  <a href="#model-coverage">Model coverage</a> ·
   <a href="#api-key-and-secret-safety">Security</a> ·
   <a href="#verification">Verification</a>
 </p>
 
 # BeatAPI Agent Plugin
 
-For a host-independent onboarding prompt, use
-`set up https://beatapi.io/SKILL.md`. The repository root [`SKILL.md`](SKILL.md)
-mirrors that setup contract; the detailed installable Skill remains under
-`skills/beatapi-video/`.
+BeatAPI is the **Agent Router for Everything**: one route to Model, Data, Tool,
+and Workspace capabilities. This plugin connects Codex, Cursor, Grok Bot, and
+Grok Build to BeatAPI through a bundled Skill, local MCP server, typed client,
+and locked public contract.
 
-A cross-host Agent Toolkit plugin for discovering live BeatAPI Model, Social
-Data, and Workflow capabilities and running text, image, video, Effect,
-analysis, and production APIs through one local MCP interface.
+For host-independent onboarding, give an Agent this instruction:
+
+```text
+set up https://beatapi.io/SKILL.md
+```
+
+The repository root [`SKILL.md`](SKILL.md) mirrors that setup contract; the
+detailed installable Skill remains under `skills/beatapi-video/`.
 
 For hosts that support remote MCP, BeatAPI also provides the stable Hosted MCP
 endpoint `https://beatapi.io/mcp` with three provider-neutral tools:
 `capabilities_search`, `capabilities_inspect`, and `capabilities_run`. The
 bundled local MCP keeps focused workflow, upload, account, and task tools for
 host-native use; both surfaces discover model IDs dynamically.
+
+## How it routes
+
+```text
+Codex · Cursor · Grok -> Skill + local MCP -> BeatAPI -> Model · Data · Tool · Workspace
+```
+
+The plugin exposes only capabilities supported by its current public contract
+and the live catalog. Tool and Workspace coverage expands through reviewed
+interfaces and integrations rather than README-only claims.
 
 The repository packages the same canonical `beatapi-video` Skill, bundled MCP
 server, typed client, and locked OpenAPI contract for four agent surfaces:
@@ -264,3 +281,7 @@ before opening a pull request.
 ## License
 
 MIT
+
+<p align="center">
+  Built by <a href="https://beatapi.io/"><strong>BeatAPI</strong></a> — Agent Router for Everything.
+</p>
