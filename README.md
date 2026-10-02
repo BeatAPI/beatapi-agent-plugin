@@ -13,7 +13,7 @@
 
 # BeatAPI Agent Plugin
 
-BeatAPI is the **Agent Router for Everything**: one route to Model, Data, Tool,
+BeatAPI is the **professional capability layer for any agent**: one route to Model, Data, Tool,
 and Workspace capabilities. This plugin connects Codex, Cursor, Grok Bot, and
 Grok Build to BeatAPI through a bundled Skill, local MCP server, typed client,
 and locked public contract.
@@ -36,7 +36,7 @@ host-native use; both surfaces discover model IDs dynamically.
 ## How it routes
 
 ```text
-Codex · Cursor · Grok -> Skill + local MCP -> BeatAPI -> Model · Data · Tool · Workspace
+Codex · Cursor · Grok -> Skill + local MCP -> BeatAPI -> Models · Social Data · SEO Data · Web Search · Workflows
 ```
 
 The plugin exposes only capabilities supported by its current public contract
@@ -283,5 +283,18 @@ before opening a pull request.
 MIT
 
 <p align="center">
-  Built by <a href="https://beatapi.io/"><strong>BeatAPI</strong></a> — Agent Router for Everything.
+  Built by <a href="https://beatapi.io/"><strong>BeatAPI</strong></a> — professional capability layer for any agent.
 </p>
+
+## Unified capability and Web tools (0.4.0)
+
+The bundled local MCP now exposes `capabilities_search`, `capabilities_inspect`,
+`capabilities_run`, `web_search`, `web_read`, `web_map`, and `web_research`, matching
+remote MCP at `https://beatapi.io/mcp`. Existing `beatapi_*` tools remain available.
+Search/Inspect require no key. Run and Web calls use host-configured credentials
+or the CLI credential store (requires CLI 0.4.0). Never pass a key in tool arguments.
+
+Search supports compact/full views and function grouping. Run supports start,
+status and result, plus preview, fields and max_items. A stored result is free to
+read within one hour. Research may return a task; poll instead of starting again.
+Models and prices come from live discovery; no list of new model IDs is embedded.

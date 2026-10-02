@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.0 — 2026-10-02
+
+- Add unified capability and four Web MCP tools; synchronize current Skill/client runtime and OpenAPI; preserve research polling and protect credential arguments.
+
+
 ## Unreleased
 
 - Synchronized the locked public OpenAPI contract with current capability,

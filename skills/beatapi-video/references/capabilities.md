@@ -20,7 +20,7 @@ short user intent
   → capabilities_run(reference, operation=status, task_id=...)
 ```
 
-Search is not a substitute for Inspect. A capability with `validation.state: partial` has documented contract gaps; do not invent missing output fields.
+Search is not a substitute for Inspect. Every response carries `next`, the exact call to make next; copy it. `readiness` is `ready` (input, output and price published), `runnable` (runs, output shape unpublished) or `listed` (cannot run through Run). Do not invent missing output fields.
 
 ## Social Data
 
@@ -35,7 +35,7 @@ errors, and credit behavior.
 curl https://api.beatapi.io/v1/capabilities/search \
   -H "Authorization: Bearer $BEATAPI_API_KEY" \
   -H 'Content-Type: application/json' \
-  -d '{"query":"search","kind":"data","platform":"xiaohongshu","limit":5}'
+  -d '{"query":"小红书 搜索笔记"}'
 ```
 
 Select an actual reference from `data.data`, then inspect it. Construct the Run
@@ -44,9 +44,9 @@ all search actions accept the same parameters. Status uses the same
 `POST /v1/capabilities/run` endpoint with `operation: "status"`, `reference`,
 and the returned `task_id`; the API origin has no separate `/run/status` route.
 
-Some Inspect responses contain only `input_modes` or omit the full input schema.
-Read the selected capability's current official API documentation before running;
-if its execution mapping remains unclear, report the gap instead of guessing.
+Text models and the JEV decision model run through the same Run call
+(`input.input` for text, `input.state` + `input.questions` for JEV). A `listed`
+capability says in `next` why it cannot run; report that instead of guessing.
 See <https://beatapi.io/SKILL.md> for setup, a runnable read-only discovery example,
 and error recovery. Anonymous discovery does not validate an API key; use
 authenticated `/v1/usage` or the authenticated MCP connection.

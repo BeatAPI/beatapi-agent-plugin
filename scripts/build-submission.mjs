@@ -1,11 +1,5 @@
 import { execFileSync } from "node:child_process";
-import {
-  cpSync,
-  existsSync,
-  mkdirSync,
-  rmSync,
-  writeFileSync,
-} from "node:fs";
+import { cpSync, existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -29,12 +23,13 @@ writeFileSync(
     "claimed by this Skills-only package.",
     "",
     "Standalone prerequisite: install Node.js 20.19+ or 22.12+, then run",
-    "`npm install --global beatapi@0.2.0`, `beatapi auth login`, and an absolute",
+    "`npm install --global beatapi@0.4.0`, `beatapi auth login`, and an absolute",
     "`BEATAPI_CLI_PATH`, unless the host",
     "already supplies compatible BeatAPI MCP tools.",
     "",
   ].join("\n"),
 );
-if (!existsSync(stage)) throw new Error("Submission staging directory is missing.");
+if (!existsSync(stage))
+  throw new Error("Submission staging directory is missing.");
 execFileSync("zip", ["-X", "-q", "-r", zip, "beatapi-video"], { cwd: dist });
 console.log(`Built official Skills-only submission package: ${zip}`);
