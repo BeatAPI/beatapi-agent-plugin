@@ -30,6 +30,68 @@ test("bundled stdio MCP serves BeatAPI tools and protects credentials", async ()
     });
 
     response.setHeader("content-type", "application/json");
+    if (request.url?.startsWith("/v1/capabilities/")) {
+      assert.equal(request.headers["x-beat-client"], "mcp");
+      const body = JSON.parse(Buffer.concat(chunks).toString("utf8"));
+      if (request.url.endsWith("/search")) {
+        assert.equal(request.headers.authorization, undefined);
+        response.end(
+          JSON.stringify({
+            data: {
+              object: "capability.list",
+              data: [{ reference: "data:web.search", readiness: "ready" }],
+              next_cursor: "",
+              next: {
+                action: "inspect",
+                call: {
+                  tool: "capabilities_inspect",
+                  arguments: { reference: "data:web.search" },
+                },
+              },
+            },
+          }),
+        );
+      } else if (request.url.endsWith("/inspect")) {
+        response.end(
+          JSON.stringify({
+            data: {
+              reference: body.reference,
+              readiness: "ready",
+              execution: { mode: "sync", status_supported: false },
+            },
+          }),
+        );
+      } else {
+        response.end(
+          JSON.stringify(
+            body.operation === "status"
+              ? {
+                  data: { id: body.task_id, status: "processing" },
+                  next: { action: "status" },
+                }
+              : {
+                  object: "web.search",
+                  items: [{ title: "Evidence" }],
+                  request_id: "req_fixture",
+                  next: { action: "result" },
+                },
+          ),
+        );
+      }
+      return;
+    }
+    if (request.url?.startsWith("/v1/web/")) {
+      assert.equal(request.headers.authorization, "Bearer test_plugin_api_key");
+      response.statusCode = request.url.endsWith("/research") ? 202 : 200;
+      response.end(
+        JSON.stringify(
+          request.url.endsWith("/research")
+            ? { request_id: "task_research", next: { action: "status" } }
+            : { object: "web.result", usage: { price_usd: "0.005" } },
+        ),
+      );
+      return;
+    }
     if (request.url === "/v1/workflows") {
       response.end(
         JSON.stringify({
@@ -257,7 +319,11 @@ test("bundled stdio MCP serves BeatAPI tools and protects credentials", async ()
     response.statusCode = 404;
     response.end(
       JSON.stringify({
-        error: { code: "not_found", message: "Not found", request_id: "req_404" },
+        error: {
+          code: "not_found",
+          message: "Not found",
+          request_id: "req_404",
+        },
       }),
     );
   });
@@ -284,15 +350,78 @@ test("bundled stdio MCP serves BeatAPI tools and protects credentials", async ()
   try {
     await client.connect(transport);
     const listed = await client.listTools();
-    assert.equal(listed.tools.length, 26);
-    assert.ok(listed.tools.every((tool) => !/api[_-]?key/i.test(JSON.stringify(tool.inputSchema))));
+    assert.equal(listed.tools.length, 33);
+    assert.ok(
+      listed.tools.every(
+        (tool) => !/api[_-]?key/i.test(JSON.stringify(tool.inputSchema)),
+      ),
+    );
+
+    const discovery = await client.callTool({
+      name: "capabilities_search",
+      arguments: { query: "web", view: "full", group_by: "function" },
+    });
+    assert.equal(
+      (
+        discovery.structuredContent as {
+          result: { next: { call: { tool: string } } };
+        }
+      ).result.next.call.tool,
+      "capabilities_inspect",
+    );
+    const inspected = await client.callTool({
+      name: "capabilities_inspect",
+      arguments: { reference: "data:web.search" },
+    });
+    assert.equal(
+      (inspected.structuredContent as { result: { readiness: string } }).result
+        .readiness,
+      "ready",
+    );
+    const stored = await client.callTool({
+      name: "capabilities_run",
+      arguments: {
+        reference: "data:web.search",
+        operation: "result",
+        request_id: "req_fixture",
+        fields: ["items[].title"],
+      },
+    });
+    assert.equal(
+      (stored.structuredContent as { result: { items: { title: string }[] } })
+        .result.items[0]?.title,
+      "Evidence",
+    );
+    const pending = await client.callTool({
+      name: "capabilities_run",
+      arguments: {
+        reference: "data:web.research",
+        operation: "status",
+        task_id: "task_research",
+      },
+    });
+    assert.equal(
+      (pending.structuredContent as { result: { next: { action: string } } })
+        .result.next.action,
+      "status",
+    );
+    const researched = await client.callTool({
+      name: "web_research",
+      arguments: { query: "research fixture" },
+    });
+    assert.equal(
+      (researched.structuredContent as { result: { request_id: string } })
+        .result.request_id,
+      "task_research",
+    );
 
     const workflows = await client.callTool({
       name: "beatapi_list_workflows",
       arguments: {},
     });
     assert.equal(
-      (workflows.structuredContent as { result: Array<{ id: string }> }).result[0]?.id,
+      (workflows.structuredContent as { result: Array<{ id: string }> })
+        .result[0]?.id,
       "music-video",
     );
 
@@ -301,7 +430,8 @@ test("bundled stdio MCP serves BeatAPI tools and protects credentials", async ()
       arguments: {},
     });
     assert.equal(
-      (textModels.structuredContent as { result: Array<{ id: string }> }).result[0]?.id,
+      (textModels.structuredContent as { result: Array<{ id: string }> })
+        .result[0]?.id,
       "gpt-5.6-sol",
     );
 
@@ -318,7 +448,8 @@ test("bundled stdio MCP serves BeatAPI tools and protects credentials", async ()
     );
     assert.equal(
       JSON.parse(
-        requests.find((request) => request.path === "/v1/responses")?.body ?? "{}",
+        requests.find((request) => request.path === "/v1/responses")?.body ??
+          "{}",
       ).stream,
       false,
     );
@@ -328,7 +459,8 @@ test("bundled stdio MCP serves BeatAPI tools and protects credentials", async ()
       arguments: {},
     });
     assert.equal(
-      (models.structuredContent as { result: Array<{ id: string }> }).result[0]?.id,
+      (models.structuredContent as { result: Array<{ id: string }> }).result[0]
+        ?.id,
       "nano-banana",
     );
 
@@ -345,7 +477,8 @@ test("bundled stdio MCP serves BeatAPI tools and protects credentials", async ()
     );
     assert.deepEqual(
       JSON.parse(
-        requests.find((request) => request.path === "/v1/images/tasks")?.body ?? "{}",
+        requests.find((request) => request.path === "/v1/images/tasks")?.body ??
+          "{}",
       ),
       {
         model: "future-image-model",
@@ -375,7 +508,8 @@ test("bundled stdio MCP serves BeatAPI tools and protects credentials", async ()
       arguments: {},
     });
     assert.equal(
-      (effects.structuredContent as { result: Array<{ id: string }> }).result[0]?.id,
+      (effects.structuredContent as { result: Array<{ id: string }> }).result[0]
+        ?.id,
       "video-muscle-max",
     );
 
@@ -384,7 +518,8 @@ test("bundled stdio MCP serves BeatAPI tools and protects credentials", async ()
       arguments: { effect_id: "video-muscle-max" },
     });
     assert.equal(
-      (effect.structuredContent as { result: { version: number } }).result.version,
+      (effect.structuredContent as { result: { version: number } }).result
+        .version,
       1,
     );
 
@@ -461,10 +596,9 @@ test("bundled stdio MCP serves BeatAPI tools and protects credentials", async ()
       (request) =>
         request.path !== "/v1/workflows" &&
         request.path !== "/v1/media/models" &&
-        !(
-          request.method === "GET" &&
-          request.path.startsWith("/v1/effects")
-        ),
+        request.path !== "/v1/capabilities/search" &&
+        request.path !== "/v1/capabilities/inspect" &&
+        !(request.method === "GET" && request.path.startsWith("/v1/effects")),
     );
     assert.ok(
       authenticatedRequests.every(
@@ -472,11 +606,13 @@ test("bundled stdio MCP serves BeatAPI tools and protects credentials", async ()
       ),
     );
     assert.equal(
-      requests.find((request) => request.path === "/v1/workflows")?.authorization,
+      requests.find((request) => request.path === "/v1/workflows")
+        ?.authorization,
       undefined,
     );
     assert.equal(
-      requests.find((request) => request.path === "/v1/media/models")?.authorization,
+      requests.find((request) => request.path === "/v1/media/models")
+        ?.authorization,
       undefined,
     );
     assert.ok(
@@ -497,7 +633,9 @@ test("bundled stdio MCP serves BeatAPI tools and protects credentials", async ()
 });
 
 test("bundled MCP reuses the API key saved by the BeatAPI CLI", async () => {
-  const directory = await mkdtemp(resolve(tmpdir(), "beatapi-cli-bridge-test-"));
+  const directory = await mkdtemp(
+    resolve(tmpdir(), "beatapi-cli-bridge-test-"),
+  );
   const fakeCli = resolve(directory, "fake-beatapi.mjs");
   await writeFile(
     fakeCli,
@@ -532,7 +670,10 @@ test("bundled MCP reuses the API key saved by the BeatAPI CLI", async () => {
     env: environment,
     stderr: "pipe",
   });
-  const client = new Client({ name: "beatapi-cli-bridge-test", version: "0.1.0" });
+  const client = new Client({
+    name: "beatapi-cli-bridge-test",
+    version: "0.1.0",
+  });
   try {
     await client.connect(transport);
     const setup = await client.callTool({
@@ -570,7 +711,9 @@ test("bundled MCP reuses the API key saved by the BeatAPI CLI", async () => {
 });
 
 test("video upload preflight follows the public 100 MB contract limit", async () => {
-  const directory = await mkdtemp(resolve(tmpdir(), "beatapi-video-limit-test-"));
+  const directory = await mkdtemp(
+    resolve(tmpdir(), "beatapi-video-limit-test-"),
+  );
   const videoPath = resolve(directory, "too-large.mp4");
   await writeFile(videoPath, "");
   await truncate(videoPath, 100 * 1024 * 1024 + 1);
@@ -588,7 +731,10 @@ test("video upload preflight follows the public 100 MB contract limit", async ()
     } as Record<string, string>,
     stderr: "pipe",
   });
-  const client = new Client({ name: "beatapi-video-limit-test", version: "0.1.0" });
+  const client = new Client({
+    name: "beatapi-video-limit-test",
+    version: "0.1.0",
+  });
 
   try {
     await client.connect(transport);
@@ -626,7 +772,10 @@ test("upload rejects paths outside configured roots and symlink escapes", async 
     } as Record<string, string>,
     stderr: "pipe",
   });
-  const client = new Client({ name: "beatapi-upload-root-test", version: "0.1.0" });
+  const client = new Client({
+    name: "beatapi-upload-root-test",
+    version: "0.1.0",
+  });
 
   try {
     await client.connect(transport);
@@ -636,7 +785,10 @@ test("upload rejects paths outside configured roots and symlink escapes", async 
         arguments: { path },
       });
       assert.equal(result.isError, true);
-      assert.match(JSON.stringify(result), /approved upload root|symbolic link/i);
+      assert.match(
+        JSON.stringify(result),
+        /approved upload root|symbolic link/i,
+      );
     }
   } finally {
     await client.close().catch(() => undefined);
@@ -676,7 +828,10 @@ test("setup reports a missing CLI login as an actionable configuration state", a
     env: environment,
     stderr: "pipe",
   });
-  const client = new Client({ name: "beatapi-cli-auth-test", version: "0.1.0" });
+  const client = new Client({
+    name: "beatapi-cli-auth-test",
+    version: "0.1.0",
+  });
   try {
     await client.connect(transport);
     const setup = await client.callTool({
@@ -708,7 +863,9 @@ test("setup requires an absolute reviewed CLI path for keychain mode", async () 
   const environment = Object.fromEntries(
     Object.entries(process.env).filter(
       ([key, value]) =>
-        key !== "BEATAPI_API_KEY" && key !== "BEATAPI_CLI_PATH" && value !== undefined,
+        key !== "BEATAPI_API_KEY" &&
+        key !== "BEATAPI_CLI_PATH" &&
+        value !== undefined,
     ),
   ) as Record<string, string>;
   const transport = new StdioClientTransport({
@@ -718,7 +875,10 @@ test("setup requires an absolute reviewed CLI path for keychain mode", async () 
     env: environment,
     stderr: "pipe",
   });
-  const client = new Client({ name: "beatapi-cli-path-test", version: "0.1.0" });
+  const client = new Client({
+    name: "beatapi-cli-path-test",
+    version: "0.1.0",
+  });
 
   try {
     await client.connect(transport);
@@ -728,7 +888,11 @@ test("setup requires an absolute reviewed CLI path for keychain mode", async () 
     });
     const result = (
       setup.structuredContent as {
-        result: { configured: boolean; setup_reason: string; next_step: string };
+        result: {
+          configured: boolean;
+          setup_reason: string;
+          next_step: string;
+        };
       }
     ).result;
     assert.equal(result.configured, false);
@@ -741,7 +905,9 @@ test("setup requires an absolute reviewed CLI path for keychain mode", async () 
 });
 
 test("setup preserves unexpected CLI runtime failures as tool errors", async () => {
-  const directory = await mkdtemp(resolve(tmpdir(), "beatapi-cli-failure-test-"));
+  const directory = await mkdtemp(
+    resolve(tmpdir(), "beatapi-cli-failure-test-"),
+  );
   const fakeCli = resolve(directory, "fake-beatapi.mjs");
   await writeFile(
     fakeCli,

@@ -1,17 +1,29 @@
 ---
 name: beatapi-video
-description: Use when a user asks an agent to call BeatAPI Model, Social Data, or Workflow capabilities. Prefer bundled MCP tools when available or the official CLI as a fallback; covers text, image, video, social-data actions, Effects, Music Video, Ecommerce Video, Video Analysis, Realtime sessions, task monitoring, usage, webhooks, and API errors.
+description: Use when a user asks an agent to call BeatAPI Model, Social Data, SEO Data, Web Search, or Workflow capabilities. Prefer bundled MCP tools when available or the official CLI as a fallback; covers text, image, video, social-data actions, Effects, Music Video, Ecommerce Video, Video Analysis, Realtime sessions, task monitoring, usage, webhooks, and API errors.
 ---
 
 # BeatAPI Agent Toolkit
+
+## Current gateway contract
+
+Read [current.md](references/current.md) for the current Search → Inspect → Run
+loop, readiness, next calls, preview and stored result reads. It applies to text,
+image, video, decision, social data, SEO data and Web capabilities. Availability
+and price come from live Search and Inspect; never hardcode a list of models.
+
+Use `web_search`, `web_read`, `web_map`, `web_research` when available. Read
+[web-search.md](references/web-search.md) for fields and research polling.
+The official CLI 0.4.0 adds `capabilities result`, view/fields controls and
+`beatapi web search|read|map|research --file`. Check installed help first.
 
 ## Use the unified capability surface
 
 For Model, Data, or Workflow work, prefer the three provider-neutral capability tools when the host supplies them:
 
 1. `capabilities_search` — find a small candidate page;
-2. `capabilities_inspect` — read the exact input, output, pagination, limits, execution mode, and validation state;
-3. `capabilities_run` — start the selected capability or query a task with `operation: "status"`.
+2. `capabilities_inspect` — read the exact input, output, pagination, limits, execution mode, and readiness and schema hash;
+3. `capabilities_run` — start the selected capability or query a task with `operation: "status"`; use `operation: "result"` with the returned request ID to read a stored result, free within one hour.
 
 Capability references use `model:<id>`, `data:<id>`, and `workflow:<id>`. Do not guess an action or parameter from a name. Inspect first when the contract is unknown. Existing `beatapi_*` tools and CLI commands remain compatible for hosts that have not upgraded.
 
@@ -26,7 +38,7 @@ before constructing input. Never guess missing fields.
 ## Choose the execution adapter
 
 Prefer the bundled BeatAPI MCP tools when `beatapi_check_setup` is available.
-Use `beatapi_*` tools for the complete workflow and do not shell out to the CLI
+Prefer `capabilities_*` and `web_*`; use `beatapi_*` tools for specialized workflows and do not shell out to the CLI
 for the same operation.
 
 When BeatAPI MCP tools are unavailable, fall back to the official `beatapi` CLI
