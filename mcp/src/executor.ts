@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { execFile } from "node:child_process";
 import {
   chmod,
@@ -62,7 +63,7 @@ const FORBIDDEN_CREDENTIAL_KEYS = new Set([
   "refreshtoken",
 ]);
 const CREDENTIAL_VALUE_PATTERNS = [
-  /\bsk_[A-Za-z0-9_-]{6,}\b/i,
+  /\bsk[-_][A-Za-z0-9_-]{6,}\b/i,
   /\bwhsec_[A-Za-z0-9_-]{6,}\b/i,
   /\bBearer\s+[A-Za-z0-9._~-]{6,}\b/i,
 ];
@@ -96,11 +97,15 @@ function assertNoCredentialMaterial(value: unknown, path = "input"): void {
 
 function stringValue(input: Input, key: string): string {
   const value = input[key];
-  if (typeof value !== "string" || !value) throw new TypeError(`${key} is required.`);
+  if (typeof value !== "string" || !value)
+    throw new TypeError(`${key} is required.`);
   return value;
 }
 
-function without<T extends Input>(input: T, keys: string[]): Record<string, unknown> {
+function without<T extends Input>(
+  input: T,
+  keys: string[],
+): Record<string, unknown> {
   return Object.fromEntries(
     Object.entries(input).filter(([key]) => !keys.includes(key)),
   );
@@ -129,7 +134,7 @@ function directApiKeyRequired(capability: string): never {
 
 function redactText(value: string): string {
   return value
-    .replace(/\bsk_[A-Za-z0-9_-]{6,}\b/g, "[REDACTED_API_KEY]")
+    .replace(/\bsk[-_][A-Za-z0-9_-]{6,}\b/g, "[REDACTED_API_KEY]")
     .replace(/\bwhsec_[A-Za-z0-9_-]{6,}\b/g, "[REDACTED_WEBHOOK_SECRET]")
     .replace(/Bearer\s+[A-Za-z0-9._~-]+/gi, "Bearer [REDACTED]");
 }
@@ -204,10 +209,13 @@ function cliEnvironment(): NodeJS.ProcessEnv {
   );
 }
 
-async function runCli(args: string[], timeout = 15 * 60 * 1000): Promise<unknown> {
+async function runCli(
+  args: string[],
+  timeout = 15 * 60 * 1000,
+): Promise<unknown> {
   const command = cliCommand(args);
   const result = await execFileAsync(command.file, command.args, {
-    env: cliEnvironment(),
+    env: { ...cliEnvironment(), BEATAPI_CLIENT_DIALECT: "mcp" },
     encoding: "utf8",
     timeout,
     maxBuffer: 8 * 1024 * 1024,
@@ -282,7 +290,9 @@ async function prepareUpload(requestedPath: string): Promise<PreparedUpload> {
     );
   }
   if (configuredRoots.some((root) => !isAbsolute(root))) {
-    throw new Error("Every BEATAPI_UPLOAD_ROOTS entry must be an absolute path.");
+    throw new Error(
+      "Every BEATAPI_UPLOAD_ROOTS entry must be an absolute path.",
+    );
   }
 
   const requested = resolve(requestedPath);
@@ -291,10 +301,15 @@ async function prepareUpload(requestedPath: string): Promise<PreparedUpload> {
     throw new Error("Symbolic links are not accepted for BeatAPI uploads.");
   }
   const canonicalPath = await realpath(requested);
-  const canonicalRoots = await Promise.all(configuredRoots.map((root) => realpath(root)));
+  const canonicalRoots = await Promise.all(
+    configuredRoots.map((root) => realpath(root)),
+  );
   const approved = canonicalRoots.some((root) => {
     const child = relative(root, canonicalPath);
-    return child === "" || (child !== ".." && !child.startsWith(`..${sep}`) && !isAbsolute(child));
+    return (
+      child === "" ||
+      (child !== ".." && !child.startsWith(`..${sep}`) && !isAbsolute(child))
+    );
   });
   if (!approved) {
     throw new Error(
@@ -349,11 +364,11 @@ export class BeatAPIExecutor {
   private readonly apiKey = process.env.BEATAPI_API_KEY?.trim();
   private readonly direct = new BeatAPIClient({
     apiKey: this.apiKey,
+    clientDialect: "mcp",
     baseUrl: process.env.BEATAPI_BASE_URL,
     allowInsecureLocalhost:
       process.env.BEATAPI_ALLOW_INSECURE_LOCALHOST === "1",
-    trustCustomBaseUrl:
-      process.env.BEATAPI_TRUST_CUSTOM_BASE_URL === "1",
+    trustCustomBaseUrl: process.env.BEATAPI_TRUST_CUSTOM_BASE_URL === "1",
   });
 
   private get usesDirectClient(): boolean {
@@ -362,6 +377,76 @@ export class BeatAPIExecutor {
 
   async execute(name: string, input: Input): Promise<unknown> {
     assertNoCredentialMaterial(input);
+    if (name === "capabilities_search")
+      return sanitize(await this.direct.searchCapabilities(input));
+    if (name === "capabilities_inspect")
+      return sanitize(
+        await this.direct.inspectCapability(stringValue(input, "reference")),
+      );
+    if (
+      [
+        "capabilities_run",
+        "web_search",
+        "web_read",
+        "web_map",
+        "web_research",
+      ].includes(name)
+    ) {
+      if (!this.usesDirectClient)
+        return this.executeCapabilityViaCli(name, input);
+      if (name === "capabilities_run") {
+        const reference = stringValue(input, "reference");
+        const view = {
+          ...(input.view ? { view: input.view as "full" | "preview" } : {}),
+          ...(typeof input.max_items === "number"
+            ? { max_items: input.max_items }
+            : {}),
+          ...(input.fields ? { fields: input.fields as string[] } : {}),
+        };
+        if (input.operation === "status")
+          return sanitize(
+            await this.direct.getCapabilityStatus(
+              reference,
+              stringValue(input, "task_id"),
+              view,
+            ),
+          );
+        if (input.operation === "result")
+          return sanitize(
+            await this.direct.getCapabilityResult(
+              reference,
+              stringValue(input, "request_id"),
+              view,
+            ),
+          );
+        return sanitize(
+          await this.direct.runCapability(
+            reference,
+            input.input as Record<string, unknown>,
+            {
+              idempotencyKey:
+                typeof input.idempotency_key === "string"
+                  ? input.idempotency_key
+                  : randomUUID(),
+              ...view,
+            },
+          ),
+        );
+      }
+      const methods = {
+        web_search: "searchWeb",
+        web_read: "readWebPages",
+        web_map: "mapWebsite",
+        web_research: "researchWeb",
+      } as const;
+      const method = this.direct[methods[name as keyof typeof methods]];
+      return sanitize(
+        await (method as (input: Input) => Promise<unknown>).call(
+          this.direct,
+          input,
+        ),
+      );
+    }
     if (name === "beatapi_check_setup") return this.checkSetup();
     if (name === "beatapi_list_workflows") {
       return sanitize(await this.direct.listWorkflows());
@@ -374,15 +459,21 @@ export class BeatAPIExecutor {
       return sanitize(await this.direct.listGenerationModels());
     }
     if (name === "beatapi_list_effects") {
-      return sanitize(await this.direct.listEffects({
-        ...(typeof input.output_type === "string"
-          ? { outputType: input.output_type as "image" | "video" }
-          : {}),
-        ...(typeof input.category === "string" ? { category: input.category } : {}),
-      }));
+      return sanitize(
+        await this.direct.listEffects({
+          ...(typeof input.output_type === "string"
+            ? { outputType: input.output_type as "image" | "video" }
+            : {}),
+          ...(typeof input.category === "string"
+            ? { category: input.category }
+            : {}),
+        }),
+      );
     }
     if (name === "beatapi_get_effect") {
-      return sanitize(await this.direct.getEffect(stringValue(input, "effect_id")));
+      return sanitize(
+        await this.direct.getEffect(stringValue(input, "effect_id")),
+      );
     }
     if (
       !this.usesDirectClient &&
@@ -393,6 +484,35 @@ export class BeatAPIExecutor {
     }
     if (!this.usesDirectClient) return this.executeViaCli(name, input);
     return this.executeDirect(name, input);
+  }
+
+  private async executeCapabilityViaCli(
+    name: string,
+    input: Input,
+  ): Promise<unknown> {
+    if (name !== "capabilities_run")
+      return withJsonFile(input, (path) =>
+        runCli(["web", name.slice(4), "--file", path]),
+      );
+    const operation = String(input.operation ?? "start");
+    const args = [
+      "capabilities",
+      operation === "start" ? "run" : operation,
+      String(input.reference),
+    ];
+    if (operation === "status") args.push(String(input.task_id));
+    if (operation === "result") args.push(String(input.request_id));
+    if (input.view) args.push("--view", String(input.view));
+    if (input.max_items) args.push("--max-items", String(input.max_items));
+    if (input.fields) args.push("--fields", JSON.stringify(input.fields));
+    if (operation !== "start") return runCli(args);
+    args.push(
+      "--idempotency-key",
+      String(input.idempotency_key ?? randomUUID()),
+    );
+    return withJsonFile(input.input as Input, (path) =>
+      runCli([...args, "--file", path]),
+    );
   }
 
   private async checkSetup(): Promise<unknown> {
@@ -512,9 +632,12 @@ export class BeatAPIExecutor {
         );
       case "beatapi_compose_music_video":
         return sanitize(
-          await this.direct.composeMusicVideoTask(stringValue(input, "task_id"), {
-            shot_ids: input.shot_ids as string[],
-          }),
+          await this.direct.composeMusicVideoTask(
+            stringValue(input, "task_id"),
+            {
+              shot_ids: input.shot_ids as string[],
+            },
+          ),
         );
       case "beatapi_create_ecommerce_video":
         return sanitize(
@@ -535,7 +658,9 @@ export class BeatAPIExecutor {
           ),
         );
       case "beatapi_get_task":
-        return sanitize(await this.direct.getTask(stringValue(input, "task_id")));
+        return sanitize(
+          await this.direct.getTask(stringValue(input, "task_id")),
+        );
       case "beatapi_wait_for_task":
         return sanitize(
           await this.direct.waitForTask(stringValue(input, "task_id"), {
@@ -584,15 +709,17 @@ export class BeatAPIExecutor {
         );
         break;
       case "beatapi_create_effect":
-        result = await withJsonFile(without(input, ["idempotency_key"]), (path) =>
-          runCli([
-            "effects",
-            "create",
-            "--file",
-            path,
-            "--idempotency-key",
-            stringValue(input, "idempotency_key"),
-          ]),
+        result = await withJsonFile(
+          without(input, ["idempotency_key"]),
+          (path) =>
+            runCli([
+              "effects",
+              "create",
+              "--file",
+              path,
+              "--idempotency-key",
+              stringValue(input, "idempotency_key"),
+            ]),
         );
         break;
       case "beatapi_upload_file": {
@@ -608,16 +735,18 @@ export class BeatAPIExecutor {
         );
         break;
       case "beatapi_edit_music_video_shot":
-        result = await withJsonFile(without(input, ["task_id", "shot_id"]), (path) =>
-          runCli([
-            "music-video",
-            "shots",
-            "edit",
-            stringValue(input, "task_id"),
-            stringValue(input, "shot_id"),
-            "--file",
-            path,
-          ]),
+        result = await withJsonFile(
+          without(input, ["task_id", "shot_id"]),
+          (path) =>
+            runCli([
+              "music-video",
+              "shots",
+              "edit",
+              stringValue(input, "task_id"),
+              stringValue(input, "shot_id"),
+              "--file",
+              path,
+            ]),
         );
         break;
       case "beatapi_get_music_video_shot_media":
@@ -672,14 +801,19 @@ export class BeatAPIExecutor {
             "--attempts",
             String(input.max_attempts),
           ],
-          (input.interval_ms as number) * (input.max_attempts as number) + 60_000,
+          (input.interval_ms as number) * (input.max_attempts as number) +
+            60_000,
         );
         break;
       case "beatapi_list_webhooks":
         result = await runCli(["webhooks", "list"]);
         break;
       case "beatapi_get_webhook":
-        result = await runCli(["webhooks", "get", stringValue(input, "webhook_id")]);
+        result = await runCli([
+          "webhooks",
+          "get",
+          stringValue(input, "webhook_id"),
+        ]);
         break;
       case "beatapi_update_webhook":
         result = await withJsonFile(without(input, ["webhook_id"]), (path) =>
@@ -693,7 +827,11 @@ export class BeatAPIExecutor {
         );
         break;
       case "beatapi_delete_webhook":
-        result = await runCli(["webhooks", "delete", stringValue(input, "webhook_id")]);
+        result = await runCli([
+          "webhooks",
+          "delete",
+          stringValue(input, "webhook_id"),
+        ]);
         break;
       default:
         throw new Error(`Unsupported BeatAPI tool: ${name}`);

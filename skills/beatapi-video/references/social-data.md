@@ -8,21 +8,22 @@ provider name to the user.
 Prefer the unified MCP tools when available:
 
 ```text
-capabilities_search({"query":"小红书 笔记搜索","kind":"data","limit":5})
-capabilities_inspect({"reference":"data:xiaohongshu.note.search"})
+capabilities_search({"query":"小红书 搜索笔记"})
+capabilities_inspect({"reference":"data:xiaohongshu.app_v2.search_notes"})
 ```
 
-The inspected contract is the source of truth for `input`, `output`, method,
-pagination, limits, and validation. The catalog is also available as
+Copy the `reference` from the Search result; Inspect returns the input schema,
+price, `readiness` and a ready-to-fill `next` Run call. A query naming only a
+platform (`"小红书"`) returns an overview of what the platform offers. The catalog is also available as
 `https://beatapi.io/social-data-catalog.json`.
 
 ## Run an action
 
 ```text
 capabilities_run({
-  "reference":"data:xiaohongshu.note.search",
-  "operation":"start",
+  "reference":"data:xiaohongshu.app_v2.search_notes",
   "input":{"keyword":"AI 视频"},
+  "view":"preview",
   "idempotency_key":"social-data-run-001"
 })
 ```
