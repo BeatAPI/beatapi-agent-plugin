@@ -9,6 +9,13 @@ import { BeatAPIClient } from "../mcp/vendor/client/index.js";
 const root = resolve(import.meta.dirname, "..");
 
 const expectedToolNames = [
+  "capabilities_search",
+  "capabilities_inspect",
+  "capabilities_run",
+  "web_search",
+  "web_read",
+  "web_map",
+  "web_research",
   "beatapi_check_setup",
   "beatapi_list_workflows",
   "beatapi_list_text_models",
@@ -200,7 +207,10 @@ test("plugin manifest wires the skill, local MCP, and production assets", async 
     "node scripts/validate-cursor.mjs",
   );
   assert.equal(manifest.name, "beatapi-agent-plugin");
-  assert.equal(manifest.repository, "https://github.com/BeatAPI/beatapi-agent-plugin");
+  assert.equal(
+    manifest.repository,
+    "https://github.com/BeatAPI/beatapi-agent-plugin",
+  );
   assert.equal(manifest.skills, "./skills/");
   assert.equal(manifest.mcpServers, "./.mcp.json");
   assert.equal(
@@ -221,9 +231,7 @@ test("Cursor manifest wires shared skills and MCP through declared variables", a
   const manifest = JSON.parse(
     await readFile(resolve(root, ".cursor-plugin/plugin.json"), "utf8"),
   ) as Record<string, unknown>;
-  const mcp = JSON.parse(
-    await readFile(resolve(root, "mcp.json"), "utf8"),
-  ) as {
+  const mcp = JSON.parse(await readFile(resolve(root, "mcp.json"), "utf8")) as {
     mcpServers: Record<
       string,
       {
@@ -237,7 +245,10 @@ test("Cursor manifest wires shared skills and MCP through declared variables", a
   };
 
   assert.equal(manifest.name, "beatapi-agent-plugin");
-  assert.equal(manifest.repository, "https://github.com/BeatAPI/beatapi-agent-plugin");
+  assert.equal(
+    manifest.repository,
+    "https://github.com/BeatAPI/beatapi-agent-plugin",
+  );
   assert.equal(manifest.skills, "./skills/");
   assert.equal(manifest.mcpServers, "./mcp.json");
 
@@ -297,7 +308,10 @@ test("Grok Build manifest exposes the shared Skill and MCP plugin metadata", asy
 
   assert.equal(manifest.name, "beatapi-agent-plugin");
   assert.equal(manifest.version, packageManifest.version);
-  assert.equal(manifest.repository, "https://github.com/BeatAPI/beatapi-agent-plugin");
+  assert.equal(
+    manifest.repository,
+    "https://github.com/BeatAPI/beatapi-agent-plugin",
+  );
   assert.equal(manifest.license, "MIT");
   assert.equal(manifest.skills, "./skills/");
   assert.equal(manifest.mcpServers, "./.mcp.json");
@@ -331,7 +345,10 @@ test("release builders use the renamed cross-host plugin artifact", async () => 
 
 test("README leads with project-native proof and complete host setup", async () => {
   const readme = await readFile(resolve(root, "README.md"), "utf8");
-  const cover = await readFile(resolve(root, "assets/readme/cover.svg"), "utf8");
+  const cover = await readFile(
+    resolve(root, "assets/readme/cover.svg"),
+    "utf8",
+  );
 
   assert.match(readme.slice(0, 300), /assets\/readme\/cover\.svg/);
   assert.match(readme, /## Quick start/);
