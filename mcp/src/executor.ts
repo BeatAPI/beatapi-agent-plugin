@@ -1,3 +1,9 @@
+/**
+ * [INPUT]: 依赖同步 BeatAPIClient、宿主凭证配置和受信任本地文件目录
+ * [OUTPUT]: 提供固定工具执行、结果脱敏与安全错误投影
+ * [POS]: MCP 到网关的客户端适配；本地 CLI 桥接不等于托管用户授权
+ * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
+ */
 import { randomUUID } from "node:crypto";
 import { execFile } from "node:child_process";
 import {

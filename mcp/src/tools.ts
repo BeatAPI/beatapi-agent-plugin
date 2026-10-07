@@ -1,3 +1,9 @@
+/**
+ * [INPUT]: 依赖 zod 校验固定网关操作参数
+ * [OUTPUT]: 对外提供工具 schemas、风险 annotations 与按名称查找
+ * [POS]: 本地 MCP 契约源；审核 profile 复用同一定义，避免另写一份 schema
+ * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
+ */
 import { z } from "zod";
 
 export interface ToolAnnotations {

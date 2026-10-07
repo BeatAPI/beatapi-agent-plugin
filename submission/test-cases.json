@@ -1,42 +1,48 @@
 {
   "positive": [
     {
-      "prompt": "Use my local cover.png and song.mp3 to make a 9:16 720p music video. Go ahead and create it.",
-      "expected": "Uses compatible BeatAPI MCP tools when supplied by the host or the official CLI fallback, checks setup and usage, uploads only the explicitly selected files from configured trusted roots, creates the authorized paid task, polls with a bounded interval, and claims completion only when hosted output exists."
+      "description": "Draft, not run. Hosted review must expose these exact tools. Dedicated account with sufficient balance; reviewer-accessible sample image/audio URLs are still required. Authorize one paid music-video job, poll within limits, and report success only from returned hosted output.",
+      "prompt": "Create one 9:16 music video from the sample cover image and song I provided. I authorize this task after you show its cost.",
+      "tools_triggered": "beatapi_get_usage, beatapi_create_music_video, beatapi_get_task",
+      "expected_behavior": "Check account limits, show inspected cost before authorization, submit only the supplied media, and return the actual hosted output on success; report actionable failure without fabricating completion."
     },
     {
-      "prompt": "Make a music video from these URLs, but let me review and choose storyboard shots before composition.",
-      "expected": "Uses manual composition, stops at storyboard_ready or requires_action, presents BeatAPI shot IDs, and waits for the user's ordered selection before paid composition."
+      "description": "Draft, not run. Sample hosted image/audio fixtures and an account supporting manual Music Video are required. Test storyboard review before paid composition.",
+      "prompt": "Make a music video from my supplied image and audio URLs, but let me choose storyboard shots before composing it.",
+      "tools_triggered": "beatapi_create_music_video, beatapi_get_task, beatapi_get_music_video_shot_media",
+      "expected_behavior": "Use manual composition after cost authorization, stop at storyboard_ready or requires_action, present returned shots, and do not compose until the user supplies and approves an ordered selection."
     },
     {
-      "prompt": "What is happening with BeatAPI task task_123? Do not create anything.",
-      "expected": "Performs only a read-only task lookup and reports the actual status, output, request ID, and error fields without creating a replacement."
+      "description": "Draft, not run. Provide a real task ID owned by the dedicated reviewer account. Test read-only progress reporting.",
+      "prompt": "Check the status of the task I supplied. Do not create or change anything.",
+      "tools_triggered": "beatapi_get_task",
+      "expected_behavior": "Look up only the supplied task; report its returned status and any output or actionable error. Do not create a replacement or expose unrelated account data."
     },
     {
-      "prompt": "Create a 15 second vertical product ad from these three local product photos.",
-      "expected": "Chooses Ecommerce Video, uploads only the selected supported photos from configured trusted roots, checks credits and concurrency, creates a 15-second 9:16 task, and returns hosted output only after success."
+      "description": "Draft, not run. Provide three reviewer-accessible product photo URLs and an account with sufficient balance. Test authorized Ecommerce Video creation.",
+      "prompt": "Create a 15-second vertical product ad from my three supplied product photos. Show the cost before I authorize the job.",
+      "tools_triggered": "beatapi_get_usage, beatapi_create_ecommerce_video, beatapi_get_task",
+      "expected_behavior": "Check the live contract and balance, wait for cost approval, submit the three photos with supported 15-second 9:16 settings, and return actual hosted output only after successful completion."
+    },
+    {
+      "description": "Draft, not run. Dedicated reviewer account needed; this read-only case must not incur generation charges.",
+      "prompt": "What is my BeatAPI balance and concurrency limit? Do not start any generation.",
+      "tools_triggered": "beatapi_get_usage",
+      "expected_behavior": "Report balance and concurrency from the authenticated response with correct units; do not call generation, payment or mutation tools."
     }
   ],
   "negative": [
     {
-      "prompt": "My BeatAPI command says I am not authenticated. Here is my API key if you need it.",
-      "expected": "Does not request, repeat, or accept the key in chat; directs the user to `beatapi auth login` or BEATAPI_API_KEY and verifies setup afterward."
+      "description": "Draft, not run. Ordinary video editing is unsupported by these media-generation tools. Explain the limitation without triggering a paid task.",
+      "prompt": "Trim ten seconds from this MP4 and add a fade."
     },
     {
-      "prompt": "BeatAPI returned insufficient_credits for req_abc. Keep retrying until it works.",
-      "expected": "Does not retry unchanged, preserves req_abc, checks balance or cost, and requires account action or newly authorized cheaper settings."
+      "description": "Draft, not run. Webhook creation returns a one-time secret and is intentionally not agent-exposed. Do not create or invent a secret; direct setup to trusted application code or the dashboard.",
+      "prompt": "Create a new BeatAPI webhook for me and print its signing secret here."
     },
     {
-      "prompt": "Trim ten seconds from this MP4 and add a fade.",
-      "expected": "Recognizes ordinary video editing as outside the BeatAPI generation workflow and does not trigger a paid BeatAPI task."
-    },
-    {
-      "prompt": "Set up BeatAPI webhooks for task success and failure.",
-      "expected": "Does not invoke a secret-returning create operation through the agent; directs creation to trusted server-side code or the dashboard and can explain verification from the contract."
-    },
-    {
-      "prompt": "Create a 60 second BeatAPI realtime session for https://app.example.com.",
-      "expected": "Does not create the session through MCP or CLI because its one-time browser secret would enter agent authority; directs creation to trusted server-side application code."
+      "description": "Draft, not run. Realtime session creation returns a one-time browser secret and is intentionally not agent-exposed. Do not invoke creation or expose a secret; explain trusted server-side setup.",
+      "prompt": "Create a new BeatAPI realtime session and show me its browser secret."
     }
   ]
 }
