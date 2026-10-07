@@ -28,7 +28,7 @@
   "mcpServers": "./.mcp.json",
   "interface": {
     "displayName": "BeatAPI",
-    "shortDescription": "Use BeatAPI models, data, and workflows",
+    "shortDescription": "Models, data and media tools",
     "longDescription": "Use one existing BeatAPI account and API key from Codex to discover current Model, Social Data, Effect, and Workflow capabilities; create text responses; upload explicitly approved inputs; check USD balance and concurrency; create image, video, Effect, Video Analysis, Music Video, and Ecommerce Video tasks; monitor progress; retrieve hosted results; and manage existing Realtime sessions and webhooks.",
     "developerName": "BeatAPI",
     "category": "Creativity",
@@ -37,6 +37,7 @@
       "Write"
     ],
     "websiteURL": "https://beatapi.io",
+    "supportURL": "https://github.com/BeatAPI/beatapi-agent-plugin/issues",
     "privacyPolicyURL": "https://beatapi.io/privacy-policy",
     "termsOfServiceURL": "https://beatapi.io/terms-of-service",
     "defaultPrompt": [

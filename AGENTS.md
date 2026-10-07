@@ -6,7 +6,7 @@ Node.js + TypeScript + MCP SDK + locked BeatAPI contract
 ## 目录地图
 - `mcp/`: 本地 stdio 服务、八工具媒体审核候选 profile 与同步客户端；`mcp/server.mjs` 为构建产物，不是托管服务。
 - `skills/`: 从 beatapi-skill 同步的安装目录，禁止直接修改。
-- `scripts/`: 契约同步、宿主校验与发布包构建。
+- `scripts/`: 契约同步、宿主校验与发布包构建，见 scripts/AGENTS.md。
 - `test/`: 本地工具、安全边界与包结构测试，见 test/AGENTS.md。
 - `submission/`: 公开提交准备与审核案例草稿，见 submission/AGENTS.md。
 - `assets/`: 品牌图标与 README 图片。

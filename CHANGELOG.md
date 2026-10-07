@@ -7,6 +7,17 @@
 
 ## Unreleased
 
+- Isolate portable OpenAI preparation metadata from local MCP installation; include
+  icons and license, validate the actual ZIP, and explicitly mark CLI-dependent
+  Skills-only exports as drafts rather than submission-ready releases.
+- Shorten the Codex subtitle and add the public repository support URL.
+- Upgrade MCP SDK and affected transitive dependencies; rebuild the local bundle.
+- Correct the submission route and track hosted review prerequisites separately.
+- Add an opt-in eight-tool media-review stdio prototype; retain the default
+  33-tool local integration, reject unknown profiles and test blocked calls.
+- Document gateway-owned OAuth, task isolation and pre-submit quotation gaps;
+  do not label the local prototype as a hosted server.
+
 - Synchronized the locked public OpenAPI contract with current capability,
   Social Data, onboarding, model, media, Effect, Workflow, and Realtime routes.
 - Distinguished the stable three-tool Hosted MCP from the plugin's 26 focused

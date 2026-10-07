@@ -1,80 +1,80 @@
-# OpenAI Plugin Directory submission
+# OpenAI Plugin Directory preparation
 
-## Recommended first submission
+## Status and artifacts
 
-Submit this release as **Skills only** at
-<https://platform.openai.com/plugins>.
+Local installation is implemented. Public submission is **not ready**.
+Registration is not verified publisher identity, successful scans or approval.
+The intended production path is **remote MCP plus the canonical Skill**.
 
-Run:
+`npm run verify` builds `dist/submission/beatapi-agent-plugin-skills-draft.zip`.
+This standalone portable draft includes plugin.json, skills/, brand icons, MIT
+LICENSE and a prerequisite notice, excluding local MCP and private App bindings.
+It needs compatible host MCP tools. The synchronized Skill references CLI
+beatapi@0.4.0, but public npm returned E404 on 2026-10-07. CLI fallback is
+blocked until the canonical Skill and a published CLI agree; do not silently
+substitute an older CLI. Future CLI setup uses authentication outside chat and
+absolute BEATAPI_CLI_PATH.
+Do not upload it as a finished public plugin. Local execution and persistent
+credentials need additional eligibility review. An existing Skills-only listing
+currently cannot simply gain MCP; prefer completing the remote package first.
 
-```bash
-npm ci
-npm run verify
-```
+## Hosted integration prerequisites
 
-Upload `dist/submission/beatapi-video-skill.zip`.
+See [HOSTED-INTEGRATION.md](HOSTED-INTEGRATION.md) for the inspected gateway
+boundaries and locally testable eight-tool media candidate. This is a stdio
+prototype, not a hosted MCP or OAuth implementation. Cost-approval cases also
+need a verifiable quote path before they can run.
 
-This is the complete official path available without deploying new
-infrastructure. The repository's local stdio MCP server is for Codex,
-Cursor, and Grok Bot installation and must not be entered as a public MCP URL.
+- Existing https://beatapi.io/mcp is a manual Bearer-key integration, not proof
+  of directory compatibility. Do not hide unreviewed operations behind generic
+  discovery/inspect/run execution.
+- Expose individually reviewable operations with input/output schemas and
+  explicit boolean readOnlyHint, destructiveHint and openWorldHint. Review
+  paid actions and external data separately.
+- Establish explicit, revocable user-bound authorization; evaluate OAuth.
+  Keep identity, tokens, billing and permissions in the gateway, not this
+  package or the marketing Worker. Never request API keys in chat.
+- Review provider/data-source authorization and third-party terms before
+  choosing coverage. Do not claim external platforms endorse BeatAPI.
+- Declare the actual tested hosted MCP endpoint only after it is available.
+  Preserve the existing public /mcp contract and local stdio installation.
 
-The Skills-only artifact does not include an MCP server. Its public listing and
-review instructions must state that users need Node.js 20.19+ / 22.12+, the
-globally installed `beatapi@0.3.0` CLI, one-time `beatapi auth login`, and an
-absolute `BEATAPI_CLI_PATH`, unless the host already supplies compatible
-BeatAPI MCP tools.
+## Listing and publication
 
-## Listing
+The draft uses the local presentation, a subtitle of at most 30 characters,
+three starter prompts, brand icons and four HTTPS resource URLs. Public support
+uses repository Issues instead of a login-only ticket page. Privacy and terms
+must be checked against actual uploads, downstream recipients, retention and
+deletion; this repository change makes no new legal promise.
 
-- Plugin name: **BeatAPI**
-- Submission type: **Skills only**
-- Category: **Creativity**
-- Developer: **BeatAPI**
-- Short description: **Use BeatAPI models, Social Data, and workflows**
-- Long description: **Use one BeatAPI account and API key to prepare media,
-  check credits and concurrency, create asynchronous Music Video and Ecommerce
-  Video tasks, manage storyboard shots, monitor progress, retrieve hosted
-  results, and inspect or close existing Realtime sessions and webhooks. This
-  Skills-only release uses compatible
-  BeatAPI MCP tools supplied by the host or the official BeatAPI CLI installed
-  on the user's machine.**
-- Website: <https://beatapi.io>
-- Support: <https://beatapi.io/dashboard/tickets>
-- Support email: <support@beatapi.io>
-- Privacy policy: <https://beatapi.io/privacy-policy>
-- Terms: <https://beatapi.io/terms-of-service>
-- Logo: `assets/logo.png`
-- Brand color: `#2563FF`
-- Availability: all countries offered by the portal where BeatAPI is available,
-  subject to OpenAI and BeatAPI policies.
+Owner confirmation is still needed for verified publisher identity, countries,
+commerce and policy attestations. Do not infer BeatAPI business verification
+from author.name or assume global availability. Unknown metadata stays absent.
 
-## Starter prompts
+## Review evidence and Portal
 
-1. Use `$beatapi-video` to create a music video from my images and audio.
-2. Use `$beatapi-video` to turn my product images into a vertical ad.
-3. Use `$beatapi-video` to check my credits and task status.
-4. Use `$beatapi-video` to inspect and close my existing Realtime Video session.
+test-cases.json contains five positive and three negative **draft** cases for
+focused media/account tools. Use them only if those exact tools are exposed
+by the hosted review server; otherwise adapt them to its advertised surface.
+They are not imported into the Skills-only draft and are **Not run against a
+hosted review server**. Local mock tests do not prove production acceptance.
 
-## Required owner-side portal steps
+Provide public sample fixtures, a dedicated authorized reviewer account,
+real results and an accessible demonstration recording. Keep credentials and
+login instructions only in secure Portal fields, never the ZIP.
 
-These are account and legal actions, not repository work:
+1. Select intended organization/project and verified developer identity with
+   Apps Management Write permission.
+2. After completing independent materials, upload the finalized remote MCP
+   plus Skill package and inspect imported metadata.
+3. Complete domain verification and authorized connection; resolve tool/Skill scans.
+4. Run cases against the exact saved version and enter secure reviewer access.
+5. Owner completes policy attestations and submits; approved publication is
+   a separate authorized action.
 
-1. Select the OpenAI organization that will publish BeatAPI.
-2. Ensure the submitter has **Apps Management: Write**.
-3. Complete individual or business identity verification as **BeatAPI**.
-4. Confirm country availability and policy attestations.
-5. Upload the Skill ZIP, logo, test cases, and release notes.
-6. Include the pinned standalone CLI prerequisite and the one-time-secret
-   creation exclusion in the reviewer setup instructions.
-7. Submit for review and respond to reviewer feedback.
+References checked 2026-10-07:
+- https://developers.openai.com/plugins/deploy/submission
+- https://developers.openai.com/plugins/guides/submit-claude-plugin
+- https://developers.openai.com/plugins/plugin-guidelines
 
-## Future MCP-backed public submission
-
-The portal requires a production public MCP URL, domain verification,
-authentication/reviewer credentials, accurate tool annotations, and a content
-security policy. A local stdio process cannot satisfy those requirements.
-
-Before a future **With MCP** submission, BeatAPI should add a hosted HTTPS MCP
-service with account-safe authentication. Do not pass customer API keys as tool
-arguments or expose a shared service key. The hosted service should preferably
-use BeatAPI OAuth or another revocable user-bound authorization flow.
+[PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md

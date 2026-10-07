@@ -23,4 +23,4 @@ jobs:
         with:
           files: |
             dist/beatapi-agent-plugin-marketplace.zip
-            dist/submission/beatapi-video-skill.zip
+            dist/submission/beatapi-agent-plugin-skills-draft.zip

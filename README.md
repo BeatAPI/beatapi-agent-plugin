@@ -248,8 +248,12 @@ Do not edit synchronized Skill or client files directly. Refresh them through
    to `xai-org/plugin-marketplace` and regenerate its component index.
 3. **Codex local marketplace:** `npm run marketplace:build` creates an
    installable marketplace and ZIP under `dist/`.
-4. **OpenAI Plugin Directory:** `npm run submission:build` creates the separate
-   Skills-only review artifact. It does not claim a hosted HTTPS MCP server.
+4. **OpenAI Plugin Directory preparation:** `npm run submission:build` creates
+   `dist/submission/beatapi-agent-plugin-skills-draft.zip`, a portable Skills-only
+   draft with listing metadata, icons and license. It is **not submission-ready**:
+   local CLI execution and persistent credentials require eligibility review.
+   The recommended production route is remote MCP plus Skill; its hosted tools,
+   user authorization and review evidence must be completed separately.
 
 For Muse and other remote-MCP hosts, connect to the Hosted MCP endpoint rather
 than installing this local plugin. A runnable Muse setup guide lives in the
@@ -258,6 +262,13 @@ repository. Documentation does not imply an approved directory listing.
 
 See [submission/SUBMISSION.md](submission/SUBMISSION.md) for the separate public
 directory review boundary.
+
+For local development only, `BEATAPI_MCP_PROFILE=media-review node mcp/server.mjs`
+registers eight fixed media/account candidate tools and requires a host-configured
+API key. It excludes generic execution, local uploads and CLI credential fallback.
+The normal local profile is unchanged. This is **not a hosted OAuth server**;
+see [hosted integration boundaries](submission/HOSTED-INTEGRATION.md) for the
+gateway work, concrete output contracts and cost-quotation gaps still required.
 
 ## Verification
 
