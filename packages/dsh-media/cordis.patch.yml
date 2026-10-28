@@ -1,0 +1,3 @@
+- insert:
+    - id: beatapi-media-kit
+      name: '@beatapi/dsh-media'
