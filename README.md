@@ -18,6 +18,10 @@ and Workspace capabilities. This plugin connects Codex, Cursor, Grok Bot, and
 Grok Build to BeatAPI through a bundled Skill, local MCP server, typed client,
 and locked public contract.
 
+**DeepSeek Harness:** three independently installable bundles provide
+[Social Research](packages/dsh-social), [Media Kit](packages/dsh-media), and
+[BeatBrowser](packages/dsh-browser). See [setup and validation](harness/README.md).
+
 For host-independent onboarding, give an Agent this instruction:
 
 ```text

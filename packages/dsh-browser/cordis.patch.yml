@@ -1,0 +1,3 @@
+- insert:
+    - id: beatbrowser-harness
+      name: '@beatapi/dsh-browser'
