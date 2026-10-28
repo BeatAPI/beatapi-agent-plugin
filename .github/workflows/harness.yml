@@ -1,0 +1,22 @@
+name: Harness packages
+on:
+  push:
+    paths: ['packages/dsh-*/**', 'harness/**', 'scripts/sync-harness.mjs', '.github/workflows/harness.yml']
+  pull_request:
+    paths: ['packages/dsh-*/**', 'harness/**', 'scripts/sync-harness.mjs', '.github/workflows/harness.yml']
+permissions:
+  contents: read
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        dsh: ['0.1.0-rc.6', '0.2.1-rc.2']
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 22
+      - run: npm run harness:check
+      - run: npm install --prefix /tmp/beatapi-dsh-host --ignore-scripts --no-audit --no-fund @deepseek-ai/dsh@${{ matrix.dsh }}
+      - run: node harness/scripts/host-smoke.mjs /tmp/beatapi-dsh-host/node_modules/@deepseek-ai/dsh
