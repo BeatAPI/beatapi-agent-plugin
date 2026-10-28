@@ -10,6 +10,7 @@ jobs:
   smoke:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         dsh: ['0.1.0-rc.6', '0.2.1-rc.2']
     steps:
@@ -18,5 +19,6 @@ jobs:
         with:
           node-version: 22
       - run: npm run harness:check
+      - run: npm install --global pnpm@10.32.1
       - run: npm install --prefix /tmp/beatapi-dsh-host --ignore-scripts --no-audit --no-fund @deepseek-ai/dsh@${{ matrix.dsh }}
       - run: node harness/scripts/host-smoke.mjs /tmp/beatapi-dsh-host/node_modules/@deepseek-ai/dsh

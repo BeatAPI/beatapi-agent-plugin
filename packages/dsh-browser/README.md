@@ -16,7 +16,7 @@ dsh --profile web
 GitHub installation is also supported (prebuilt JavaScript; no prepare/build script):
 
 ```sh
-dsh plugin --profile web add 'github:BeatAPI/beatapi-agent-plugin#path:/packages/dsh-browser'
+dsh plugin --profile web add 'github:BeatAPI/beatapi-agent-plugin#harness-v0.1.0&path:/packages/dsh-browser'
 ```
 
 Install the Chrome extension separately using [BeatBrowser setup](https://beatapi.io/browser). This connector pins `@beatapi/beat-browser@1.4.1`; CLI/MCP installation does not install or grant permissions to a Chrome extension. Connect your intended Chrome profile, then inspect status before starting a task.
@@ -39,6 +39,6 @@ Normal local tools are free and need no account or API key. Optional FAST/JEV is
 
 ## Validation and support
 
-See [Harness validation](https://github.com/BeatAPI/beatapi-agent-plugin/blob/main/harness/VALIDATION.md) for tested versions, exact checks and unverified boundaries. Report sanitized issues at https://github.com/BeatAPI/beatapi-agent-plugin/issues. See [privacy and security](https://github.com/BeatAPI/beatapi-agent-plugin/blob/main/harness/SECURITY.md).
+See [Harness validation](https://github.com/BeatAPI/beatapi-agent-plugin/blob/harness-v0.1.0/harness/VALIDATION.md) for tested versions, exact checks and unverified boundaries. Report sanitized issues at https://github.com/BeatAPI/beatapi-agent-plugin/issues. See [privacy and security](https://github.com/BeatAPI/beatapi-agent-plugin/blob/harness-v0.1.0/harness/SECURITY.md).
 
 [简体中文](README.zh-CN.md) · [BeatAPI](https://beatapi.io/)

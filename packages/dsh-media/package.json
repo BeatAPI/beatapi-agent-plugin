@@ -52,7 +52,7 @@
     "url": "git+https://github.com/BeatAPI/beatapi-agent-plugin.git",
     "directory": "packages/dsh-media"
   },
-  "homepage": "https://github.com/BeatAPI/beatapi-agent-plugin/tree/main/packages/dsh-media",
+  "homepage": "https://github.com/BeatAPI/beatapi-agent-plugin/tree/harness-v0.1.0/packages/dsh-media",
   "bugs": {
     "url": "https://github.com/BeatAPI/beatapi-agent-plugin/issues"
   },

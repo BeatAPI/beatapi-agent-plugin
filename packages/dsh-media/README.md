@@ -16,7 +16,7 @@ dsh --profile web
 GitHub installation is also supported (prebuilt JavaScript; no prepare/build script):
 
 ```sh
-dsh plugin --profile web add 'github:BeatAPI/beatapi-agent-plugin#path:/packages/dsh-media'
+dsh plugin --profile web add 'github:BeatAPI/beatapi-agent-plugin#harness-v0.1.0&path:/packages/dsh-media'
 ```
 
 Set `BEATAPI_API_KEY` in the Harness credential store, or in the environment of the process that launches Harness. Never put a secret in chat or tool arguments. `apiKeyRef` in plugin settings is the credential name, not the key itself. Rotated credentials are resolved at the next call.
@@ -41,6 +41,6 @@ Supported reference inputs depend on the inspected model. Use authorized HTTPS r
 
 ## Validation and support
 
-See [Harness validation](https://github.com/BeatAPI/beatapi-agent-plugin/blob/main/harness/VALIDATION.md) for tested versions, exact checks and unverified boundaries. Report sanitized issues at https://github.com/BeatAPI/beatapi-agent-plugin/issues. See [privacy and security](https://github.com/BeatAPI/beatapi-agent-plugin/blob/main/harness/SECURITY.md).
+See [Harness validation](https://github.com/BeatAPI/beatapi-agent-plugin/blob/harness-v0.1.0/harness/VALIDATION.md) for tested versions, exact checks and unverified boundaries. Report sanitized issues at https://github.com/BeatAPI/beatapi-agent-plugin/issues. See [privacy and security](https://github.com/BeatAPI/beatapi-agent-plugin/blob/harness-v0.1.0/harness/SECURITY.md).
 
 [简体中文](README.zh-CN.md) · [BeatAPI](https://beatapi.io/)
