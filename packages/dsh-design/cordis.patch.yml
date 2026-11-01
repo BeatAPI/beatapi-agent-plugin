@@ -1,0 +1,3 @@
+- insert:
+    - id: beatdesign-harness
+      name: '@beatapi/dsh-design'

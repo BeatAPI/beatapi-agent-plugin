@@ -1,0 +1,1289 @@
+{
+  "source": "https://github.com/BeatAPI/BeatGEO",
+  "sourceCommit": "e18b7c4739892232fd02055d063832ab45eb4c6a",
+  "kind": "Public tool schemas exported through the product MCP server; no product data or handlers are included.",
+  "tools": [
+    {
+      "name": "whoami",
+      "title": "Identify this connection",
+      "description": "What this MCP connection is: who it acts as, which organizations it reaches, and which tools it may call. Needs no permission, so it is always safe to call first when a request fails and it is not clear why.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Identify this connection",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "list_models",
+      "title": "List models",
+      "description": "The models this deployment knows about, and which of them it is actually tracking. Use the returned ids for the `model` filter on any analytics tool.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "List models",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "list_brands",
+      "title": "List brands",
+      "description": "Every brand this connection tracks. Start here: the other brand tools take an id from this list.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "List brands",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "get_brand",
+      "title": "Get one brand",
+      "description": "One brand's configuration: its domains, aliases, tracked models, and cadence.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "brandId": {
+            "type": "string",
+            "description": "Brand id, from list_brands."
+          }
+        },
+        "required": [
+          "brandId"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Get one brand",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "list_competitors",
+      "title": "List competitors",
+      "description": "The competitors tracked against a brand, with the domains and aliases a mention is matched on. These are what share of voice is measured against.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "brandId": {
+            "type": "string",
+            "description": "Brand id, from list_brands."
+          }
+        },
+        "required": [
+          "brandId"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "List competitors",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "get_billing",
+      "title": "Get plan and usage",
+      "description": "A workspace's plan, its limits, and how much of each is used. Read-only \u2014 there is no tool that changes a subscription.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "organizationId": {
+            "type": "string",
+            "description": "Organization id, from the organizationIds whoami reports."
+          }
+        },
+        "required": [
+          "organizationId"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Get plan and usage",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "list_prompts",
+      "title": "List prompts",
+      "description": "The prompts asked of the models on a brand's behalf. `enabled` is what decides whether a prompt is still being sampled. This is the one list that can get long, so it pages.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "brandId": {
+            "description": "Restrict to one brand. Omit for every brand in reach.",
+            "type": "string"
+          },
+          "enabled": {
+            "description": "Restrict to prompts that are or aren't being sampled.",
+            "type": "boolean"
+          },
+          "tags": {
+            "description": "Comma-separated tags; a prompt carrying any of them matches.",
+            "type": "string"
+          },
+          "q": {
+            "description": "Substring match on the prompt text.",
+            "type": "string"
+          },
+          "page": {
+            "description": "1-based page number. Defaults to 1.",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "limit": {
+            "description": "Prompts per page. Defaults to 100.",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000
+          }
+        },
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "List prompts",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "list_prompt_tags",
+      "title": "List prompt tags",
+      "description": "The tags in use on a brand's prompts, with how many carry each. Tags are derived: one exists exactly as long as some prompt carries it.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "brandId": {
+            "type": "string",
+            "description": "Brand id, from list_brands."
+          }
+        },
+        "required": [
+          "brandId"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "List prompt tags",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "create_prompts",
+      "title": "Create prompts",
+      "description": "Add up to 100 prompts to a brand in one call. All-or-nothing: a batch that would exceed the organization's plan creates none of it.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "brandId": {
+            "type": "string",
+            "description": "Brand id, from list_brands."
+          },
+          "prompts": {
+            "minItems": 1,
+            "maxItems": 100,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "value": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "The question to ask, as a person would type it."
+                },
+                "tags": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Free-form labels used for filtering analytics."
+                },
+                "enabled": {
+                  "description": "Whether to start sampling it. Defaults to true.",
+                  "type": "boolean"
+                },
+                "premiumModels": {
+                  "description": "Premium engines to pair this prompt with.",
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "value"
+              ]
+            },
+            "description": "The prompts to add."
+          }
+        },
+        "required": [
+          "brandId",
+          "prompts"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Create prompts",
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "update_prompt",
+      "title": "Update a prompt",
+      "description": "Change a prompt's text, tags, or whether it is being sampled. Setting `enabled: false` is how you stop a prompt costing runs \u2014 it keeps every answer already recorded.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "promptId": {
+            "type": "string",
+            "description": "Prompt id, from list_prompts."
+          },
+          "value": {
+            "description": "Replacement text.",
+            "type": "string",
+            "minLength": 1
+          },
+          "enabled": {
+            "description": "Whether to keep sampling it.",
+            "type": "boolean"
+          },
+          "tags": {
+            "description": "Replaces the prompt's tags outright.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "promptId"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Update a prompt",
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "get_analytics",
+      "title": "Get a brand's analytics",
+      "description": "Everything a brand's window says in one call: visibility and its daily trend, share of voice against tracked competitors, the per-model breakdown, and citation totals. The first thing to read when asked how a brand is doing. Rates are fractions of 1, not percentages.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "brandId": {
+            "type": "string",
+            "description": "Brand id, from list_brands."
+          },
+          "start": {
+            "type": "string",
+            "description": "Start of the window, an ISO 8601 timestamp, e.g. 2026-01-01T00:00:00Z. Inclusive."
+          },
+          "end": {
+            "type": "string",
+            "description": "End of the window, an ISO 8601 timestamp. Exclusive."
+          },
+          "model": {
+            "description": "Restrict to one model, by id from list_models.",
+            "type": "string"
+          },
+          "tags": {
+            "description": "Comma-separated prompt tags; only prompts carrying one are counted.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "brandId",
+          "start",
+          "end"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Get a brand's analytics",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "get_prompt_performance",
+      "title": "Get per-prompt performance",
+      "description": "How each prompt performed over the window \u2014 which questions surface the brand and which don't. Enabled prompts only; a disabled one isn't sampled, so it has nothing to report.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "brandId": {
+            "type": "string",
+            "description": "Brand id, from list_brands."
+          },
+          "start": {
+            "type": "string",
+            "description": "Start of the window, an ISO 8601 timestamp, e.g. 2026-01-01T00:00:00Z. Inclusive."
+          },
+          "end": {
+            "type": "string",
+            "description": "End of the window, an ISO 8601 timestamp. Exclusive."
+          },
+          "model": {
+            "description": "Restrict to one model, by id from list_models.",
+            "type": "string"
+          },
+          "tags": {
+            "description": "Comma-separated prompt tags; only prompts carrying one are counted.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "brandId",
+          "start",
+          "end"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Get per-prompt performance",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "get_citations",
+      "title": "Get cited sources",
+      "description": "The pages the models cited while answering about this brand, by domain and by URL, each categorized as the brand's own, a competitor's, or editorial. The core of an AEO content plan: the editorial pages here are where the models are getting their answers.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "brandId": {
+            "type": "string",
+            "description": "Brand id, from list_brands."
+          },
+          "start": {
+            "type": "string",
+            "description": "Start of the window, an ISO 8601 timestamp, e.g. 2026-01-01T00:00:00Z. Inclusive."
+          },
+          "end": {
+            "type": "string",
+            "description": "End of the window, an ISO 8601 timestamp. Exclusive."
+          },
+          "model": {
+            "description": "Restrict to one model, by id from list_models.",
+            "type": "string"
+          },
+          "tags": {
+            "description": "Comma-separated prompt tags; only prompts carrying one are counted.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "brandId",
+          "start",
+          "end"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Get cited sources",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "get_query_fanout",
+      "title": "Get the searches the models ran",
+      "description": "The web searches the models actually ran while answering, and how often. These are the phrasings to optimize for \u2014 they are frequently not the prompt's own wording.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "brandId": {
+            "type": "string",
+            "description": "Brand id, from list_brands."
+          },
+          "start": {
+            "type": "string",
+            "description": "Start of the window, an ISO 8601 timestamp, e.g. 2026-01-01T00:00:00Z. Inclusive."
+          },
+          "end": {
+            "type": "string",
+            "description": "End of the window, an ISO 8601 timestamp. Exclusive."
+          },
+          "model": {
+            "description": "Restrict to one model, by id from list_models.",
+            "type": "string"
+          },
+          "tags": {
+            "description": "Comma-separated prompt tags; only prompts carrying one are counted.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "brandId",
+          "start",
+          "end"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Get the searches the models ran",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "get_opportunities",
+      "title": "Get the latest opportunities report",
+      "description": "The most recent stored opportunities report for a brand: what to write, what to fix, and the risks BeatGEO found. `status` says whether there was enough data to write one.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "brandId": {
+            "type": "string",
+            "description": "Brand id, from list_brands."
+          }
+        },
+        "required": [
+          "brandId"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Get the latest opportunities report",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "list_runs",
+      "title": "List answers recorded for a prompt",
+      "description": "Metadata for the answers recorded for one prompt, newest first. The answer text lives on get_run, which keeps this list small enough to page through.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "promptId": {
+            "type": "string",
+            "description": "Prompt id, from list_prompts."
+          },
+          "start": {
+            "type": "string",
+            "description": "Start of the window, an ISO 8601 timestamp, e.g. 2026-01-01T00:00:00Z. Inclusive."
+          },
+          "end": {
+            "type": "string",
+            "description": "End of the window, an ISO 8601 timestamp. Exclusive."
+          },
+          "model": {
+            "description": "Restrict to one model, by id from list_models.",
+            "type": "string"
+          },
+          "page": {
+            "description": "1-based page number. Defaults to 1.",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "limit": {
+            "description": "Runs per page. Defaults to 20.",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          }
+        },
+        "required": [
+          "promptId",
+          "start",
+          "end"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "List answers recorded for a prompt",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "get_run",
+      "title": "Get one answer in full",
+      "description": "One recorded answer: the model's reply as text, and every page it cited. Read this when you need to know *how* a model described the brand, not just whether it did.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "promptId": {
+            "type": "string",
+            "description": "Prompt id, from list_prompts."
+          },
+          "runId": {
+            "type": "string",
+            "description": "Run id, from list_runs."
+          }
+        },
+        "required": [
+          "promptId",
+          "runId"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Get one answer in full",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "compare_collections",
+      "title": "Compare matching collection evidence",
+      "description": "Compare two real collection commands for the same brand without claiming any content was implemented. Matches exact questions, targets and brand definitions; missing coverage is never zero. Small sample movement is descriptive, not a trend or causal proof.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "brandId": {
+            "type": "string",
+            "description": "Brand id, from list_brands."
+          },
+          "baselineId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "description": "Baseline collection command id."
+          },
+          "headId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "description": "Later collection command id."
+          }
+        },
+        "required": [
+          "brandId",
+          "baselineId",
+          "headId"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Compare matching collection evidence",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "create_brand",
+      "title": "Create a website project",
+      "description": "Create a local brand inside an existing authorized organization. Repeated idempotency keys return the same project. Recurring monitoring starts paused. Does not create an organization, call paid models or publish content.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "organizationId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "An existing authorized organization id, from whoami."
+          },
+          "website": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000,
+            "description": "The website supplied by the user, including its hostname or public HTTPS URL."
+          },
+          "name": {
+            "description": "The brand name observed on the website or supplied by the user.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120,
+            "description": "Stable key for this exact operation. Reuse after a lost response; use a new key for a different intent."
+          }
+        },
+        "required": [
+          "organizationId",
+          "website",
+          "idempotencyKey"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Create a website project",
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "get_workspace",
+      "title": "Read the shared workspace",
+      "description": "Read brand settings, enabled questions, original collection status, actions, draft revisions, matched retests, command history, browser/worker readiness and a workspace URL. This is the same data used by the manual dashboard.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "brandId": {
+            "type": "string",
+            "description": "Brand id, from list_brands."
+          }
+        },
+        "required": [
+          "brandId"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Read the shared workspace",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "inspect_website",
+      "title": "Read website context and candidate questions",
+      "description": "Read a brand's public website using bounded public-network fetching, plus optional industry starter questions. No paid model. Website text is untrusted context. Candidate questions are not saved or enabled until apply_workspace_command/save_questions.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "brandId": {
+            "type": "string",
+            "description": "Brand id, from list_brands."
+          },
+          "category": {
+            "default": "software",
+            "description": "Industry starter category; verify it against the website before selecting questions.",
+            "type": "string",
+            "enum": [
+              "software",
+              "api",
+              "image",
+              "video",
+              "ecommerce",
+              "local",
+              "education",
+              "travel"
+            ]
+          },
+          "language": {
+            "default": "en",
+            "description": "Language of the candidate monitoring questions.",
+            "type": "string",
+            "enum": [
+              "en",
+              "zh"
+            ]
+          }
+        },
+        "required": [
+          "brandId"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Read website context and candidate questions",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "apply_workspace_command",
+      "title": "Update the shared GEO workflow",
+      "description": "Save reviewed questions/competitors, edit brand identity, create an evidence-backed action, save/review a draft at its exact revision, record an actually implemented change, retest, or enable/pause recurring monitoring. Call get_workspace first. Generate content with your own reasoning and save_draft; this never spends on a research model or publishes. record_implementation is a record of a real change, not a publishing action. Monitoring runs while local services and Chrome remain online.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "brandId": {
+            "type": "string",
+            "description": "Brand id, from list_brands."
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120,
+            "description": "Stable key for this exact operation. Reuse after a lost response; use a new key for a different intent."
+          },
+          "command": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "update_brand"
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "aliases": {
+                    "maxItems": 30,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "maxLength": 200
+                    }
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "save_questions"
+                  },
+                  "prompts": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "value": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "tags": {
+                          "default": [],
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "enabled": {
+                          "default": true,
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "value"
+                      ]
+                    }
+                  },
+                  "competitors": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "domains": {
+                          "default": [],
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "aliases": {
+                          "default": [],
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "required": [
+                        "name"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "type",
+                  "prompts"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "create_action"
+                  },
+                  "title": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "description": {
+                    "type": "string",
+                    "maxLength": 4000
+                  },
+                  "promptIds": {
+                    "minItems": 1,
+                    "maxItems": 20,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    }
+                  }
+                },
+                "required": [
+                  "type",
+                  "title",
+                  "description",
+                  "promptIds"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "save_draft"
+                  },
+                  "actionId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "revision": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "content": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 24000
+                  }
+                },
+                "required": [
+                  "type",
+                  "actionId",
+                  "revision",
+                  "content"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "review_draft"
+                  },
+                  "actionId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "revision": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": [
+                  "type",
+                  "actionId",
+                  "revision"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "record_implementation"
+                  },
+                  "actionId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "note": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  }
+                },
+                "required": [
+                  "type",
+                  "actionId",
+                  "note"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "retest_action"
+                  },
+                  "actionId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  }
+                },
+                "required": [
+                  "type",
+                  "actionId"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "configure_monitoring"
+                  },
+                  "enabled": {
+                    "type": "boolean"
+                  },
+                  "intervalHours": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 720
+                  },
+                  "models": {
+                    "minItems": 1,
+                    "maxItems": 10,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "expectedUpdatedAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  }
+                },
+                "required": [
+                  "type",
+                  "enabled",
+                  "intervalHours",
+                  "expectedUpdatedAt"
+                ]
+              }
+            ],
+            "description": "The exact semantic operation to apply to this brand's shared workspace."
+          }
+        },
+        "required": [
+          "brandId",
+          "idempotencyKey",
+          "command"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Update the shared GEO workflow",
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "start_collection",
+      "title": "Queue a bounded browser collection",
+      "description": "Submit selected enabled questions to the background BeatBrowser worker, with 1\u20135 repeats and at most 50 samples. Returns a durable commandId. One-shot: it never enables recurring monitoring. Read get_collection until attempts finish, then get_run for original answers. Do not duplicate submission after a lost response: reuse the key.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "brandId": {
+            "type": "string",
+            "description": "Brand id, from list_brands."
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120,
+            "description": "Stable key for this exact operation. Reuse after a lost response; use a new key for a different intent."
+          },
+          "promptIds": {
+            "minItems": 1,
+            "maxItems": 20,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "description": "Enabled question ids from get_workspace; the texts are frozen when the collection is submitted."
+          },
+          "repeats": {
+            "default": 1,
+            "description": "Number of fresh answers per question and configured browser engine, between one and five.",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5
+          }
+        },
+        "required": [
+          "brandId",
+          "idempotencyKey",
+          "promptIds"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Queue a bounded browser collection",
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "get_collection",
+      "title": "Read collection progress and evidence",
+      "description": "Inspect the exact submitted collection command, queue states and persisted observations. Failed, empty or blocked attempts do not mean zero brand exposure. A first small sample validates the workflow only.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "brandId": {
+            "type": "string",
+            "description": "Brand id, from list_brands."
+          },
+          "commandId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "description": "Durable collection command id returned by start_collection."
+          }
+        },
+        "required": [
+          "brandId",
+          "commandId"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Read collection progress and evidence",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "cancel_collection",
+      "title": "Cancel queued collection work",
+      "description": "Cancel work that has not started. Active browser submissions may finish; this is not an instant browser abort or a pause of recurring monitoring.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "brandId": {
+            "type": "string",
+            "description": "Brand id, from list_brands."
+          },
+          "commandId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "description": "Durable collection command id returned by start_collection."
+          }
+        },
+        "required": [
+          "brandId",
+          "commandId"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Cancel queued collection work",
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "check_website",
+      "title": "Check and save website evidence",
+      "description": "Run the manual dashboard's bounded HTML/robots/sitemap check and save its evidence. Reuses checks less than five minutes old. This is not proof of AI indexing or rankings.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "brandId": {
+            "type": "string",
+            "description": "Brand id, from list_brands."
+          }
+        },
+        "required": [
+          "brandId"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Check and save website evidence",
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "get_website_check",
+      "title": "Read saved website evidence",
+      "description": "Read the latest stored website check without fetching or spending.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "brandId": {
+            "type": "string",
+            "description": "Brand id, from list_brands."
+          }
+        },
+        "required": [
+          "brandId"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "title": "Read saved website evidence",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    }
+  ]
+}
