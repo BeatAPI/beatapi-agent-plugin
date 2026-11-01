@@ -33,3 +33,13 @@ The three packages declare `engines.dsh: "*"` and unrestricted optional DSH peer
 - Media status returns remote task results. File upload, local file download and full timeline editing are not provided by this package.
 
 The plugin readmes and proposed marketplace descriptions deliberately stay within these boundaries.
+
+## BeatDesign and BeatGEO bundles — 2026-11-02
+
+- Product prerequisite verified: BeatGEO PR #28 merged as `e18b7c4739892232fd02055d063832ab45eb4c6a`, with all four PR checks passing. The main README documents the shared connection, twelve SEO endpoints, brand SEO page and reviewed-question import. Real paid SEO calls remain a separate acceptance.
+- BeatDesign uses the published 0.2.5 runtime, not its unreleased source additions. Isolated bundle installs on the three recorded Harness versions start the local production workspace and register 30 MCP tools and its Skill. Project list, temporary project creation, Canvas handoff and HTTP health checks pass. The test asserts its database is in temporary storage.
+- BeatGEO bundle installs on the same three hosts. Its proxy test uses a synthetic authenticated MCP fixture: permitted read-only discovery/call and missing-key setup behavior pass. It does not certify a real user's key, browser account, product database or paid SEO queries.
+- The `beatgeo-mcp-catalog.json` fixture contains 27 public tool schemas exported through BeatGEO's real MCP server without invoking product handlers. Full-catalog tests check Harness schema ingestion; returned identity is clearly synthetic. These are not fetched brand analytics.
+- Two transport-boundary regressions cover loopback-only URLs, credential-file privacy, symbolic links, malformed credentials and file rotation. Existing behavior tests remain in the full check.
+- The SEO dashboard is accessed through the same brand URL and shared BeatGEO connection. No SEO-specific MCP execution API is claimed or duplicated by this connector.
+- Package publication, public registry installation and community review are reported separately in the delivery record.
