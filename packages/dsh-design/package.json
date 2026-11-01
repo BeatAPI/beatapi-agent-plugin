@@ -1,0 +1,64 @@
+{
+  "name": "@beatapi/dsh-design",
+  "version": "0.1.0",
+  "description": "Local BeatDesign projects, Canvas, Assets and Timeline tools for DeepSeek Harness.",
+  "type": "module",
+  "main": "index.mjs",
+  "exports": {
+    ".": "./index.mjs",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "*.mjs",
+    "cordis.patch.yml",
+    "SKILL.md",
+    "README.md",
+    "README.zh-CN.md",
+    "LICENSE"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "engines": {
+    "node": ">=22.12.0",
+    "dsh": "*"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/schemastery": "^3.18.1",
+    "@deepseek-ai/dsh-mcp-client": "*"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/schemastery": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-mcp-client": {
+      "optional": true
+    }
+  },
+  "license": "MIT",
+  "author": "BeatAPI",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BeatAPI/beatapi-agent-plugin.git",
+    "directory": "packages/dsh-design"
+  },
+  "homepage": "https://github.com/BeatAPI/beatapi-agent-plugin/tree/main/packages/dsh-design",
+  "bugs": {
+    "url": "https://github.com/BeatAPI/beatapi-agent-plugin/issues"
+  },
+  "keywords": [
+    "deepseek-harness",
+    "dsh-plugin",
+    "beatdesign",
+    "canvas",
+    "video-editing"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@beatapi/beatdesign-workbuddy": "0.2.5"
+  }
+}

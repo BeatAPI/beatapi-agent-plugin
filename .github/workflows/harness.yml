@@ -18,7 +18,12 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: 22
+      - run: npm ci
       - run: npm run harness:check
       - run: npm install --global pnpm@10.32.1
       - run: node harness/scripts/install-host.mjs ${{ matrix.dsh }} /tmp/beatapi-dsh-host
       - run: node harness/scripts/host-smoke.mjs /tmp/beatapi-dsh-host/node_modules/@deepseek-ai/dsh
+      - run: node harness/scripts/workspace-smoke.mjs /tmp/beatapi-dsh-host/node_modules/@deepseek-ai/dsh
+      - run: node harness/scripts/geo-smoke.mjs /tmp/beatapi-dsh-host/node_modules/@deepseek-ai/dsh
+      - run: node harness/scripts/geo-smoke.mjs /tmp/beatapi-dsh-host/node_modules/@deepseek-ai/dsh --full-catalog
+      - run: node harness/scripts/geo-smoke.mjs /tmp/beatapi-dsh-host/node_modules/@deepseek-ai/dsh --missing-key
