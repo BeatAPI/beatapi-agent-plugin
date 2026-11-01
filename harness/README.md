@@ -1,12 +1,14 @@
 # BeatAPI plugins for DeepSeek Harness
 
-Three independently installable bundles with distinct tools and tasks:
+Five independently installable bundles with distinct tools and tasks:
 
 | Bundle | Task | Tools | Install |
 |---|---|---|---|
 | [Social Research](../packages/dsh-social) | Social discovery, approved reads, stored results and source tables | 5 native | `dsh plugin --profile web add @beatapi/dsh-social@0.1.1` |
 | [Media Kit](../packages/dsh-media) | Image/video discovery, pricing previews, approved starts and task status | 4 native | `dsh plugin --profile web add @beatapi/dsh-media@0.1.1` |
 | [BeatBrowser](../packages/dsh-browser) | Existing Chrome logins and owned background TaskSpaces | 24 namespaced MCP tools | `dsh plugin --profile web add @beatapi/dsh-browser@0.1.1` |
+| [BeatDesign](../packages/dsh-design) | Local creative Project, Canvas, Assets and Timeline | 30 namespaced MCP tools | `dsh plugin --profile web add @beatapi/dsh-design` |
+| [BeatGEO](../packages/dsh-geo) | Existing local brand, evidence and SEO/GEO workspace | Setup diagnostic plus the product’s permitted MCP tools | `dsh plugin --profile web add @beatapi/dsh-geo` |
 
 The packages do not restrict Harness versions. Tested hosts: `0.1.0-rc.6`, `0.2.1-rc.2`, and `0.2.1-rc.5`. Future hosts are not yet tested and may introduce breaking changes. Node.js 22.12+. Community integrations by BeatAPI, not official DeepSeek products. Each bundle supplies a Skill and coexists with the others. Prebuilt JavaScript needs no install-time build script. Each package README documents GitHub installation too.
 
@@ -15,3 +17,5 @@ The packages do not restrict Harness versions. Tested hosts: `0.1.0-rc.6`, `0.2.
 See [validation](VALIDATION.md) and [security](SECURITY.md) for evidence and limits.
 
 For a reproducible test runtime, first run `node harness/scripts/install-host.mjs <version> /tmp/beatapi-dsh-host`. Its recorded official package versions avoid older prerelease caret ranges resolving a mixture of later RC packages. These pins affect the test host only, not the distributed plugins or the user's installation.
+
+BeatDesign starts its pinned published runtime; port 3020 must be free. BeatGEO requires an already-running local product and a scoped workspace MCP key; it does not duplicate the product’s BeatAPI connection. SEO is accessed in the same brand dashboard, not an invented MCP query catalog. See each package README for first-use setup. `workspace-smoke.mjs` checks a real isolated BeatDesign runtime; `geo-smoke.mjs` checks authenticated proxying, read-only catalog and missing-key behavior with labeled synthetic MCP data.

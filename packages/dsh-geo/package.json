@@ -1,0 +1,72 @@
+{
+  "name": "@beatapi/dsh-geo",
+  "version": "0.1.0",
+  "description": "Connect Harness to an existing local BeatGEO SEO and AI visibility workspace.",
+  "type": "module",
+  "main": "index.mjs",
+  "exports": {
+    ".": "./index.mjs",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "*.mjs",
+    "cordis.patch.yml",
+    "SKILL.md",
+    "README.md",
+    "README.zh-CN.md",
+    "LICENSE"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "engines": {
+    "node": ">=22.12.0",
+    "dsh": "*"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/schemastery": "^3.18.1",
+    "@deepseek-ai/dsh-mcp-client": "*",
+    "@deepseek-ai/dsh-tools": "*",
+    "@deepseek-ai/dsh-credentials": "*"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/schemastery": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-mcp-client": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-tools": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-credentials": {
+      "optional": true
+    }
+  },
+  "license": "MIT",
+  "author": "BeatAPI",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BeatAPI/beatapi-agent-plugin.git",
+    "directory": "packages/dsh-geo"
+  },
+  "homepage": "https://github.com/BeatAPI/beatapi-agent-plugin/tree/main/packages/dsh-geo",
+  "bugs": {
+    "url": "https://github.com/BeatAPI/beatapi-agent-plugin/issues"
+  },
+  "keywords": [
+    "deepseek-harness",
+    "dsh-plugin",
+    "beatgeo",
+    "seo",
+    "ai-visibility"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.32.0"
+  }
+}
