@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "discovery": ["capabilities_search", "capabilities_inspect"],
+  "execution": "One generated tool per executable reference; no public generic executor.",
+  "task": "beatapi_get_capability_task",
+  "result": "beatapi_get_capability_result",
+  "catalogCommand": "npm run submission:catalog -- --fetch",
+  "artifact": "dist/submission/remote-catalog.json",
+  "status": "Build contract only; hosted tools and OAuth integration are not deployed by this repository."
+}

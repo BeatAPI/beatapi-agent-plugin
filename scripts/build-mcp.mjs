@@ -1,3 +1,9 @@
+/**
+ * [INPUT]: 本地 MCP TypeScript 入口与锁定依赖，使用 esbuild 生成单文件产物
+ * [OUTPUT]: mcp/server.mjs 或源码/依赖与既有产物的逐字节一致性检查
+ * [POS]: 本地安装包的生成边界；SDK 升级导致的 bundle 改动不应手动维护
+ * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
+ */
 import { build } from "esbuild";
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
