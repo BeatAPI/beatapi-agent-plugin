@@ -17,9 +17,12 @@
     "validate:cursor": "node scripts/validate-cursor.mjs",
     "validate:grok": "node scripts/validate-grok.mjs",
     "typecheck": "tsc --noEmit",
-    "test": "node --import tsx --test test/*.test.ts",
+    "test": "node --import tsx --test test/*.test.ts test/*.test.mjs",
     "submission:build": "node scripts/build-submission.mjs",
-    "verify": "npm run contract:check && npm run skill:check && npm run runtime:check && npm run validate:cursor && npm run validate:grok && npm run typecheck && npm test && npm run build:check && npm run marketplace:build && npm run submission:build && npm run harness:check",
+    "submission:check": "node scripts/build-submission.mjs --check",
+    "submission:probe": "node scripts/build-submission.mjs --probe",
+    "submission:catalog": "node scripts/build-remote-catalog.mjs",
+    "verify": "npm run contract:check && npm run skill:check && npm run runtime:check && npm run validate:cursor && npm run validate:grok && npm run typecheck && npm test && npm run build:check && npm run marketplace:build && npm run submission:check && npm run harness:check",
     "harness:sync": "node scripts/sync-harness.mjs",
     "harness:check": "node scripts/sync-harness.mjs --check && node --test harness/test/*.test.mjs"
   },
@@ -28,11 +31,11 @@
   },
   "license": "MIT",
   "devDependencies": {
-    "@modelcontextprotocol/sdk": "1.30.0",
+    "@modelcontextprotocol/sdk": "1.32.2",
     "@types/node": "26.1.1",
     "esbuild": "0.28.1",
     "tsx": "4.20.6",
     "typescript": "5.9.3",
-    "zod": "4.4.3"
+    "zod": "4.6.7"
   }
 }

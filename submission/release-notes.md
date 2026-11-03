@@ -1,11 +1,25 @@
-# BeatAPI Agent Plugin 0.4.0
+# BeatAPI Remote Plugin preparation
 
-Updated the local MCP and installable Skill against the current gateway API.
-The plugin exposes capability Search/Inspect/Run and four Web tools, including
-preview/field controls, free stored-result reads and research task polling.
-Existing specialized media tools remain available. Models and prices are
-discovered at runtime. Credentials stay in host settings or CLI keychain.
+Prepare a portable remote MCP + Skill package while preserving the existing
+plugin identity and local marketplace installations. The remote Skill uses the
+host OAuth connection only; it does not require local software or key entry.
 
-The marketplace ZIP includes the local MCP. The Skills-only ZIP requires a
-compatible host MCP or the official CLI 0.4.0. Platform submission/review is
-a separate publication step from building these artifacts.
+The remote Skill now covers social/web research, text and decision models,
+image/video generation and media workflows through Search, Inspect and exposed
+execution operations. Social data is read/research-only. The existing local
+generic capability tools remain compatible.
+
+Independent public execution schemas and fixed-reference bindings can be compiled
+from the real gateway catalog. The dispatcher validates inputs and the next adapter
+does not walk untrusted content. The gateway bridge and frontend have shipped
+with remote OAuth/MCP disabled; production activation and real host acceptance
+remain outstanding. Generic public execution, local uploads and administration are excluded.
+
+Public packaging requires a real deployed OAuth endpoint and passes a read-only
+discovery and SDK tool-inventory comparison before emitting a ZIP. The pinned
+v2 catalog retains OAuth declarations in SDK-visible metadata and binds each
+operation to its reference/schema hash. Missing tools, schema or policy drift
+prevent packaging; OAuth-only diagnostics cannot bypass that check.
+Actual user authorization, live tool
+behavior, review cases and demo remain unverified. This preparation is not a
+published release or a completed review submission.

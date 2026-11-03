@@ -18,6 +18,26 @@ and Workspace capabilities. This plugin connects Codex, Cursor, Grok Bot, and
 Grok Build to BeatAPI through a bundled Skill, local MCP server, typed client,
 and locked public contract.
 
+The existing host installations below use local stdio MCP. The OpenAI public
+release is a separate remote MCP + OAuth package under preparation; it does not
+require users to install a CLI or provide keys in chat. Its gateway OAuth endpoint
+implementation has shipped with the feature disabled; production OAuth activation
+and a real host connection remain unverified. This repository change alone does
+not enable the hosted service.
+See [public submission](submission/SUBMISSION.md) for the build and review gates.
+
+The remote Skill is general-purpose: social/web research, text and decision
+models, image/video generation and media workflows. Social data is read/research
+only, not social posting. Public execution tools are generated individually from
+gateway capability contracts; local `capabilities_*` interfaces stay compatible.
+`npm run submission:catalog -- --fetch` reads the anonymous catalog only and writes
+tool definitions, fixed-reference bindings and exclusions under `dist/submission/`.
+These artifacts still need the hosted gateway's OAuth/transport activation; generating them
+does not deploy a remote server or prove that every listed capability succeeds.
+Public packaging also requires a pinned v2 catalog and a matching anonymous SDK
+tool scan, not just OAuth metadata. Probe reports distinguish blocked, OAuth-only
+and metadata-matched states; none substitutes for real user/workflow review tests.
+
 **DeepSeek Harness:** five independently installable bundles provide
 [Social Research](packages/dsh-social), [Media Kit](packages/dsh-media),
 [BeatBrowser](packages/dsh-browser), [BeatDesign](packages/dsh-design), and
@@ -253,8 +273,15 @@ Do not edit synchronized Skill or client files directly. Refresh them through
    to `xai-org/plugin-marketplace` and regenerate its component index.
 3. **Codex local marketplace:** `npm run marketplace:build` creates an
    installable marketplace and ZIP under `dist/`.
-4. **OpenAI Plugin Directory:** `npm run submission:build` creates the separate
-   Skills-only review artifact. It does not claim a hosted HTTPS MCP server.
+4. **OpenAI Plugin Directory:** the public target is remote MCP + Skill using
+   host-managed OAuth, without local software or CLI prerequisites. Run
+   `npm run submission:check` for offline source validation. After the gateway's
+   actual OAuth endpoint is deployed, `npm run submission:build -- --mcp-config
+   /absolute/path/to/actual-remote-mcp.json --catalog
+   dist/submission/remote-catalog.json` performs read-only discovery checks
+   and builds `dist/submission/beatapi-agent-plugin-remote.zip`. Missing or
+   API-key-only endpoints fail closed; a Skill-only substitute is not produced.
+   Local marketplace and Harness packages remain separate and unchanged.
 
 For Muse and other remote-MCP hosts, connect to the Hosted MCP endpoint rather
 than installing this local plugin. A runnable Muse setup guide lives in the
