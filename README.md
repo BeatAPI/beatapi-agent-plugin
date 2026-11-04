@@ -20,14 +20,19 @@ and locked public contract.
 
 The existing host installations below use local stdio MCP. The OpenAI public
 release is a separate remote MCP + OAuth package under preparation; it does not
-require users to install a CLI or provide keys in chat. Its gateway OAuth endpoint
-implementation has shipped with the feature disabled; production OAuth activation
-and a real host connection remain unverified. This repository change alone does
-not enable the hosted service.
+require users to install a CLI or provide keys in chat. The owner has confirmed
+the hosted ChatGPT OAuth connection and tool invocation. Full review cases,
+the demo recording and public submission remain separate acceptance gates.
+This repository does not configure or deploy the hosted service.
 See [public submission](submission/SUBMISSION.md) for the build and review gates.
+The public listing is named **BeatAPI Agent Toolkit**; its stable package ID
+remains `beatapi-agent-plugin`, and existing local host manifests are unchanged.
 
-The remote Skill is general-purpose: social/web research, text and decision
-models, image/video generation and media workflows. Social data is read/research
+The remote Skill is general-purpose: social/web research, SEO keyword and competitor
+analysis, text and decision models, image/video generation and media workflows.
+Research, SEO analysis and creative production can be used independently or combined.
+SEO traffic figures are estimates, and ranking positions are dated snapshots, not live tracking.
+Social data is read/research
 only, not social posting. Public execution tools are generated individually from
 gateway capability contracts; local `capabilities_*` interfaces stay compatible.
 `npm run submission:catalog -- --fetch` reads the anonymous catalog only and writes
@@ -278,9 +283,11 @@ Do not edit synchronized Skill or client files directly. Refresh them through
    `npm run submission:check` for offline source validation. After the gateway's
    actual OAuth endpoint is deployed, `npm run submission:build -- --mcp-config
    /absolute/path/to/actual-remote-mcp.json --catalog
-   dist/submission/remote-catalog.json` performs read-only discovery checks
-   and builds `dist/submission/beatapi-agent-plugin-remote.zip`. Missing or
-   API-key-only endpoints fail closed; a Skill-only substitute is not produced.
+   dist/submission/remote-catalog.json --demo-recording-url
+   "$BEATAPI_REVIEW_DEMO_URL"` performs read-only discovery checks
+   and builds `dist/submission/beatapi-agent-plugin-remote.zip`. Verify recording
+   playback and reviewer access before supplying its URL. Missing recordings,
+   mismatched tools or API-key-only endpoints fail closed; a Skill-only substitute is not produced.
    Local marketplace and Harness packages remain separate and unchanged.
 
 For Muse and other remote-MCP hosts, connect to the Hosted MCP endpoint rather

@@ -1,13 +1,113 @@
-# OpenAI remote MCP + Skill submission
+# BeatAPI Agent Toolkit - OpenAI remote MCP + Skill submission
 
 Public distribution targets **With MCP**, not Skills only or desktop-only.
 The owner has confirmed developer access and identity verification. This does
 not establish that an endpoint, OAuth connection, tool scan or review has passed.
 
+## Current acceptance, 2026-11-04
+
+The owner confirms that OAuth connection and tool invocation now work in ChatGPT.
+An independent anonymous initialize of `https://api.beatapi.io/mcp/openai` returns
+MCP JSON. These are distinct from a complete recorded run of the review cases.
+Use [LAUNCH-CHECKLIST.md](LAUNCH-CHECKLIST.md) for the current release sequence and
+remaining materials; the delivery history below is not current activation advice.
+
+The public research/creation catalog now excludes seven exact
+references (messaging deep links, device registration, guest credentials and
+advertiser-session identity). The compiler owns the policy; catalog validation
+rejects reintroduction, and the gateway built-in artifact is regenerated from it.
+The new inventory is 982 tools including discovery. Gateway commit
+046715b14826fba2bf1371908bede70159d409bb is deployed and a post-deployment
+anonymous strict comparison matched every tool. See LAUNCH-CHECKLIST.md for the
+deployment and catalog digest. An admin-selected uploaded catalog takes priority;
+pushing a new built-in does not itself override it.
+Website commit 26eb4bb711de717a25769be95e23f3e0fbf81016 deployed the OAuth
+privacy and connected-application terms in English, Chinese and Japanese.
+All six public pages returned 200 with the new text and date. See POLICY-ADDENDUM.md
+for implementation evidence; publication is not legal sign-off or review approval.
+
 The local marketplace, Cursor/Grok manifests, canonical `skills/beatapi-video`
 and Harness packages remain independent. Do not upload local stdio wiring as
 the public plugin. The retired `beatapi-video-skill.zip` is not a replacement
 for a remote connection and is no longer built or attached to releases.
+
+## Listing draft and owner decisions
+
+The public display name is **BeatAPI Agent Toolkit** (21 characters). The stable
+package ID remains `beatapi-agent-plugin`, and the remote Skill stays `beatapi`.
+Local compatibility manifests keep their existing identity and display names.
+
+| Field | Draft or remaining decision |
+| --- | --- |
+| Display name | BeatAPI Agent Toolkit |
+| Subtitle | Research, SEO and AI creation |
+| Category | Productivity |
+| Description and starters | `createRemoteManifest` in `scripts/submission-package.mjs` is the authoritative package copy |
+| Publisher | Owner confirmed Logiavox LLC on 2026-11-04; remote author.name and developerName use this value. Select and verify the matching business identity in the portal; local brand metadata remains BeatAPI |
+| Countries | Owner requested all available countries; `publication.countries: []` removes directory country restrictions, not upstream or service eligibility limits |
+| Commerce declaration | `review.commerce: false`: no plugin purchases or checkout. Execution consumes existing BeatAPI balance; top-ups occur independently on the BeatAPI website. The review description discloses both facts |
+| Icons | Existing 180px composer icon and 1024px light/dark PNG logos; dark logo also supplies composerIconDark. Source checks enforce contained PNG paths, square dimensions, minimum resolution and 5 MiB maximum |
+
+The listing explains free capability Search/Inspect separately from paid
+execution, including web search. It covers social/web research, SEO analysis,
+text/decision models, images/videos and media workflows without claiming social posting, private
+messages, account administration, local uploads or credit purchases.
+
+Creative copy references [CreativeClaw](https://creativeclaw.co/) (checked
+2026-11-03) for task-first organization, not feature parity. Within the creative
+section, describe product visuals, ad creatives, social images and short videos, then supported
+inputs and selection. The pinned catalog includes product-video, music-video and
+video-analysis workflows; live Inspect still controls availability and parameters.
+Do not borrow its persistent brand/character kits, voice cloning, automatic
+cross-model consistency, publishing, promotions or usage metrics.
+
+The overall listing presents the complete toolkit before its individual use cases.
+Research is a standalone outcome, not merely preparation for media generation.
+Additional primary-source examples checked on 2026-11-03:
+
+| Area | Reference and useful pattern | BeatAPI scope and evidence boundary |
+| --- | --- | --- |
+| Social research | [Brand24 MCP](https://brand24.com/mcp/) organizes questions around brand discussions, topics and competitor comparisons | Query available public posts/profiles/comments and compare sampled themes and engagement; do not imply continuous monitoring, complete mention coverage or measured population sentiment |
+| Web research | [Parallel Search in ChatGPT](https://openai.com/business/plugins/parallel-search/) uses market briefs and source-linked vendor comparisons | The pinned web search/read/map/research contracts support finding and reading sources; a snippet or unread citation is not page evidence, and partial research stays partial |
+| SEO | [Ahrefs in ChatGPT](https://openai.com/business/plugins/ahrefs/) leads with keyword opportunities, organic competitors and backlink patterns | The pinned SEO contracts cover keyword ideas/volume/intent/difficulty, domain comparisons, ranked keywords, top pages, backlinks, ratings and traffic estimates; this is not a promise of live rank tracking, first-party analytics, technical audits or AI-visibility monitoring |
+
+These are writing references, not integrations, affiliations or claims of feature
+parity. Scope was checked against `dist/submission/remote-catalog.contracts.json`,
+not paid runtime results. Live discovery/Inspect and permissions remain authoritative;
+the contract snapshot does not prove production execution. Preserve requested
+country/language, observation dates, unknown-versus-zero values and provider-specific
+metric scales. The remote Skill carries these interpretation rules, not a second
+fixed endpoint/model list. The three listing starters now span social/web research,
+SEO planning and creative production rather than two creative-only prompts.
+
+The commerce declaration describes the absence of purchasing functionality, not
+free execution. The [plugin guidelines](https://developers.openai.com/plugins/plugin-guidelines)
+allow access to an existing paid account but prohibit selling digital credits or
+promoting upgrades, including indirect upsells. Keep website top-ups a factual
+review disclosure, not a plugin call to action. Insufficient balance must stop
+execution without checkout links or top-up recommendations. Acceptance of this
+balance-funded usage model remains subject to review; offsite payment alone does
+not establish compliance.
+
+The existing website, support, privacy and terms URLs are inherited from the
+builder/local metadata. Verify public content and actual OAuth data-practice
+coverage before submission; successful HTTP delivery alone is not policy sign-off.
+
+Listing checks on 2026-11-03 found all four destinations publicly reachable with
+the expected product, policy or repository content. The privacy and terms pages
+have no explicit MCP/OAuth paragraphs yet. Review the real connected-account,
+tool-result sharing, retention and revocation/deletion behavior before preparing
+policy additions; do not invent legal commitments or treat this check as legal
+approval. Existing PNG dimensions are 180x180 for the composer icon and
+1024x1024 for both logos; the light composer and dark logo were visually inspected.
+
+The owner has supplied the business name Logiavox LLC, and the public generated
+demo-image fixture is documented in DEMO-ASSETS.md and included in the media case.
+Policy coverage, tested review cases, reviewer access and a playable demo recording
+remain incomplete. Publisher type, country
+targeting and the balance/top-up arrangement were confirmed by the owner on
+2026-11-03; this does not establish review approval.
+Never store reviewer credentials in this repository or the public archive.
 
 ## Package source
 
@@ -16,17 +116,18 @@ for a remote connection and is no longer built or attached to releases.
 - `remote-tools.json` records the discovery and generated execution convention,
   not a second fixed catalog. `scripts/remote-capabilities.mjs` compiles one
   execution tool per supported reference plus bounded status/result tools.
-- The Skill covers social/web research, text and decision models, images,
+- The Skill covers social/web research, SEO, text and decision models, images,
   videos and media workflows. Social data is read/research-only, not posting.
 - The portable manifest preserves the existing plugin identity and icons,
   with remote-specific listing copy and three starter prompts.
 - Built root `mcp.json` contains only the supplied remote OAuth configuration.
   Repository root `mcp.json` remains Cursor's local stdio configuration.
-- Credentials are never packaged. Draft cases are not imported as executed
-  evidence. Final review cases and recording metadata still need to be added
-  after the hosted service is tested.
+- Credentials are never packaged. The five positive and three negative draft cases
+  are packaged under review.test_cases, not represented as executed evidence.
+  Build verifies every named tool against the pinned catalog. The media image is
+  publicly hosted and verified; real case outcomes and a playable recording remain incomplete.
 
-## Backend dependency
+## Historical backend delivery (2026-11-03, not current configuration)
 
 No production review endpoint is declared here yet. Existing `https://beatapi.io/mcp`
 is a manual API-key integration. On 2026-11-03 anonymous initialize returned 401
@@ -167,7 +268,7 @@ variables, keys and secrets are forbidden.
 
 ```bash
 npm run submission:probe -- --mcp-config /absolute/path/to/actual-remote-mcp.json --catalog dist/submission/remote-catalog.json --report dist/submission/preflight.json
-npm run submission:build -- --mcp-config /absolute/path/to/actual-remote-mcp.json --catalog dist/submission/remote-catalog.json
+npm run submission:build -- --mcp-config /absolute/path/to/actual-remote-mcp.json --catalog dist/submission/remote-catalog.json --demo-recording-url "$BEATAPI_REVIEW_DEMO_URL"
 ```
 
 Preflight checks OAuth discovery and uses the official SDK Client and Streamable
@@ -185,8 +286,10 @@ mode and writes an explicit metadata-only, metadata-matched or blocked status;
 none is an assertion of user authorization, billing or review success. A successful
 full report includes the pinned catalog SHA-256 and checks that remain unverified.
 
-Missing configuration, a pinned v2 catalog, OAuth discovery or tool consistency
-fails without producing a public ZIP.
+Missing configuration, a pinned v2 catalog, a demo recording URL, OAuth discovery or tool consistency
+fails without producing a public ZIP. Set BEATAPI_REVIEW_DEMO_URL only after checking
+real playback and reviewer access. The builder accepts HTTPS without embedded credentials
+and writes review.demo_recording_url; URL validation does not verify the recording's content.
 Successful output is `dist/submission/beatapi-agent-plugin-remote.zip`, containing
 `plugin.json`, `mcp.json`, the remote Skill, icons and LICENSE. Discovery does
 not prove that a registered client, user consent, refresh or revocation works.
@@ -196,15 +299,10 @@ not prove that a registered client, user consent, refresh or revocation works.
 1. Source and build: generate a pinned v2 catalog, run `npm run verify`, then
    compare the actual hosted tools. This step can be automated without a key.
    A successful scan is metadata evidence only, not eight passed review cases.
-2. Runtime and review rehearsal: wire gateway OAuth, consent and operation scopes;
-   verify account isolation and the database matrix before production activation.
-   Prefer a separately isolated preview deployment. The owner authorized shipping
-   default-off code to production first; that does not authorize treating an
-   inactive endpoint as an accepted host connection. The current Compose stack does not yet pass the MCP
-   settings or mount the compiled catalog; preview wiring must explicitly supply
-   both, exact host-issued redirect URIs and an explicitly migrated preview DB.
-   Build the gateway's actual `web/dist` assets before the embedded application
-   image; a backend-package test is not a complete application image build.
+2. Runtime and review rehearsal: the owner has now accepted the hosted ChatGPT
+   connection. Current remote MCP settings are managed in the gateway admin UI;
+   the default-off delivery notes above are historical. Recheck the exact
+   submission client's redirect URIs, scopes and production tool catalog before review.
    Run all five positive and three negative cases in the intended host with a
    dedicated, funded review account and public fixtures. Resolve conceptual stages
    to exact scanned tool names and record actual outcomes, not proposed calls.
@@ -223,8 +321,9 @@ not edit it into fabricated completion. Verify playback and reviewer access befo
 adding an actual `review.demo_recording_url` to the package.
 
 Reviewer passwords, tokens and any login instructions containing secrets belong
-only in secure Portal reviewer-access fields. No recording, reviewer account,
-country targeting or legal attestation is completed by this source change.
+only in secure Portal reviewer-access fields. No recording, reviewer account or
+legal attestation is completed by this source change; all-available-country
+targeting is already encoded from the owner's decision.
 
 ## Review handoff
 
@@ -237,17 +336,18 @@ country targeting or legal attestation is completed by this source change.
    its conceptual stages to actual generated tool names during rehearsal and
    supply public media fixtures and owned task/result IDs. Balance is not a quote;
    do not promise spending limits unless the server enforces them.
-4. Record real flows, verify the recording URL, then add tested cases/demo
-   metadata to the final package. Reviewer credentials stay in secure Portal
+4. Record real flows, verify the recording URL, then finalize the packaged cases
+   and add demo metadata. Reviewer credentials stay in secure Portal
    fields, not the repository or ZIP.
-5. Confirm the verified publisher name, countries, commerce declarations and
-   policy coverage. Existing listing links do not prove remote data practices
+5. Select the verified Logiavox LLC identity and confirm policy coverage; check the imported
+   all-country targeting and no-checkout commerce declaration against the owner's
+   confirmed arrangement. Existing listing links do not prove remote data practices
    match. Do not add checkout, credit purchases, upgrades or unauthorized relays.
 6. Upload through With MCP. Verify imported metadata, domain verification,
    user authorization and tool/Skill scans. The owner completes attestations
    and submits; approval and Publish remain separate actions.
 
-References checked 2026-11-03:
+References checked 2026-11-04:
 - https://developers.openai.com/plugins/build/plugins
 - https://developers.openai.com/plugins/build/auth
 - https://developers.openai.com/plugins/deploy/submission
