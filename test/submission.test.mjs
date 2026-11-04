@@ -1,11 +1,12 @@
 /**
- * [INPUT]: 远程发布构建器、本地 metadata、候选工具与 mock OAuth 响应
- * [OUTPUT]: 验证公开包无需本地执行、拒绝凭证和无效端点、保留完整远程接线
+ * [INPUT]: 远程发布构建器、展示翻译、品牌 PNG、审核案例与 mock OAuth 响应
+ * [OUTPUT]: 验证展示/ZIP 同源、录像链接必填、研究规则、公开范围及凭证边界
  * [POS]: 公开发布边界回归；不代替真实用户 OAuth、计费或门户审核
  * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
  */
 import assert from "node:assert/strict";
-import { readFileSync, mkdtempSync, rmSync, existsSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { readFileSync, mkdtempSync, rmSync, existsSync, writeFileSync, mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { execFileSync } from "node:child_process";
@@ -18,6 +19,9 @@ import {
   probeRemoteOAuth,
   buildRemotePackage,
   probeRemoteRelease,
+  checkListingAssets,
+  checkRemoteSource,
+  exportListing,
 } from "../scripts/submission-package.mjs";
 
 const root = resolve(import.meta.dirname, "..");
@@ -32,20 +36,109 @@ const config = () => ({
   },
 });
 
+test("public icons include a dark composer variant and satisfy actual PNG dimensions", () => {
+  const ui = checkRemoteSource(root).extensions["com.openai"].interface;
+  assert.equal(ui.composerIconDark, "./assets/logo-dark.png");
+  checkListingAssets(root, ui);
+  assert.throws(() => checkListingAssets(root, { ...ui, logo: "../logo.png" }), /path/);
+  const dir = mkdtempSync(join(tmpdir(), "beatapi-icons-"));
+  try {
+    mkdirSync(join(dir, "assets"));
+    const png = Buffer.from(readFileSync(join(root, "assets/logo.png")));
+    png.writeUInt32BE(128, 16);
+    writeFileSync(join(dir, "assets/logo.png"), png);
+    assert.throws(() => checkListingAssets(dir, ui), /square/);
+    writeFileSync(join(dir, "assets/logo.png"), "not a PNG");
+    assert.throws(() => checkListingAssets(dir, ui), /PNG/);
+    writeFileSync(join(dir, "assets/logo.png"), Buffer.alloc(5 * 1024 * 1024 + 1));
+    assert.throws(() => checkListingAssets(dir, ui), /5 MiB/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test("remote manifest has complete listing without local runtime dependencies", () => {
   const manifest = createRemoteManifest(local, "0.4.0", "Remote preparation.");
   const ui = manifest.extensions["com.openai"].interface;
   assert.equal(manifest.name, local.name);
+  assert.equal(ui.displayName, "BeatAPI Agent Toolkit");
+  assert.equal(ui.developerName, "Logiavox LLC");
+  assert.equal(manifest.author.name, "Logiavox LLC");
+  assert.equal(local.author.name, "BeatAPI");
+  assert.ok(ui.displayName.length <= 30);
   assert.equal(manifest.mcpServers, undefined);
   assert.equal(manifest.skills, undefined);
   assert.equal(ui.supportURL, "https://github.com/BeatAPI/beatapi-agent-plugin/issues");
   assert.ok(ui.shortDescription.length <= 30);
   assert.match(ui.longDescription, /OAuth/);
+  assert.match(ui.longDescription, /Search and Inspect are free/);
+  assert.equal(ui.shortDescription, "Research, SEO and AI creation");
+  for (const area of ["Social research:", "Web research:", "SEO and competitor analysis:", "AI creation and workflows:", "Text and decision models:"]) {
+    assert.ok(ui.longDescription.includes(area), area);
+  }
+  assert.match(ui.longDescription, /historical snapshots, not live rank tracking/);
+  assert.ok(manifest.keywords.includes("seo"));
+  assert.match(ui.defaultPrompt[0], /social.*web/);
+  assert.match(ui.defaultPrompt[1], /SEO/);
+  assert.match(ui.defaultPrompt[2], /visuals.*video/);
+  assert.match(ui.longDescription, /product visuals, ad creatives, social images and short videos/);
+  assert.match(ui.longDescription, /public HTTPS URLs/);
+  assert.deepEqual(manifest.extensions["com.openai"].publication.countries, []);
+  const review = manifest.extensions["com.openai"].review;
+  assert.equal(review.commerce, false);
+  assert.match(review.commerce_description, /existing BeatAPI balance/);
+  assert.match(review.commerce_description, /independently on the BeatAPI website/);
+  assert.match(review.commerce_description, /does not sell credits/);
   for (const domain of ["social", "web", "text", "decision", "images", "videos"]) assert.ok(ui.longDescription.includes(domain));
   assert.doesNotMatch(JSON.stringify(manifest), /BEATAPI_CLI_PATH|stdio|API key|requires_local_executor/);
   for (const key of ["websiteURL", "supportURL", "privacyPolicyURL", "termsOfServiceURL"]) {
     assert.equal(new URL(ui[key]).protocol, "https:");
   }
+});
+
+test("private presentation and submission share English defaults, translations and real icons", () => {
+  const manifest = checkRemoteSource(root);
+  const openai = manifest.extensions["com.openai"];
+  assert.equal(openai.interface.displayName, "BeatAPI Agent Toolkit");
+  assert.equal(openai.interface.category, "Productivity");
+  assert.equal(openai.interface.websiteURL, "https://beatapi.io");
+  assert.equal(openai.interface.shortDescription, "Research, SEO and AI creation");
+  assert.match(manifest.description, /^Combine social and web research/);
+  assert.deepEqual(Object.keys(openai.publication.translations), ["zh-CN", "ja-JP"]);
+  assert.match(openai.publication.translations["zh-CN"].description, /不支持发帖、私信/);
+  assert.match(openai.publication.translations["ja-JP"].description, /リアルタイムの順位計測ではありません/);
+  for (const entry of Object.values(openai.publication.translations)) {
+    assert.ok(entry.subtitle.length <= 30);
+    assert.ok(entry.description.length <= 4000);
+    assert.ok(entry.description.includes("OAuth"));
+    assert.ok(entry.description.includes("HTTPS"));
+  }
+  const directory = mkdtempSync(join(tmpdir(), "beatapi-presentation-"));
+  try {
+    exportListing(root, directory);
+    assert.deepEqual(JSON.parse(readFileSync(join(directory, "plugin.json"), "utf8")), manifest);
+    for (const path of [openai.interface.logo, openai.interface.logoDark, openai.interface.composerIcon, openai.interface.composerIconDark]) {
+      assert.deepEqual(readFileSync(join(directory, path)), readFileSync(join(root, path)));
+    }
+    assert.equal(existsSync(join(directory, "mcp.json")), false, "listing export must not pretend to be an installable connection");
+    assert.equal(existsSync(join(directory, ".app.json")), false);
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+test("remote skill discloses insufficient balance without promoting a purchase", () => {
+  const skill = readFileSync(join(root, "submission/REMOTE-SKILL.md"), "utf8");
+  assert.match(skill, /Do not promote top-ups or link to checkout/);
+  assert.match(skill, /If balance is insufficient, explain the execution limitation and stop/);
+});
+
+test("research guidance preserves evidence and SEO metric boundaries", () => {
+  const skill = readFileSync(join(root, "submission/REMOTE-SKILL.md"), "utf8");
+  for (const boundary of ["read_status", "position_seen_at", "has_data", "total site visits", "country and language", "not continuous monitoring"]) {
+    assert.ok(skill.includes(boundary), boundary);
+  }
+  assert.match(skill, /Do not promise ranking gains/);
 });
 
 test("remote configuration accepts OAuth registration but rejects local or secret-bearing inputs", () => {
@@ -135,8 +228,14 @@ test("general remote Skill and review drafts cover discovery and bounded cross-d
   assert.equal(cases.negative.length, 3);
   for (const item of cases.positive) {
     assert.match(item.description, /Draft, not run/);
-    assert.ok(item.stages.every((stage) => ["search", "inspect", "execute", "status", "result"].includes(stage)));
+    assert.ok(item.tools_triggered.includes("capabilities_inspect"));
+    assert.equal(item.stages, undefined);
   }
+  assert.deepEqual(checkRemoteSource(root).extensions["com.openai"].review.test_cases, cases);
+  const fixtureHash = createHash("sha256").update(readFileSync(join(root, "assets/demo-water-bottle-v1.png"))).digest("hex");
+  const mediaCase = cases.positive.find((item) => item.tools_triggered.includes("beatapi_workflow_ecommerce_video_214cba3420"));
+  assert.ok(mediaCase.prompt.includes(`https://cdn.beatapi.io/plugins/beatapi-agent-toolkit/review/demo-water-bottle-${fixtureHash.slice(0, 12)}.png`));
+  assert.match(mediaCase.description, /AI-generated, fictional unbranded/);
 });
 
 function capability(reference, overrides = {}) {
@@ -228,6 +327,31 @@ test("catalog compiler exposes each executable reference independently and repor
   assert.throws(() => compileRemoteCatalog([contracts[3]]), /empty/);
 });
 
+test("public research catalog excludes messaging, device and credential utilities without blocking public research", () => {
+  const excluded = [
+    "data:bilibili.huahuo.account_session_info",
+    "data:douyin.app.v3.open_douyin_app_to_send_private_message",
+    "data:tiktok.app.v3.open_tiktok_app_to_send_private_message",
+    "data:douyin.app.v3.register_device",
+    "data:douyin.web.fetch_douyin_web_guest_cookie",
+    "data:tiktok.web.fetch_tiktok_web_guest_cookie",
+    "data:tiktok.web.generate_real_mstoken",
+  ];
+  const permitted = ["data:xiaohongshu.app_v2.search_notes", "data:creator.contacts", "data:douyin.xingtu_v2.get_author_hot_comment_tokens"];
+  const catalog = compileRemoteCatalog([...excluded, ...permitted].map((reference) => capability(reference)));
+  assert.deepEqual(Object.values(catalog.bindings).map((item) => item.reference).sort(), permitted.sort());
+  assert.deepEqual(catalog.excluded.map((item) => item.reference).sort(), excluded.sort());
+  assert.ok(catalog.excluded.every((item) => item.reason.startsWith("outside public research/creation scope:")));
+  const dispatcher = createRemoteDispatcher(catalog);
+  const unsafe = compileRemoteCatalog([capability("data:search")]);
+  const name = Object.keys(unsafe.bindings)[0];
+  const reference = excluded[0];
+  unsafe.bindings[name].reference = reference;
+  unsafe.tools[0]._meta["beatapi/capability"].reference = reference;
+  assert.throws(() => validateRemoteCatalog(unsafe), /public.*scope/);
+  assert.throws(() => dispatcher("capabilities_run", { reference }), /not exposed/);
+});
+
 test("remote dispatch pins references, validates exact input and prevents generic execution or mode switching", () => {
   const catalog = compileRemoteCatalog([capability("data:search"), capability("model:image", {
     execution: { mode: "async", executable: true, status_supported: true },
@@ -284,21 +408,42 @@ test("next adaptation stays within exposed bindings and never walks untrusted re
 test("remote ZIP contains portable connection and Skill but no local MCP or credentials", async () => {
   const dist = mkdtempSync(join(tmpdir(), "beatapi-remote-package-"));
   try {
-    const catalog = compileRemoteCatalog([capability("data:search")]);
+    const catalog = compileRemoteCatalog([
+      capability("data:xiaohongshu.app_v2.search_notes"), capability("data:web.search"), capability("data:web.read"),
+      capability("data:seo.keyword_overview"), capability("workflow:ecommerce-video", {
+        execution: { mode: "async", executable: true, status_supported: true },
+      }),
+    ]);
+    const demoUrl = "https://cdn.beatapi.io/plugins/review/demo.mp4";
     await assert.rejects(buildRemotePackage(root, dist, config(), mockOAuth().fetcher), /catalog/i);
-    await assert.rejects(buildRemotePackage(root, dist, config(), mockReady(catalog, (tools) => tools.slice(1)).fetcher, catalog), /tool/i);
-    const archive = await buildRemotePackage(root, dist, config(), mockReady(catalog).fetcher, catalog);
+    await assert.rejects(buildRemotePackage(root, dist, config(), mockReady(catalog).fetcher, catalog), /demo-recording-url/);
+    for (const invalid of ["http://cdn.beatapi.io/demo.mp4", "https://user:password@cdn.beatapi.io/demo.mp4"]) {
+      await assert.rejects(buildRemotePackage(root, dist, config(), mockReady(catalog).fetcher, catalog, invalid), /recording/i);
+    }
+    await assert.rejects(buildRemotePackage(root, dist, config(), mockReady(catalog, (tools) => tools.slice(1)).fetcher, catalog, demoUrl), /tool/i);
+    const archive = await buildRemotePackage(root, dist, config(), mockReady(catalog).fetcher, catalog, demoUrl);
     const files = execFileSync("unzip", ["-Z1", archive], { encoding: "utf8" }).split("\n");
     const prefix = "beatapi-agent-plugin/";
-    for (const name of ["plugin.json", "mcp.json", "skills/beatapi/SKILL.md", "assets/logo.png", "assets/icon.png", "LICENSE"]) {
+    for (const name of ["plugin.json", "mcp.json", "skills/beatapi/SKILL.md", "assets/logo.png", "assets/logo-dark.png", "assets/icon.png", "LICENSE"]) {
       assert.ok(files.includes(prefix + name), name);
     }
     assert.doesNotMatch(files.join("\n"), /node_modules|server\.mjs|\.codex-plugin|\.app\.json|\.env|README\.txt/);
     const remote = JSON.parse(execFileSync("unzip", ["-p", archive, prefix + "mcp.json"], { encoding: "utf8" }));
     validateRemoteConfig(remote);
     const manifest = JSON.parse(execFileSync("unzip", ["-p", archive, prefix + "plugin.json"], { encoding: "utf8" }));
-    assert.equal(manifest.extensions["com.openai"].review, undefined);
-    await assert.rejects(buildRemotePackage(root, dist, config(), mockReady(catalog, (tools) => tools.slice(1)).fetcher, catalog), /tool/i);
+    const openai = manifest.extensions["com.openai"];
+    assert.equal(openai.review.commerce, false);
+    assert.equal(openai.review.test_cases.positive.length, 5);
+    assert.equal(openai.review.test_cases.negative.length, 3);
+    assert.equal(openai.interface.composerIconDark, "./assets/logo-dark.png");
+    const icon = execFileSync("unzip", ["-p", archive, prefix + openai.interface.composerIconDark.slice(2)]);
+    assert.deepEqual(icon, readFileSync(join(root, "assets/logo-dark.png")));
+    assert.equal(openai.review.demo_recording_url, demoUrl);
+    assert.deepEqual(openai.publication.countries, []);
+    assert.deepEqual(openai.publication.translations, checkRemoteSource(root).extensions["com.openai"].publication.translations);
+    await assert.rejects(buildRemotePackage(root, dist, config(), mockReady(catalog).fetcher,
+      compileRemoteCatalog([capability("data:search")]), demoUrl), /Review case names an unavailable tool/);
+    await assert.rejects(buildRemotePackage(root, dist, config(), mockReady(catalog, (tools) => tools.slice(1)).fetcher, catalog, demoUrl), /tool/i);
     assert.equal(existsSync(archive), false, "a failed rebuild must not leave a stale public ZIP");
   } finally {
     rmSync(dist, { recursive: true, force: true });

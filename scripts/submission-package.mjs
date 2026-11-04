@@ -1,6 +1,6 @@
 /**
- * [INPUT]: 本地 metadata、远程 Skill、固定目录、真实 OAuth 配置与 SDK discovery/工具扫描
- * [OUTPUT]: 源检查、probeRemoteRelease 完整元数据预检、仅在 OAuth 与工具一致时生成的 ZIP
+ * [INPUT]: 本地展示源、品牌 PNG、审核案例、操作者已核验的录像链接与真实 OAuth/工具扫描
+ * [OUTPUT]: 展示源校验/导出、完整预检及含录像链接的远程 ZIP，不验证录像内容或案例实绩
  * [POS]: OpenAI 公开包边界；不继承本地接线，也不替代网关授权或门户审核
  * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
  */
@@ -8,6 +8,7 @@ import { execFileSync } from "node:child_process";
 import { cpSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { z } from "zod";
+import listingTranslations from "../submission/listing-translations.json" with { type: "json" };
 import {
   discoverAuthorizationServerMetadata,
   discoverOAuthProtectedResourceMetadata,
@@ -22,6 +23,7 @@ const clientSchema = z.discriminatedUnion("mode", [
   z.object({ mode: z.literal("cimd") }).strict(),
 ]);
 const scopes = z.array(z.string().trim().min(1));
+const publisherName = "Logiavox LLC";
 const remoteConfigSchema = z.object({
   $schema: z.literal("https://agent-plugins.org/schemas/1.0.0/mcp.schema.json").optional(),
   mcpServers: z.object({ beatapi: z.object({
@@ -45,22 +47,22 @@ export function validateRemoteConfig(config) {
   return remoteConfigSchema.parse(config).mcpServers.beatapi;
 }
 
-export function createRemoteManifest(local, version, releaseNotes) {
+export function createRemoteManifest(local, version, releaseNotes, testCases) {
   const ui = local.interface;
   return {
     $schema: "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
     name: local.name,
     version,
-    description: "Research public data and combine text, decision, image, video and media workflows through BeatAPI.",
-    author: local.author,
+    description: "Combine social and web research, SEO analysis, text and decision models, and image/video creation through BeatAPI.",
+    author: { ...local.author, name: publisherName },
     homepage: local.homepage,
     repository: local.repository,
     license: local.license,
-    keywords: ["beatapi", "social-research", "web-search", "text-generation", "image-generation", "video-generation", "workflows"],
+    keywords: ["beatapi", "social-research", "web-search", "seo", "competitor-analysis", "text-generation", "image-generation", "video-generation", "workflows"],
     extensions: { "com.openai": {
       interface: {
-        displayName: ui.displayName,
-        developerName: ui.developerName,
+        displayName: "BeatAPI Agent Toolkit",
+        developerName: publisherName,
         category: "Productivity",
         capabilities: ["Read", "Write"],
         websiteURL: ui.websiteURL,
@@ -68,27 +70,70 @@ export function createRemoteManifest(local, version, releaseNotes) {
         termsOfServiceURL: ui.termsOfServiceURL,
         brandColor: ui.brandColor,
         composerIcon: "./assets/icon.png",
+        composerIconDark: "./assets/logo-dark.png",
         logo: "./assets/logo.png",
         logoDark: "./assets/logo-dark.png",
-        shortDescription: "Research, models and workflows",
-        longDescription: "Use BeatAPI to research social and web data, run text and decision models, generate images and videos, and combine media workflows. Search for a capability, inspect its current inputs and pricing, then use the connected server's exposed operation. Social data is for reading and research, not posting or managing social accounts. Executions use your existing BeatAPI balance. Available operations depend on the connected server and your account permissions. Sign-in uses the host OAuth flow, without local software or credentials in chat. Local uploads, account administration, purchases, webhooks and Realtime setup are not included.",
+        shortDescription: "Research, SEO and AI creation",
+        longDescription: [
+          "BeatAPI Agent Toolkit brings social and web research, SEO analysis, text and decision models, and image/video creation into one toolkit. Investigate a market, compare competitors, find content opportunities or create campaign assets. Use each capability independently or combine the steps your task needs.",
+          "Social research: Find public posts, videos, profiles and comments to investigate brand mentions, audience questions and competitor content. Compare discussion themes and available engagement signals, with source links and sample limits. Supported platforms include Xiaohongshu, Douyin, TikTok, Bilibili, Weibo, X, Instagram, YouTube and Reddit; available operations vary by platform.",
+          "Web research: Search for current information, read relevant pages and research questions across multiple sources. Prepare market briefs, product comparisons and evidence summaries. Keep source links, distinguish retrieved facts from interpretation, and flag missing or unread evidence.",
+          "SEO and competitor analysis: Explore keyword ideas, search volume, intent and difficulty. Compare domains, ranking keywords, top pages, backlinks, domain ratings and estimated traffic to prioritize content opportunities. Check the requested market and data dates: traffic figures are estimates, and ranking positions are historical snapshots, not live rank tracking.",
+          "AI creation and workflows: Turn a creative brief into product visuals, ad creatives, social images and short videos. Discover image and video models, compare supported inputs and settings, and generate the options you choose. Start from a text prompt or reference images supplied as public HTTPS URLs, depending on the selected capability. Use product-video, music-video or video-analysis workflows when available, then track tasks and retrieve results.",
+          "Text and decision models: Draft copy, summarize findings and evaluate options using the models selected for your task. For example, combine audience research and keyword data into a content brief, then create visuals if requested. Research does not require a generation step.",
+          "Find a capability, inspect its current inputs, pricing and readiness, then choose what to run. Search and Inspect are free; web searches and other execution calls use your existing BeatAPI balance. Charges depend on the selected capability and usage. The plugin does not sell credits or handle payments.",
+          "Connect through OAuth without installing local software or sharing credentials in chat. Available operations depend on the connected server and your permissions.",
+          "Social data is for reading and research, not posting, messaging or managing social accounts. Local file uploads, account administration, credit purchases, webhooks and Realtime setup are not included.",
+        ].join("\n\n"),
         supportURL: "https://github.com/BeatAPI/beatapi-agent-plugin/issues",
         defaultPrompt: [
-          "Use $beatapi to find social research capabilities for my topic. Do not run paid queries yet.",
-          "Use $beatapi to compare text, decision, image and video options for this project without running them.",
-          "Use $beatapi to plan research and a product video from these image URLs. Show the steps before running.",
+          "Use $beatapi to plan social and web research on my topic, with sources and sample limits. Show pricing before running.",
+          "Use $beatapi to plan SEO keyword and competitor analysis for my domain and target market. Show pricing before running.",
+          "Use $beatapi to plan product visuals and a short video from these image URLs. Show options and pricing before running.",
         ],
       },
-      publication: { release_notes: releaseNotes },
+      review: {
+        ...(testCases ? { test_cases: testCases } : {}),
+        commerce: false,
+        commerce_description: "Execution consumes the connected user's existing BeatAPI balance. Users manage top-ups independently on the BeatAPI website. The plugin does not sell credits, initiate purchases, process payments, promote upgrades or direct users to checkout.",
+      },
+      publication: { countries: [], release_notes: releaseNotes, translations: structuredClone(listingTranslations) },
     } },
   };
+}
+
+export function checkListingAssets(root, ui) {
+  for (const field of ["logo", "logoDark", "composerIcon", "composerIconDark"]) {
+    const path = ui[field];
+    if (!path && ["logoDark", "composerIconDark"].includes(field)) continue;
+    if (!/^\.\/assets\/[a-zA-Z0-9_-]+\.png$/.test(path ?? "")) throw new Error(`Invalid icon path: ${field}`);
+    const png = readFileSync(join(root, path));
+    if (png.length < 33 || png.length > 5 * 1024 * 1024 ||
+      png.subarray(0, 8).toString("hex") !== "89504e470d0a1a0a" || png.toString("ascii", 12, 16) !== "IHDR") {
+      throw new Error(`Icon must be a PNG up to 5 MiB: ${field}`);
+    }
+    const width = png.readUInt32BE(16);
+    const height = png.readUInt32BE(20);
+    const minimum = field.startsWith("logo") ? 256 : 48;
+    if (width !== height || width < minimum) throw new Error(`Icon must be square and at least ${minimum}px: ${field}`);
+  }
 }
 
 export function checkRemoteSource(root) {
   const local = JSON.parse(readFileSync(join(root, ".codex-plugin/plugin.json"), "utf8"));
   const { version } = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
-  const manifest = createRemoteManifest(local, version, readFileSync(join(root, "submission/release-notes.md"), "utf8"));
+  const positive = z.object({ description: z.string().trim().min(1).max(4000), prompt: z.string().trim().min(1),
+    tools_triggered: z.string().trim().min(1), expected_behavior: z.string().trim().min(1) }).strict();
+  const testCases = z.object({ positive: z.array(positive).length(5),
+    negative: z.array(positive.pick({ description: true, prompt: true })).length(3) }).strict()
+    .parse(JSON.parse(readFileSync(join(root, "submission/test-cases.json"), "utf8")));
+  const manifest = createRemoteManifest(local, version, readFileSync(join(root, "submission/release-notes.md"), "utf8"), testCases);
   const ui = manifest.extensions["com.openai"].interface;
+  z.record(z.enum(["zh-CN", "ja-JP"]), z.object({
+    subtitle: z.string().trim().min(1).max(30).refine((value) => !/[\r\n\t]/.test(value)),
+    description: z.string().trim().min(1).max(4000).refine((value) => !/[\u0000-\u0009\u000b-\u001f\u007f]/.test(value)),
+  }).strict()).parse(manifest.extensions["com.openai"].publication.translations);
+  checkListingAssets(root, ui);
   for (const [field, max] of Object.entries({ displayName: 30, shortDescription: 30, longDescription: 4000, developerName: 80 })) {
     z.string().trim().min(1).max(max).parse(ui[field]);
   }
@@ -103,6 +148,17 @@ export function checkRemoteSource(root) {
     throw new Error("Remote Skill must use the host OAuth connection, without local or generic-executor fallbacks.");
   }
   return manifest;
+}
+
+export function exportListing(root, directory) {
+  const manifest = checkRemoteSource(root);
+  const ui = manifest.extensions["com.openai"].interface;
+  mkdirSync(join(directory, "assets"), { recursive: true });
+  writeFileSync(join(directory, "plugin.json"), JSON.stringify(manifest, null, 2) + "\n");
+  for (const path of new Set([ui.logo, ui.logoDark, ui.composerIcon, ui.composerIconDark].filter(Boolean))) {
+    cpSync(join(root, path), join(directory, path));
+  }
+  return directory;
 }
 
 export async function probeRemoteOAuth(config, fetcher = fetch) {
@@ -156,12 +212,24 @@ export async function probeRemoteRelease(config, catalog, fetcher = fetch) {
   return { oauth, tools };
 }
 
-export async function buildRemotePackage(root, dist, config, fetcher = fetch, catalog) {
+export async function buildRemotePackage(root, dist, config, fetcher = fetch, catalog, demoRecordingUrl) {
   mkdirSync(dist, { recursive: true });
   const archive = join(dist, "beatapi-agent-plugin-remote.zip");
   rmSync(archive, { force: true });
   const manifest = checkRemoteSource(root);
   if (!catalog) throw new Error("A pinned generated remote catalog is required for public packaging.");
+  if (!demoRecordingUrl) throw new Error("Provide --demo-recording-url after verifying playback and reviewer access; a script is not a recording.");
+  const recording = new URL(demoRecordingUrl);
+  if (recording.protocol !== "https:" || recording.username || recording.password) {
+    throw new Error("Demo recording must use HTTPS without embedded credentials.");
+  }
+  manifest.extensions["com.openai"].review.demo_recording_url = recording.href;
+  const toolNames = new Set([...catalog.discovery, ...catalog.tools.map((tool) => tool.name)]);
+  for (const item of manifest.extensions["com.openai"].review.test_cases.positive) {
+    for (const name of item.tools_triggered.split(/,\s*/)) {
+      if (!toolNames.has(name)) throw new Error(`Review case names an unavailable tool: ${name}`);
+    }
+  }
   await probeRemoteRelease(config, catalog, fetcher);
   const temporary = mkdtempSync(join(dist, ".remote-build-"));
   try {

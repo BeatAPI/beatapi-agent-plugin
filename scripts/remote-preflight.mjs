@@ -1,5 +1,5 @@
 /**
- * [INPUT]: 固定远程目录、第一方 MCP URL 与匿名 HTTP；使用官方 MCP Client/Transport
+ * [INPUT]: 固定远程目录、公开范围策略、第一方 MCP URL 与匿名 HTTP；使用官方 MCP Client/Transport
  * [OUTPUT]: validateRemoteCatalog 校验构建目录，probeRemoteTools 比对真实分页工具清单与目录摘要
  * [POS]: 发布前只读工具扫描；不注册 OAuth 客户端、不签发令牌、不调用任何业务工具
  * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
@@ -9,7 +9,7 @@ import { isDeepStrictEqual } from "node:util";
 import { z } from "zod";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-import { createRemoteDispatcher, discoveryTools, taskTool, resultTool } from "./remote-capabilities.mjs";
+import { createRemoteDispatcher, discoveryTools, taskTool, resultTool, remoteCapabilityExclusions } from "./remote-capabilities.mjs";
 
 export const firstPartyUrl = z.string().url().refine((value) => {
   const url = new URL(value);
@@ -43,6 +43,7 @@ export function validateRemoteCatalog(value) {
     const binding = catalog.bindings[tool.name];
     if (!binding && ![taskTool, resultTool].includes(tool.name)) throw new Error(`Missing catalog binding: ${tool.name}`);
     if (binding) {
+      if (Object.hasOwn(remoteCapabilityExclusions, binding.reference)) throw new Error(`Capability outside public research/creation scope: ${binding.reference}`);
       if (!isDeepStrictEqual(tool._meta["beatapi/capability"], { reference: binding.reference, schemaHash: binding.schemaHash, operation: "start" })) {
         throw new Error(`Catalog binding metadata mismatch: ${tool.name}`);
       }

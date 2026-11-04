@@ -1,6 +1,6 @@
 /**
  * [INPUT]: 网关完整能力契约；不读取 key、用户数据或供应商内部目录
- * [OUTPUT]: compileRemoteCatalog 生成最小权限工具并规范 schema 注解，createRemoteDispatcher 验证绑定，adaptRemoteNext 改写协议调用
+ * [OUTPUT]: 公开范围排除策略、最小权限工具编译、固定绑定验证和协议 next 改写
  * [POS]: 公开 MCP 的构建期契约编译器；不启动服务器、不鉴权、不执行或扣费
  * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
  */
@@ -25,6 +25,16 @@ export const taskTool = "beatapi_get_capability_task";
 export const resultTool = "beatapi_get_capability_result";
 const read = { readOnlyHint: true, destructiveHint: false, openWorldHint: false };
 const credentialField = /^(api_?key|authorization|cookie|password|secret|client_?secret|access_?token|refresh_?token)$/i;
+
+export const remoteCapabilityExclusions = Object.freeze({
+  "data:bilibili.huahuo.account_session_info": "advertiser session identity is not public research",
+  "data:douyin.app.v3.open_douyin_app_to_send_private_message": "messaging deep links are not research",
+  "data:tiktok.app.v3.open_tiktok_app_to_send_private_message": "messaging deep links are not research",
+  "data:douyin.app.v3.register_device": "device registration is not research",
+  "data:douyin.web.fetch_douyin_web_guest_cookie": "guest credential acquisition is not research",
+  "data:tiktok.web.fetch_tiktok_web_guest_cookie": "guest credential acquisition is not research",
+  "data:tiktok.web.generate_real_mstoken": "credential generation is not research",
+});
 
 function unsupportedSchema(value) {
   if (!value || typeof value !== "object") return false;
@@ -69,7 +79,8 @@ export function compileRemoteCatalog(contracts) {
     references.add(reference);
     if (!reference.startsWith(contract.kind + ":")) throw new Error(`Capability kind mismatch: ${reference}`);
     let reason;
-    if (contract.readiness === "listed" || !contract.execution.executable || contract.execution.run_supported === false || !["sync", "async"].includes(contract.execution.mode)) reason = "not executable through Run";
+    if (Object.hasOwn(remoteCapabilityExclusions, reference)) reason = `outside public research/creation scope: ${remoteCapabilityExclusions[reference]}`;
+    else if (contract.readiness === "listed" || !contract.execution.executable || contract.execution.run_supported === false || !["sync", "async"].includes(contract.execution.mode)) reason = "not executable through Run";
     else if (contract.input_schema?.type !== "object" || !contract.input_schema.properties) reason = "missing object input contract";
     else if (unsupportedSchema(contract.input_schema)) reason = "credential input or unresolved schema reference";
     else if (!contract.schema_hash) reason = "missing contract schema hash";

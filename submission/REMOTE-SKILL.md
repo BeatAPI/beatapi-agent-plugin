@@ -1,21 +1,29 @@
 ---
 name: beatapi
-description: Use when the user asks to use BeatAPI for social or web research, text or decision models, image or video generation, media workflows, or progress and results of an existing BeatAPI task. Discover current capabilities rather than assuming a fixed platform, model or input contract.
+description: Use when the user asks to use BeatAPI for social or web research, SEO keyword and competitor analysis, text or decision models, image or video generation, media workflows, or progress and results of an existing BeatAPI task. Discover current capabilities rather than assuming a fixed platform, model or input contract.
 ---
 
 <!--
 [INPUT]: Connected server tool schemas, public capability contracts and host-managed OAuth
-[OUTPUT]: Search, Inspect, authorized execution and bounded cross-capability composition
+[OUTPUT]: Search, Inspect, authorized execution and bounded composition with research/SEO evidence limits
 [POS]: General remote BeatAPI Skill; local compatibility Skill remains independently synchronized
 [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
 -->
 
-# BeatAPI
+# BeatAPI Agent Toolkit
+
+Reply in the user's requested language, or the language of their request when
+none is specified. The listing defaults to English; that does not force English
+responses. Keep tool names, references, IDs and URLs unchanged when translating
+explanations. Do not translate parameter keys or machine-readable enum values.
 
 ## Search, Inspect, Execute
 
 1. Search with `capabilities_search`, using the user's platform and intended action.
-   Start with a small page. An empty query gives a catalog overview.
+   Start with a small page. An empty query gives a catalog overview. Use `platform`
+   only for an actual platform identifier; web research and SEO are topics, not
+   necessarily platform IDs. If a filtered search is empty, remove unverified
+   filters and refine the query before concluding that a capability is unavailable.
 2. Copy a returned reference exactly into `capabilities_inspect`. Read its input
    schema, pricing, execution mode, readiness and `next`. Never construct a reference.
 3. Use the specific execution tool named by the protocol-level `next.call`, only
@@ -27,7 +35,7 @@ Search and Inspect are public, free discovery; do not require sign-in for these
 steps when the server allows anonymous access. An installed Skill is not proof
 that the remote server is connected or that execution is authorized.
 
-This plugin covers the connected server's available social data, web search,
+This plugin covers the connected server's available social data, web research, SEO,
 text and decision models, image/video models and media workflows. Social data
 supports reading and research, not posting, messaging or social-account changes.
 Do not imply affiliation with any social platform. Availability comes from the
@@ -50,6 +58,7 @@ Inspect pricing before execution. Distinguish per-request, per-token and media
 rates from an exact total. Do not infer a quote from the account balance. If the
 user requires a hard spending cap, execute only if the server can enforce it.
 Do not buy credits, initiate checkout, subscriptions or upgrades.
+Do not promote top-ups or link to checkout. If balance is insufficient, explain the execution limitation and stop.
 
 An explicit task authorizes its stated scope, not unlimited searches, pagination,
 generations or retries. Resolve ambiguous settings before spending. For a multi-step
@@ -73,6 +82,44 @@ Prefer preview results, then the stored-result tool when additional fields are n
 For input media, use only user-supplied or explicitly approved public HTTPS URLs.
 Do not search local files, borrow another tool's upload path, or send private-network,
 localhost or credential-bearing URLs. Explain unsupported attachment inputs.
+
+## Research and SEO evidence
+
+For social research, agree on the platforms, topic, time window and sample size.
+Compare public posts, comments and available engagement signals, retaining source
+links and retrieval dates. This is on-demand research, not continuous monitoring
+or a complete measure of brand awareness, sentiment or audience demographics.
+Do not infer private traits about individuals from public activity.
+
+For web research, read pages before citing their contents. Search snippets are
+discovery leads, not verified page evidence. For research results, cite only sources
+whose `read_status` is `read`; label partial coverage and unread sources. Separate
+source claims from your synthesis. A website map is not a technical SEO audit.
+
+For SEO, establish the domain or seed keywords and target country and language
+before paid calls where those inputs apply. Compare like-for-like markets, dates
+and metric definitions. Keep estimated search traffic separate from total site visits;
+neither is first-party analytics. Ranking positions are dated snapshots: use
+`position_seen_at` when returned, not a claim of live tracking. `has_data: false`
+and missing keywords mean unknown, not zero. Do not convert authority or difficulty
+scores between different data sets or assume missing metrics. Do not promise ranking gains,
+AI-search visibility tracking, Search Console access or site changes without an
+explicitly available contract. Recommendations must identify their supporting data
+and limitations, not present model inference as a provider measurement.
+
+## Deliver the requested outcome
+
+For a research brief, lead with the answer, then a compact source table and the
+sample, date and coverage limits. Separate observed evidence from interpretation;
+do not return a raw catalog when the user asked for research findings.
+
+For SEO analysis, group returned metrics by the requested keyword/domain and
+market, include observation dates, and rank proposed actions by the evidence
+actually returned. Explain missing data rather than filling the table with zeros.
+
+For creative work, return the actual generated image/video links and relevant
+settings. If still processing, return the owned task ID and current state instead
+of claiming delivery. Do not run extra text models merely to format an answer.
 
 ## Submit once, monitor, recover
 
