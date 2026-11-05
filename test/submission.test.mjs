@@ -229,6 +229,7 @@ test("general remote Skill and review drafts cover discovery and bounded cross-d
   assert.equal(profile.result, resultTool);
   const skill = readFileSync(join(root, "submission/REMOTE-SKILL.md"), "utf8");
   assert.match(skill, /^---\nname: beatapi\n/);
+  assert.match(skill, /Do not turn a refusal into a purchase or credential path/);
   assert.doesNotMatch(skill, /npm install|BEATAPI_CLI_PATH|BEATAPI_API_KEY|capabilities_run|beatapi_upload_file/);
   const cases = JSON.parse(readFileSync(join(root, "submission/test-cases.json"), "utf8"));
   assert.equal(cases.positive.length, 5);
@@ -243,8 +244,8 @@ test("general remote Skill and review drafts cover discovery and bounded cross-d
   const mediaCase = cases.positive.find((item) => item.tools_triggered.includes("beatapi_model_nano_banana_2_890739a2f7"));
   assert.ok(mediaCase.prompt.includes(`https://cdn.beatapi.io/plugins/beatapi-agent-toolkit/review/demo-water-bottle-${fixtureHash.slice(0, 12)}.png`));
   assert.match(mediaCase.description, /AI-generated fictional unbranded/);
-  assert.match(mediaCase.prompt, /1K, 1:1 and PNG/);
-  assert.match(mediaCase.expected_behavior, /resolution=1K, aspect_ratio=1:1, output_format=png/);
+  assert.match(mediaCase.prompt, /1K, 9:16 and PNG/);
+  assert.match(mediaCase.expected_behavior, /resolution=1K, aspect_ratio=9:16, output_format=png/);
   assert.doesNotMatch(mediaCase.tools_triggered, /workflow_ecommerce/);
 });
 

@@ -89,6 +89,8 @@ npm run submission:listing
 
 ## 多语言边界
 
+2026-11-06 同一插件更新为 1.1.1，仅收紧购买额度/暴露凭证请求的停止规则。上传前后重新下载核对，App 绑定与 manifest 其他字段不变；三项负向在新对话补验通过。网关与组件仍是此前部署版本，不把 Skill 补丁说成后端更新；完整分版本证据见 REVIEW-RUN-2026-11-06.md。
+
 英文放在 interface 的基础字段，中日文以 zh-CN / ja-JP 写入
 extensions.com.openai.publication.translations；不增加虚构的默认语言字段或 en-US 翻译。
 按 OpenAI 2026-11-04 文档，翻译会被导入并保留，但目前不保证目录页和 listing API

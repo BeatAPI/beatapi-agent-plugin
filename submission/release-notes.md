@@ -1,5 +1,13 @@
 # BeatAPI Remote Plugin preparation
 
+Private 1.1.1 tightens the stop condition for credit-purchase and credential
+requests: refusal must not continue into top-up/dashboard directions or offers
+to check balances. The existing App binding, OAuth connection, gateway tools
+and result component are unchanged. The affected negative cases were rechecked.
+The creative case now uses portrait PNG; landscape JPEG and the earlier square
+PNG are retained as supplementary evidence. Live evidence is versioned in
+REVIEW-RUN-2026-11-06.md, not a claim of formal review approval.
+
 This revision adds a read-only inline result component for existing task and
 stored-result tools: native media playback with observed dimensions, bounded
 research tables, source links, unknown-value handling, and same-task refresh.
