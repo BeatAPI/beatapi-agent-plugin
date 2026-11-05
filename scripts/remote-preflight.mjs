@@ -1,6 +1,6 @@
 /**
  * [INPUT]: 固定远程目录、公开范围策略、第一方 MCP URL 与匿名 HTTP；使用官方 MCP Client/Transport
- * [OUTPUT]: validateRemoteCatalog 校验构建目录，probeRemoteTools 比对真实分页工具清单与目录摘要
+ * [OUTPUT]: validateRemoteCatalog 校验构建目录，probeRemoteTools 精确比对真实分页工具及 UI/outputSchema 元数据
  * [POS]: 发布前只读工具扫描；不注册 OAuth 客户端、不签发令牌、不调用任何业务工具
  * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
  */
@@ -22,10 +22,13 @@ const oauthScheme = z.object({ type: z.literal("oauth2"), scopes: z.array(z.stri
 const catalogSchema = z.object({
   version: z.literal(2), discovery: z.tuple([z.literal("capabilities_search"), z.literal("capabilities_inspect")]),
   tools: z.array(z.object({ name: z.string().regex(/^[a-zA-Z0-9_-]{1,64}$/), title: z.string().min(1), description: z.string().min(1),
-    inputSchema: z.record(z.string(), z.unknown()), annotations, securitySchemes: z.array(oauthScheme).min(1),
+    inputSchema: z.record(z.string(), z.unknown()), outputSchema: z.record(z.string(), z.unknown()).optional(), annotations, securitySchemes: z.array(oauthScheme).min(1),
     _meta: z.object({ securitySchemes: z.array(oauthScheme).min(1),
       "beatapi/capability": z.object({ reference: z.string(), schemaHash: z.string().min(1), operation: z.literal("start") }).strict().optional(),
-      "beatapi/operation": z.enum(["status", "result"]).optional() }).strict() }).strict()).min(1).max(20_000),
+      "beatapi/operation": z.enum(["status", "result"]).optional(),
+      ui: z.object({ resourceUri: z.literal("ui://beatapi/results-v1.html"), visibility: z.tuple([z.literal("model"), z.literal("app")]) }).strict().optional(),
+      "openai/toolInvocation/invoking": z.string().max(64).optional(),
+      "openai/toolInvocation/invoked": z.string().max(64).optional() }).strict() }).strict()).min(1).max(20_000),
   bindings: z.record(z.string(), z.object({ reference: z.string().regex(/^(model|data|workflow):[^\s]+$/), operation: z.literal("start"),
     schemaHash: z.string().min(1), mode: z.enum(["sync", "async"]), statusSupported: z.boolean() }).strict()),
   excluded: z.array(z.object({ reference: z.string(), reason: z.string() }).strict()),
@@ -42,6 +45,7 @@ export function validateRemoteCatalog(value) {
     if (!isDeepStrictEqual(tool.securitySchemes, tool._meta.securitySchemes)) throw new Error(`Conflicting OAuth declarations: ${tool.name}`);
     const binding = catalog.bindings[tool.name];
     if (!binding && ![taskTool, resultTool].includes(tool.name)) throw new Error(`Missing catalog binding: ${tool.name}`);
+    if (binding && tool._meta.ui) throw new Error(`Paid tools must not mount a result UI: ${tool.name}`);
     if (binding) {
       if (Object.hasOwn(remoteCapabilityExclusions, binding.reference)) throw new Error(`Capability outside public research/creation scope: ${binding.reference}`);
       if (!isDeepStrictEqual(tool._meta["beatapi/capability"], { reference: binding.reference, schemaHash: binding.schemaHash, operation: "start" })) {
@@ -109,14 +113,14 @@ export async function probeRemoteTools(url, value, fetcher = fetch) {
         }
         const pinned = expected.get(tool.name);
         if (!pinned) throw new Error(`Unexposed remote tool: ${tool.name}`);
-        for (const field of ["title", "description", "inputSchema"]) {
+        for (const field of ["title", "description", "inputSchema", "outputSchema"]) {
           if (!isDeepStrictEqual(tool[field], pinned[field])) throw new Error(`Remote ${field} drift: ${tool.name}`);
         }
         for (const field of ["readOnlyHint", "destructiveHint", "openWorldHint"]) {
           if (tool.annotations[field] !== pinned.annotations[field]) throw new Error(`Remote annotation drift: ${tool.name}`);
         }
         if (!isDeepStrictEqual(security, pinned.securitySchemes)) throw new Error(`Remote OAuth policy drift: ${tool.name}`);
-        for (const field of ["beatapi/capability", "beatapi/operation"]) {
+        for (const field of ["beatapi/capability", "beatapi/operation", "ui", "openai/toolInvocation/invoking", "openai/toolInvocation/invoked"]) {
           if (!isDeepStrictEqual(tool._meta?.[field], pinned._meta[field])) throw new Error(`Remote binding metadata drift: ${tool.name}`);
         }
       }

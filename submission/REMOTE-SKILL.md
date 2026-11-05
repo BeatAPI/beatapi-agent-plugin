@@ -5,7 +5,7 @@ description: Use when the user asks to use BeatAPI for social or web research, S
 
 <!--
 [INPUT]: Connected server tool schemas, public capability contracts and host-managed OAuth
-[OUTPUT]: Search, Inspect, authorized execution and bounded composition with research/SEO evidence limits
+[OUTPUT]: Search, Inspect, authorized execution and bounded composition with research/SEO and unsupported-social response limits
 [POS]: General remote BeatAPI Skill; local compatibility Skill remains independently synchronized
 [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
 -->
@@ -31,6 +31,27 @@ explanations. Do not translate parameter keys or machine-readable enum values.
    typed values from the user or verified prior results. Missing inputs require
    clarification, not invented IDs, URLs, or parameters.
 
+The `next.call.input` is a starting template, not the completed request. Build the
+actual input from all confirmed settings and the current schema, including optional
+settings the user selected. Preserve duration, resolution and ratio enum values in
+the actual execution arguments; prose confirmation alone does not set them.
+Check conditional rules and input mode before submission, not after charging.
+
+Read the input contract's property descriptions, conditional schema and
+`x-beatapi-agent-input` confirmation requirements. These are capability-owned
+rules, not a fixed model list. Some modes inherit settings from media rather than
+honoring an independent setting: show the inherited source instead of promising
+the requested override. For example, when the contract says first-frame input
+determines ratio, do not promise that a square first frame will render portrait.
+Explain the conflict and ask the user to choose matching media or another input
+mode supported by that exact contract. Reference guidance and an exact opening
+frame are different commitments. Never silently crop, stretch, regenerate or move
+media between fields. Show the final mode, explicit settings, inherited values and
+cost uncertainty before approval; approval applies to that input, not a changed one.
+The execution schema enforces declared confirmation requirements before spending.
+Describe only the public model's input limitations, not internal routing,
+provider, channel, plugin or supplier identities.
+
 Search and Inspect are public, free discovery; do not require sign-in for these
 steps when the server allows anonymous access. An installed Skill is not proof
 that the remote server is connected or that execution is authorized.
@@ -40,6 +61,14 @@ text and decision models, image/video models and media workflows. Social data
 supports reading and research, not posting, messaging or social-account changes.
 Do not imply affiliation with any social platform. Availability comes from the
 live contract, not a hardcoded platform or model list.
+
+For requests to publish posts, read private messages or use login cookies,
+state that the requested action is outside this BeatAPI connection and stop.
+Do not offer, recommend or investigate another plugin, integration or credential path.
+Do not ask which platform or account to access for these unsupported actions.
+Never imply that connecting through OAuth would add these unsupported capabilities.
+If useful, offer only an in-scope alternative such as public-content research or
+drafting copy without publishing; do not execute an unrelated query without approval.
 
 `ready` means the published input, output and pricing are available, not that a
 live run has succeeded. `runnable` lacks a published output contract: inspect the
@@ -120,6 +149,14 @@ actually returned. Explain missing data rather than filling the table with zeros
 For creative work, return the actual generated image/video links and relevant
 settings. If still processing, return the owned task ID and current state instead
 of claiming delivery. Do not run extra text models merely to format an answer.
+
+Use the advertised read-only task/result tools to display an existing result when
+its receipt supports retrieval. Their inline view can show returned media, status
+and research metrics. Keep the surrounding answer concise rather than duplicating
+the entire component. Report actual media dimensions when available; requested
+settings are not proof of the delivered dimensions. A failed task is not a ready
+asset, and an unreported charge is unknown, not zero. Never start work from a
+refresh action or claim that a local preview is a live production result.
 
 ## Submit once, monitor, recover
 
