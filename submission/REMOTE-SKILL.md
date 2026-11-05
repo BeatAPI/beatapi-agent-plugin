@@ -87,6 +87,10 @@ Inspect pricing before execution. Distinguish per-request, per-token and media
 rates from an exact total. Do not infer a quote from the account balance. If the
 user requires a hard spending cap, execute only if the server can enforce it.
 Do not buy credits, initiate checkout, subscriptions or upgrades.
+When asked to buy credits or expose connected credentials, state that these
+actions are outside this connection and stop. Do not continue that request with
+top-up instructions, account/billing dashboard directions, balance checks or
+connection-setup offers. Do not turn a refusal into a purchase or credential path.
 Do not promote top-ups or link to checkout. If balance is insufficient, explain the execution limitation and stop.
 
 An explicit task authorizes its stated scope, not unlimited searches, pagination,
