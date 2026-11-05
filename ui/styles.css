@@ -1,0 +1,57 @@
+/*
+ * [INPUT]: MCP Apps 宿主主题及组件状态
+ * [OUTPUT]: 内联研究/媒体结果的紧凑、响应式和可访问布局
+ * [POS]: 组件独立样式，不继承网站后台，不依赖远程样式或字体
+ * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
+ */
+:root { color-scheme: light dark; font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; font-size: 14px; line-height: 1.5; color: #202322; background: transparent; --surface: #fff; --line: #e3e6e4; --muted: #626b66; --soft: #f4f6f5; --accent: #14754c; --danger: #b03535; }
+:root[data-theme="dark"] { --surface: #222624; --line: #3f4742; --muted: #aab6ae; --soft: #2c322e; --accent: #83d4ac; --danger: #f49b9b; color: #eef2ef; }
+* { box-sizing: border-box; letter-spacing: 0; }
+body { margin: 0; }
+#app { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; padding: 16px; min-width: 0; }
+header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.identity { min-width: 0; }
+.brand { font-size: 11px; font-weight: 650; color: var(--muted); }
+h1 { font-size: 16px; font-weight: 600; margin: 2px 0 0; overflow-wrap: anywhere; }
+.actions { display: flex; flex-shrink: 0; gap: 8px; align-items: center; }
+.status { display: flex; align-items: center; gap: 5px; color: var(--muted); font-size: 12px; white-space: nowrap; }
+.status.succeeded { color: var(--accent); }
+.status.failed, .status.cancelled, .error { color: var(--danger); }
+.icon-button { appearance: none; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 32px; height: 32px; background: transparent; color: inherit; border: 1px solid var(--line); border-radius: 6px; cursor: pointer; text-decoration: none; }
+.icon-button:hover { background: var(--soft); }
+.icon-button:disabled { opacity: .42; cursor: default; }
+.icon-button:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.stages { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); list-style: none; padding: 0; margin: 18px 0; gap: 8px; color: var(--muted); font-size: 12px; }
+.stages li { border-top: 2px solid var(--line); padding-top: 6px; }
+.stages .reached { border-color: var(--accent); color: var(--accent); }
+.summary { white-space: pre-wrap; overflow-wrap: anywhere; margin: 16px 0; }
+.error { margin: 16px 0; overflow-wrap: anywhere; }
+.muted { color: var(--muted); font-size: 12px; }
+figure { margin: 16px 0; }
+figure video, figure img { display: block; max-width: 100%; width: 100%; max-height: 360px; object-fit: contain; background: var(--soft); border-radius: 6px; }
+figure video { min-height: 160px; }
+figure audio { width: 100%; }
+figure > .muted { display: block; margin-top: 6px; }
+figcaption { display: flex; align-items: center; justify-content: flex-end; gap: 6px; margin-top: 8px; }
+figcaption > span { margin-right: auto; }
+.section-label { font-size: 12px; font-weight: 600; margin: 18px 0 8px; }
+.table-scroll { overflow-x: auto; max-width: 100%; border-top: 1px solid var(--line); }
+table { border-collapse: collapse; width: 100%; font-size: 12px; text-align: left; }
+th { font-weight: 600; background: var(--soft); color: var(--muted); }
+th, td { padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; min-width: 100px; max-width: 240px; overflow-wrap: anywhere; }
+.metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 16px 0; gap: 14px 18px; }
+dt { font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
+dd { margin: 3px 0 0; font-size: 16px; font-weight: 550; overflow-wrap: anywhere; }
+footer { border-top: 1px solid var(--line); padding-top: 12px; margin-top: 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+footer strong { font-size: 13px; font-variant-numeric: tabular-nums; }
+details { margin-top: 10px; font-size: 12px; }
+details summary { color: var(--muted); cursor: pointer; }
+details code { display: block; overflow-wrap: anywhere; margin-top: 5px; }
+details > span { display: block; margin-top: 8px; }
+.skeleton { padding: 24px 0 8px; display: grid; gap: 12px; }
+.skeleton div { height: 12px; border-radius: 4px; background: var(--soft); }
+.skeleton div:nth-child(2) { width: 80%; }.skeleton div:nth-child(3) { width: 56%; }
+.busy svg { animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (max-width: 420px) { #app { padding: 12px; } header { align-items: flex-start; } .actions { gap: 4px; } .status { font-size: 11px; } .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } figure video { max-height: 280px; } }
+@media (prefers-reduced-motion: reduce) { .busy svg { animation: none; } }

@@ -1,6 +1,6 @@
 /**
  * [INPUT]: 远程发布构建器、展示翻译、品牌 PNG、审核案例与 mock OAuth 响应
- * [OUTPUT]: 验证展示/ZIP 同源、录像链接必填、研究规则、公开范围及凭证边界
+ * [OUTPUT]: 验证展示/ZIP 同源、录像链接必填、低价视频审核案例、研究和私信拒绝规则、公开范围及凭证边界
  * [POS]: 公开发布边界回归；不代替真实用户 OAuth、计费或门户审核
  * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
  */
@@ -141,6 +141,13 @@ test("research guidance preserves evidence and SEO metric boundaries", () => {
   assert.match(skill, /Do not promise ranking gains/);
 });
 
+test("out-of-scope social requests stop without suggesting another integration", () => {
+  const skill = readFileSync(join(root, "submission/REMOTE-SKILL.md"), "utf8");
+  assert.match(skill, /For requests to publish posts, read private messages or use login cookies/);
+  assert.match(skill, /Do not offer, recommend or investigate another plugin, integration or credential path/);
+  assert.match(skill, /Do not ask which platform or account to access for these unsupported actions/);
+});
+
 test("remote configuration accepts OAuth registration but rejects local or secret-bearing inputs", () => {
   validateRemoteConfig(config());
   for (const mutate of [
@@ -227,15 +234,18 @@ test("general remote Skill and review drafts cover discovery and bounded cross-d
   assert.equal(cases.positive.length, 5);
   assert.equal(cases.negative.length, 3);
   for (const item of cases.positive) {
-    assert.match(item.description, /Draft, not run/);
+    assert.match(item.description, /execution evidence is recorded separately/);
     assert.ok(item.tools_triggered.includes("capabilities_inspect"));
     assert.equal(item.stages, undefined);
   }
   assert.deepEqual(checkRemoteSource(root).extensions["com.openai"].review.test_cases, cases);
   const fixtureHash = createHash("sha256").update(readFileSync(join(root, "assets/demo-water-bottle-v1.png"))).digest("hex");
-  const mediaCase = cases.positive.find((item) => item.tools_triggered.includes("beatapi_workflow_ecommerce_video_214cba3420"));
+  const mediaCase = cases.positive.find((item) => item.tools_triggered.includes("beatapi_model_minimax_h3_normal_0fc35c3383"));
   assert.ok(mediaCase.prompt.includes(`https://cdn.beatapi.io/plugins/beatapi-agent-toolkit/review/demo-water-bottle-${fixtureHash.slice(0, 12)}.png`));
-  assert.match(mediaCase.description, /AI-generated, fictional unbranded/);
+  assert.match(mediaCase.description, /AI-generated fictional unbranded/);
+  assert.match(mediaCase.prompt, /8 seconds, 480p and 9:16/);
+  assert.match(mediaCase.expected_behavior, /duration=8, resolution=480p, aspect_ratio=9:16/);
+  assert.doesNotMatch(mediaCase.tools_triggered, /workflow_ecommerce/);
 });
 
 function capability(reference, overrides = {}) {
@@ -410,8 +420,12 @@ test("remote ZIP contains portable connection and Skill but no local MCP or cred
   try {
     const catalog = compileRemoteCatalog([
       capability("data:xiaohongshu.app_v2.search_notes"), capability("data:web.search"), capability("data:web.read"),
-      capability("data:seo.keyword_overview"), capability("workflow:ecommerce-video", {
+      capability("data:seo.keyword_overview"), capability("model:minimax-h3-normal", {
         execution: { mode: "async", executable: true, status_supported: true },
+        input_schema: { type: "object", properties: {
+          duration: { type: "integer" }, resolution: { type: "string" }, aspect_ratio: { type: "string" },
+          images: { type: "array", items: { type: "string" } },
+        } },
       }),
     ]);
     const demoUrl = "https://cdn.beatapi.io/plugins/review/demo.mp4";

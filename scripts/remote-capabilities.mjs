@@ -1,6 +1,6 @@
 /**
  * [INPUT]: 网关完整能力契约；不读取 key、用户数据或供应商内部目录
- * [OUTPUT]: 公开范围排除策略、最小权限工具编译、固定绑定验证和协议 next 改写
+ * [OUTPUT]: 公开范围、显式媒体设置门禁、最小权限工具与只读结果 UI 编译和协议 next 改写
  * [POS]: 公开 MCP 的构建期契约编译器；不启动服务器、不鉴权、不执行或扣费
  * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
  */
@@ -23,6 +23,7 @@ const contractSchema = z.object({
 export const discoveryTools = ["capabilities_search", "capabilities_inspect"];
 export const taskTool = "beatapi_get_capability_task";
 export const resultTool = "beatapi_get_capability_result";
+export const resultResourceUri = "ui://beatapi/results-v1.html";
 const read = { readOnlyHint: true, destructiveHint: false, openWorldHint: false };
 const credentialField = /^(api_?key|authorization|cookie|password|secret|client_?secret|access_?token|refresh_?token)$/i;
 
@@ -93,13 +94,20 @@ export function compileRemoteCatalog(contracts) {
     if (bindings[name]) throw new Error(`Generated tool name collision: ${name}`);
     bindings[name] = { reference, operation: "start", schemaHash: contract.schema_hash,
       mode: contract.execution.mode, statusSupported: contract.execution.status_supported === true };
+    const inputSchema = normalizeSchemaAnnotations(contract.input_schema);
+    const confirmation = inputSchema["x-beatapi-agent-input"];
+    if (confirmation !== undefined) {
+      if (!confirmation || typeof confirmation !== "object" || Array.isArray(confirmation)) throw new Error(`Invalid agent input contract: ${reference}`);
+      inputSchema.allOf = [...(inputSchema.allOf ?? []), confirmation];
+      delete inputSchema["x-beatapi-agent-input"];
+    }
     tools.push({
       name, title: contract.title,
-      description: `${contract.description || contract.title}. Executes only ${reference}. Uses the connected BeatAPI balance; inspect current pricing first. Reuse idempotency_key only for retries of the same input.`,
+      description: `${contract.description || contract.title}. Executes only ${reference}. Uses the connected BeatAPI balance; inspect current pricing first. Include every user-selected supported setting in input, even when optional. Resolve conditional constraints and inherited settings using this schema before execution; do not silently change mode or media. Reuse idempotency_key only for retries of the same input.`,
       inputSchema: {
         type: "object", additionalProperties: false, required: ["input", "idempotency_key"],
         properties: {
-          input: { ...normalizeSchemaAnnotations(contract.input_schema), additionalProperties: contract.input_schema.additionalProperties ?? false },
+          input: { ...inputSchema, additionalProperties: inputSchema.additionalProperties ?? false },
           idempotency_key: { type: "string", minLength: 1, maxLength: 255, pattern: "\\S", not: { const: "<idempotency_key>" } },
         },
       },
@@ -107,6 +115,8 @@ export function compileRemoteCatalog(contracts) {
       annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
       securitySchemes: [{ type: "oauth2", scopes: [scope] }],
       _meta: { securitySchemes: [{ type: "oauth2", scopes: [scope] }],
+        "openai/toolInvocation/invoking": contract.kind === "data" ? "Running query" : "Submitting request",
+        "openai/toolInvocation/invoked": contract.execution.mode === "async" ? "Task submitted" : "Request complete",
         "beatapi/capability": { reference, schemaHash: contract.schema_hash, operation: "start" } },
     });
   }
@@ -131,8 +141,12 @@ export function compileRemoteCatalog(contracts) {
   ]) {
     if (properties.reference.enum.length) tools.push({ name, title: description.split(";")[0], description,
       inputSchema: { type: "object", additionalProperties: false, properties, required }, annotations: { ...read },
+      outputSchema: { type: "object", properties: { data: { type: "object" }, error: { type: "object" }, next: { type: "object" } }, additionalProperties: true },
       securitySchemes: [{ type: "oauth2", scopes: ["mcp:tasks:read"] }],
       _meta: { securitySchemes: [{ type: "oauth2", scopes: ["mcp:tasks:read"] }],
+        ui: { resourceUri: resultResourceUri, visibility: ["model", "app"] },
+        "openai/toolInvocation/invoking": name === taskTool ? "Checking task" : "Reading saved result",
+        "openai/toolInvocation/invoked": name === taskTool ? "Task status updated" : "Saved result ready",
         "beatapi/operation": name === taskTool ? "status" : "result" } });
   }
   return { version: 2, discovery: [...discoveryTools], tools, bindings, excluded };

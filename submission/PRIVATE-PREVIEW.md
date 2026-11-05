@@ -25,7 +25,46 @@ skills/beatapi/SKILL.md；账户读回内容与 REMOTE-SKILL.md 字节一致，�
 也不证明宿主对新技能的实际调用已验收。浏览器验证及本机电脑控制不可用，
 App 展示编辑仍需在其管理界面完成，不能用本次技能更新冒充完成。
 
-## 同源导出
+## 2026-11-05 当前浏览器账户核对
+
+当前浏览器账户中新建并连接的开发插件为
+`plugin_asdk_app_6aeb574f6f948191a37a3a5c345f0721`，App ID 为
+`asdk_app_6aeb574f6f948191a37a3a5c345f0721`。设置页已显示 Connected accounts、
+OAuth 和正式 MCP 地址；用户自行完成登录与授权。该对象不是前述原私有 Test，
+不可把原 Test 的 1.0.1 Skill 更新当作此对象已更新。
+
+更新前经页面 Download plugin ZIP 导出核对，此对象 1.0.0 仅有 `.app.json` 和
+`.codex-plugin/plugin.json`，没有 Skill；完整英文说明和名称已由同源资料填写。
+页面仍显示个人开发者、Other 分类、网站 Unavailable 和默认图标，尚未与公开包展示对齐。
+当前连接器的源码读取对这个精确 ID 返回 Not found，未使用其他账户对象替代。
+
+2026-11-05 用户要求重试后，通过 Upload new version 上传私有更新包成功。
+文件选择器重新打开后，选择 visualizations 中的更新包，Open 按钮可用；
+此前禁用的原因未确定，不能据此断言是 ZIP 或路径权限问题。
+页面显示 New version uploaded，同一插件详情显示 Version 1.0.1、Apps 1 和 Skills 1。
+随后从同一页面重新下载归档 `/Users/zeiki/Downloads/plugin (1).zip`，确认
+skills/beatapi/SKILL.md 与 REMOTE-SKILL.md 字节一致，`.app.json` 内容不变，
+manifest 除版本和 `skills` 声明外与更新前完全一致。未重新创建插件或更改 OAuth 配置。
+本次证明技能已保存且页面已发现，不代表宿主新会话已实际加载执行该 Skill；
+默认图标、Other 分类、网站和企业署名仍未对齐，也没有正式提交或付费调用。
+
+免费宿主检查对话为 https://chatgpt.com/c/6aeb590d-be80-83ee-98fd-e9f8b277a6d8 。
+请求仅允许 capabilities_search（web search，最多三项）和 capabilities_inspect。
+ChatGPT 页面返回成功，目标为 data:web.search，目录价格 $0.005/request，
+next 为 beatapi_data_web_search_96ea6f8641；页面可见工具活动，但未取得原始调用日志。
+这只记录宿主显示的发现结果，不是付费 Web Search 执行、全部审核案例通过或账务核验。
+用户设置的每日 20 美元连接限额不构成当前 Agent 的付费测试授权。
+
+## 同源导出流程
+
+### 2026-11-05 私信边界修复
+
+当前浏览器的同一个开发插件已更新为 1.0.2。只修改 REMOTE-SKILL.md 的
+发帖/私信/cookie 拒绝规则：不推荐或调查其他集成、不追问平台账户、不暗示 OAuth 能补足未支持能力。
+上传前重新导出当前 1.0.1 为基线；1.0.2 上传后再次下载，确认 Skill 与源码字节一致，
+`.app.json` 不变，manifest 仅 version 从 1.0.1 变为 1.0.2，其余所有字段和原 App/OAuth 绑定保持不变。
+归档位于本机 visualizations 的 beatapi-private-update-1.0.2.zip，不是公开送审 ZIP。
+源码回归已先观察失败后修复通过；实际宿主行为复验状态见 REVIEW-RUN-2026-11-05.md。
 
 ```bash
 npm run submission:listing

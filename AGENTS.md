@@ -8,6 +8,7 @@ scripts/ - 契约同步、宿主校验、本地与远程发布构建，见 scrip
 submission/ - 通用远程 Skill、目录生成接线规范和审核准备，社媒仅用于读取调研，见 submission/AGENTS.md
 test/ - MCP 行为、安全边界与发布回归，见 test/AGENTS.md
 assets/ - 插件浅/深色品牌 PNG 与小图标，见 assets/AGENTS.md
+ui/ - MCP Apps 只读内联结果组件；源码在此，静态 HTML 显式构建到网关，见 ui/AGENTS.md
 contract/ - 上游 OpenAPI 快照
 generated/ - Skill 与客户端同步锁
 packages/ - DeepSeek Harness 插件包，独立于 OpenAI 公开包
