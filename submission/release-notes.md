@@ -1,5 +1,16 @@
 # BeatAPI Remote Plugin preparation
 
+This revision adds a read-only inline result component for existing task and
+stored-result tools: native media playback with observed dimensions, bounded
+research tables, source links, unknown-value handling, and same-task refresh.
+The component cannot start paid work or select another account.
+
+The added generation ratio restrictions and confirmation requirements were
+withdrawn on 2026-11-06 to preserve existing API compatibility. Existing model
+rules remain unchanged. The creative case now uses one low-cost image task,
+not a video-ratio acceptance check. Final submission evidence must come from
+the saved hosted version, not the local component preview.
+
 Prepare a portable remote MCP + Skill package while preserving the existing
 plugin identity and local marketplace installations. The remote Skill uses the
 host OAuth connection only; it does not require local software or key entry.
@@ -38,3 +49,9 @@ prevent packaging; OAuth-only diagnostics cannot bypass that check.
 Independent review-case evidence, reviewer access, policy coverage and demo
 remain incomplete. This preparation is not a
 published release or a completed review submission.
+
+## 2026-11-06 范围收敛
+
+- 撤回本轮新增的后端比例拒绝与参数确认要求，恢复既有生成 API 兼容性；原有模型规则不变。
+- 保留只读结果组件、媒体实际信息、安全结果投影及用户已选参数应正确传递的交互说明。
+- 创意测试改为单次 Nano Banana 2 图片任务，1K 当前报价 USD 0.02；不再验收视频比例，不以此替代完整送审案例。

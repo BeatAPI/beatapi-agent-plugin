@@ -1,6 +1,6 @@
 /**
  * [INPUT]: 远程发布构建器、展示翻译、品牌 PNG、审核案例与 mock OAuth 响应
- * [OUTPUT]: 验证展示/ZIP 同源、录像链接必填、低价视频审核案例、研究和私信拒绝规则、公开范围及凭证边界
+ * [OUTPUT]: 验证展示/ZIP 同源、录像链接必填、低价图片审核案例、研究和私信拒绝规则、公开范围及凭证边界
  * [POS]: 公开发布边界回归；不代替真实用户 OAuth、计费或门户审核
  * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
  */
@@ -240,11 +240,11 @@ test("general remote Skill and review drafts cover discovery and bounded cross-d
   }
   assert.deepEqual(checkRemoteSource(root).extensions["com.openai"].review.test_cases, cases);
   const fixtureHash = createHash("sha256").update(readFileSync(join(root, "assets/demo-water-bottle-v1.png"))).digest("hex");
-  const mediaCase = cases.positive.find((item) => item.tools_triggered.includes("beatapi_model_minimax_h3_normal_0fc35c3383"));
+  const mediaCase = cases.positive.find((item) => item.tools_triggered.includes("beatapi_model_nano_banana_2_890739a2f7"));
   assert.ok(mediaCase.prompt.includes(`https://cdn.beatapi.io/plugins/beatapi-agent-toolkit/review/demo-water-bottle-${fixtureHash.slice(0, 12)}.png`));
   assert.match(mediaCase.description, /AI-generated fictional unbranded/);
-  assert.match(mediaCase.prompt, /8 seconds, 480p and 9:16/);
-  assert.match(mediaCase.expected_behavior, /duration=8, resolution=480p, aspect_ratio=9:16/);
+  assert.match(mediaCase.prompt, /1K, 1:1 and PNG/);
+  assert.match(mediaCase.expected_behavior, /resolution=1K, aspect_ratio=1:1, output_format=png/);
   assert.doesNotMatch(mediaCase.tools_triggered, /workflow_ecommerce/);
 });
 
@@ -420,10 +420,10 @@ test("remote ZIP contains portable connection and Skill but no local MCP or cred
   try {
     const catalog = compileRemoteCatalog([
       capability("data:xiaohongshu.app_v2.search_notes"), capability("data:web.search"), capability("data:web.read"),
-      capability("data:seo.keyword_overview"), capability("model:minimax-h3-normal", {
+      capability("data:seo.keyword_overview"), capability("model:nano-banana-2", {
         execution: { mode: "async", executable: true, status_supported: true },
         input_schema: { type: "object", properties: {
-          duration: { type: "integer" }, resolution: { type: "string" }, aspect_ratio: { type: "string" },
+          output_format: { type: "string" }, resolution: { type: "string" }, aspect_ratio: { type: "string" },
           images: { type: "array", items: { type: "string" } },
         } },
       }),
