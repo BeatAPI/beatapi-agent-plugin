@@ -79,6 +79,14 @@ npm run submission:listing
 若宿主没有展示完整元数据的入口，应如实报告限制，不把本地导出描述成账户已更新。
 若需要改为独立完整 ZIP 安装，先确认迁移方式及原连接保留方案，不能静默复制绑定。
 
+## 1.1.0 私有更新
+
+2026-11-05 在同一浏览器账户、同一插件 ID 更新为 1.1.0，页面显示 New version uploaded。
+上传前重新下载当前 1.0.2，上传后再次下载确认：Skill 与当前 REMOTE-SKILL.md 字节一致；
+`.app.json` 完全不变，manifest 仅 version 变为 1.1.0，其余字段、App ID、OAuth 连接与私有范围均保留。
+私有更新归档为 visualizations 下 beatapi-private-update-1.1.0.zip，不是正式公开送审包。
+新版 Skill 和服务端组件是不同发布环节：界面显示 1.1.0 不证明网关部署或内联组件已被宿主验收。
+
 ## 多语言边界
 
 英文放在 interface 的基础字段，中日文以 zh-CN / ja-JP 写入
