@@ -1,6 +1,6 @@
 /**
  * [INPUT]: 远程发布构建器、展示翻译、品牌 PNG、审核案例与 mock OAuth 响应
- * [OUTPUT]: 验证展示/ZIP 同源、录像链接必填、低价图片审核案例、研究和私信拒绝规则、公开范围及凭证边界
+ * [OUTPUT]: 验证发布/ZIP 同源、Schema 投影、网关契约导出与 SDK 只读 UI 扫描；隔离凭证及付费执行
  * [POS]: 公开发布边界回归；不代替真实用户 OAuth、计费或门户审核
  * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
  */
@@ -34,6 +34,21 @@ const config = () => ({
       extensions: { "com.openai": { auth: { type: "oauth", client: { mode: "dcr" } } } },
     },
   },
+});
+
+test("catalog CLI exports gateway metadata and result schema from one validated source", () => {
+  const directory = mkdtempSync(join(tmpdir(), "beatapi-schema-export-"));
+  try {
+    const input = join(directory, "contracts.json");
+    writeFileSync(input, JSON.stringify([capability("data:search")]));
+    const output = join(directory, "catalog.json");
+    const gateway = join(directory, "gateway");
+    execFileSync(process.execPath, ["scripts/build-remote-catalog.mjs", "--catalog", input, "--output", output, "--gateway-dir", gateway], { cwd: root });
+    const catalog = validateRemoteCatalog(JSON.parse(readFileSync(output, "utf8")));
+    assert.deepEqual(JSON.parse(readFileSync(join(gateway, "catalog_default.json"), "utf8")), catalog);
+    const schema = JSON.parse(readFileSync(join(gateway, "result_schema.json"), "utf8"));
+    for (const tool of catalog.tools) assert.deepEqual(tool.outputSchema, schema);
+  } finally { rmSync(directory, { recursive: true, force: true }); }
 });
 
 test("public icons include a dark composer variant and satisfy actual PNG dimensions", () => {
@@ -259,10 +274,12 @@ function capability(reference, overrides = {}) {
 function mockReady(catalog, change = (tools) => tools) {
   const base = mockOAuth();
   const tools = change([...discoveryTools.map((name) => ({ name, title: name, description: "Read the public capability catalog.",
-    inputSchema: { type: "object", properties: {} }, annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
+    inputSchema: { type: "object", properties: {} }, outputSchema: structuredClone(catalog.tools[0].outputSchema), annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     securitySchemes: [{ type: "noauth" }], _meta: { securitySchemes: [{ type: "noauth" }] } })), ...structuredClone(catalog.tools)]);
   const methods = [];
-  return { methods, tools, fetcher: async (url, init) => {
+  const resource = { uri: "ui://beatapi/results-v1.html", mimeType: "text/html;profile=mcp-app", text: "<!doctype html><html></html>",
+    _meta: { ui: { domain: "https://beatapi-agent-toolkit.oaiusercontent.com", csp: { connectDomains: [], resourceDomains: ["https://media.beatapi.io", "https://cdn.beatapi.io"] } } } };
+  return { methods, tools, resource, fetcher: async (url, init) => {
     if (String(url) !== config().mcpServers.beatapi.url) return base.fetcher(url, init);
     assert.equal(new Headers(init.headers).has("authorization"), false);
     assert.equal(new Headers(init.headers).has("cookie"), false);
@@ -272,6 +289,11 @@ function mockReady(catalog, change = (tools) => tools) {
     if (message.method === "initialize") return Response.json({ jsonrpc: "2.0", id: message.id,
       result: { protocolVersion: message.params.protocolVersion, capabilities: { tools: {} }, serverInfo: { name: "beatapi-test", version: "1" } } });
     if (message.method === "notifications/initialized") return new Response(null, { status: 202 });
+    if (message.method === "resources/list") return Response.json({ jsonrpc: "2.0", id: message.id, result: { resources: [{ uri: resource.uri, name: "Results", mimeType: resource.mimeType }] } });
+    if (message.method === "resources/read") {
+      assert.equal(message.params.uri, resource.uri);
+      return Response.json({ jsonrpc: "2.0", id: message.id, result: { contents: [resource] } });
+    }
     assert.equal(message.method, "tools/list", "preflight must not execute tools");
     const offset = Number(message.params?.cursor ?? 0);
     const end = Math.min(offset + 2, tools.length);
@@ -291,7 +313,8 @@ test("release preflight uses real SDK pagination and compares every exposed tool
   assert.equal(report.tools.anonymousToolListing, true);
   assert.ok(report.tools.notVerified.includes("user OAuth consent, refresh and revocation"));
   assert.ok(remote.methods.filter((method) => method === "tools/list").length > 1);
-  assert.ok(remote.methods.every((method) => ["initialize", "notifications/initialized", "tools/list"].includes(method)));
+  assert.ok(remote.methods.every((method) => ["initialize", "notifications/initialized", "tools/list", "resources/list", "resources/read"].includes(method)));
+  assert.equal(report.tools.uiResources?.[0].domain, remote.resource._meta.ui.domain);
   assert.throws(() => validateRemoteCatalog({ ...catalog, tools: [...catalog.tools, catalog.tools[0]] }), /Duplicate/);
   assert.throws(() => validateRemoteCatalog({ ...catalog, bindings: {} }), /binding/i);
   for (const change of [
@@ -302,6 +325,7 @@ test("release preflight uses real SDK pagination and compares every exposed tool
     (tools) => { tools[2]._meta.securitySchemes = [{ type: "noauth" }]; return tools; },
     (tools) => { tools[2]._meta["beatapi/capability"].schemaHash = "drifted-contract"; return tools; },
     (tools) => { delete tools[0].annotations.openWorldHint; return tools; },
+    (tools) => { delete tools[0].outputSchema; return tools; },
     (tools) => [...tools, tools[0]],
   ]) {
     await assert.rejects(probeRemoteTools(config().mcpServers.beatapi.url, catalog, mockReady(catalog, change).fetcher));
@@ -314,6 +338,23 @@ test("release preflight uses real SDK pagination and compares every exposed tool
     return Promise.resolve(Response.json({ jsonrpc: "2.0", id: message.id,
       result: { tools: [looping.tools[page++]], nextCursor: "repeated-cursor" } }));
   }), /pagination/);
+});
+
+test("release preflight validates linked UI metadata without executing business tools", async () => {
+  const catalog = compileRemoteCatalog([capability("data:search")]);
+  for (const change of [
+    resource => { delete resource._meta.ui.domain; },
+    resource => { resource._meta.ui.domain = "https://web-sandbox.oaiusercontent.com"; },
+    resource => { resource._meta.ui.domain = "https://example.com/path"; },
+    resource => { resource._meta.ui.csp.resourceDomains = ["*"]; },
+    resource => { resource._meta.ui.csp.connectDomains = ["https://example.com"]; },
+    resource => { resource.mimeType = "text/plain"; },
+  ]) {
+    const remote = mockReady(catalog);
+    change(remote.resource);
+    await assert.rejects(probeRemoteTools(config().mcpServers.beatapi.url, catalog, remote.fetcher), /UI|resource|domain|CSP/i);
+    assert.ok(!remote.methods.includes("tools/call"));
+  }
 });
 
 test("catalog compiler exposes each executable reference independently and reports unsupported contracts", () => {
@@ -382,15 +423,85 @@ test("remote dispatch pins references, validates exact input and prevents generi
 });
 
 test("catalog normalizes example annotations without removing a property named examples", () => {
-  const source = { type: "object", properties: { query: { type: "string", examples: { one: "hello" } }, examples: { type: "string" } }, required: ["query"], examples: { query: "hello" } };
+  const source = { type: "object", properties: { query: { type: "string", examples: { one: { value: "hello", summary: "Greeting" } } }, examples: { type: "string" } }, required: ["query"], examples: { query: "hello" } };
   const catalog = compileRemoteCatalog([capability("data:examples", { input_schema: source })]);
   const name = Object.keys(catalog.bindings)[0];
   const schema = catalog.tools.find((tool) => tool.name === name).inputSchema.properties.input;
   assert.deepEqual(schema.examples, [{ query: "hello" }]);
-  assert.deepEqual(schema.properties.query.examples, [{ one: "hello" }]);
+  assert.deepEqual(schema.properties.query.examples, ["hello"]);
   assert.equal(schema.properties.examples.type, "string");
   assert.equal(Array.isArray(source.examples), false);
   assert.throws(() => createRemoteDispatcher(catalog)(name, { input: { query: 7 }, idempotency_key: "one" }), /Invalid tool arguments/);
+});
+
+test("public schema annotations are valid without changing accepted arguments or source contracts", () => {
+  const source = { type: "object", properties: {
+    boardId: { type: "integer", default: "1" },
+    size: { type: "string", format: "image-size", pattern: "^[0-9]+x[0-9]+$" },
+    sort: { type: "string", enum: ["recent", "popular"], examples: { first: { value: "recent" }, second: { value: "popular" } } },
+    object: { type: "object", properties: { value: { type: "string" } }, examples: { value: "literal object" } },
+    flag: { type: "boolean", default: false }, example: { type: "string", example: "sample" },
+  } };
+  const before = structuredClone(source);
+  const catalog = compileRemoteCatalog([capability("data:annotations", { input_schema: source })]);
+  const tool = catalog.tools[0];
+  const p = tool.inputSchema.properties.input.properties;
+  assert.equal(p.boardId.default, undefined);
+  assert.equal(p.size.format, undefined);
+  assert.equal(p.size.pattern, source.properties.size.pattern);
+  assert.deepEqual(p.sort.examples, ["recent", "popular"]);
+  assert.deepEqual(p.object.examples, [{ value: "literal object" }]);
+  assert.equal(p.flag.default, false);
+  assert.deepEqual(p.example.examples, ["sample"]);
+  assert.deepEqual(source, before);
+  const dispatch = createRemoteDispatcher(catalog);
+  const args = { input: { boardId: 1, size: "720x1280", sort: "recent" }, idempotency_key: "same-args" };
+  assert.deepEqual(dispatch(tool.name, args).input, args.input);
+  assert.throws(() => dispatch(tool.name, { ...args, input: { boardId: "1" } }));
+  assert.throws(() => dispatch(tool.name, { ...args, input: { size: "invalid" } }));
+  tool.inputSchema.properties.input.properties.boardId.default = "1";
+  assert.throws(() => validateRemoteCatalog(catalog), /default/i);
+});
+
+test("public catalog rejects secret annotations at any schema depth rather than stripping inputs", () => {
+  const safe = capability("data:public");
+  for (const secret of [{ type: "string", format: "password" }, { type: "string", writeOnly: true }]) {
+    const hidden = capability("data:secret", { input_schema: { type: "object", properties: { options: {
+      type: "array", items: { type: "object", properties: { arbitraryName: secret } },
+    } } } });
+    const catalog = compileRemoteCatalog([safe, hidden]);
+    assert.equal(Object.keys(catalog.bindings).length, 1);
+    assert.equal(catalog.excluded[0].reference, hidden.reference);
+  }
+  for (const input_schema of [
+    { type: "object", dependencies: { options: { properties: { arbitrary: { writeOnly: true } } } } },
+    { type: "object", properties: { options: { type: "array", unevaluatedItems: { writeOnly: true } } } },
+    { type: "object", properties: { document: { type: "string", contentSchema: { properties: { arbitrary: { format: "password" } } } } } },
+  ]) {
+    const catalog = compileRemoteCatalog([safe, capability("data:nested", { input_schema })]);
+    assert.equal(catalog.excluded[0].reference, "data:nested");
+  }
+  const payload = capability("data:literal", { input_schema: { type: "object", properties: {
+    payload: { type: "object", examples: [{ writeOnly: true, format: "password", properties: { api_key: "literal field" } }] },
+  } } });
+  assert.equal(Object.keys(compileRemoteCatalog([payload]).bindings).length, 1, "example data is not a schema subtree");
+  const altered = compileRemoteCatalog([safe]);
+  altered.tools[0].inputSchema.properties.input.properties.arbitrary = { type: "string", writeOnly: true };
+  assert.throws(() => validateRemoteCatalog(altered), /Unsupported public input/);
+  delete altered.tools[0].inputSchema.properties.input.properties.arbitrary;
+  altered.tools[0].inputSchema.properties.input.properties.api_key = { type: "string" };
+  assert.throws(() => validateRemoteCatalog(altered), /Unsupported public input/);
+});
+
+test("all execution and retrieval tools declare a shared structured result envelope", () => {
+  const catalog = compileRemoteCatalog([capability("data:search")]);
+  for (const tool of catalog.tools) {
+    assert.equal(tool.outputSchema?.type, "object", tool.name);
+    assert.ok(tool.outputSchema.properties.data);
+    assert.equal(tool.outputSchema.properties.error.type, "object");
+  }
+  delete catalog.tools[0].outputSchema;
+  assert.throws(() => validateRemoteCatalog(catalog), /outputSchema|output schema/i);
 });
 
 test("next adaptation stays within exposed bindings and never walks untrusted result content", () => {
