@@ -1,5 +1,5 @@
 /**
- * [INPUT]: 网关完整能力契约；不读取 key、用户数据或供应商内部目录
+ * [INPUT]: 网关完整能力契约与 remote-schema 的公共 Schema 投影；不读取凭证
  * [OUTPUT]: 公开范围、显式媒体设置门禁、最小权限工具与只读结果 UI 编译和协议 next 改写
  * [POS]: 公开 MCP 的构建期契约编译器；不启动服务器、不鉴权、不执行或扣费
  * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
@@ -7,6 +7,7 @@
 import { createHash } from "node:crypto";
 import { z } from "zod";
 import { AjvJsonSchemaValidator } from "@modelcontextprotocol/sdk/validation/ajv";
+import { normalizePublicSchema, resultOutputSchema, unsupportedPublicInputSchema } from "./remote-schema.mjs";
 
 const contractSchema = z.object({
   reference: z.string().regex(/^(model|data|workflow):[^\s]+$/),
@@ -25,7 +26,6 @@ export const taskTool = "beatapi_get_capability_task";
 export const resultTool = "beatapi_get_capability_result";
 export const resultResourceUri = "ui://beatapi/results-v1.html";
 const read = { readOnlyHint: true, destructiveHint: false, openWorldHint: false };
-const credentialField = /^(api_?key|authorization|cookie|password|secret|client_?secret|access_?token|refresh_?token)$/i;
 
 export const remoteCapabilityExclusions = Object.freeze({
   "data:bilibili.huahuo.account_session_info": "advertiser session identity is not public research",
@@ -37,35 +37,10 @@ export const remoteCapabilityExclusions = Object.freeze({
   "data:tiktok.web.generate_real_mstoken": "credential generation is not research",
 });
 
-function unsupportedSchema(value) {
-  if (!value || typeof value !== "object") return false;
-  if (Object.hasOwn(value, "$ref") || Object.hasOwn(value, "$dynamicRef")) return true;
-  if (value.properties && Object.keys(value.properties).some((key) => credentialField.test(key))) return true;
-  return Object.values(value).some((item) => Array.isArray(item) ? item.some(unsupportedSchema) : unsupportedSchema(item));
-}
-
 function toolName(reference) {
   const slug = reference.replace(/[^a-zA-Z0-9]+/g, "_").toLowerCase();
   const suffix = createHash("sha256").update(reference).digest("hex").slice(0, 10);
   return `beatapi_${slug.slice(0, 45)}_${suffix}`;
-}
-
-function normalizeSchemaAnnotations(schema) {
-  const copy = structuredClone(schema);
-  const visit = (node) => {
-    if (!node || typeof node !== "object" || Array.isArray(node)) return;
-    if (Object.hasOwn(node, "examples") && !Array.isArray(node.examples)) node.examples = [node.examples];
-    for (const key of ["properties", "patternProperties", "$defs", "definitions", "dependentSchemas"]) {
-      if (node[key] && typeof node[key] === "object") Object.values(node[key]).forEach(visit);
-    }
-    for (const key of ["allOf", "anyOf", "oneOf", "prefixItems"]) node[key]?.forEach(visit);
-    for (const key of ["items", "additionalProperties", "not", "if", "then", "else", "contains", "propertyNames", "unevaluatedProperties"]) {
-      if (Array.isArray(node[key])) node[key].forEach(visit);
-      else visit(node[key]);
-    }
-  };
-  visit(copy);
-  return copy;
 }
 
 export function compileRemoteCatalog(contracts) {
@@ -83,7 +58,7 @@ export function compileRemoteCatalog(contracts) {
     if (Object.hasOwn(remoteCapabilityExclusions, reference)) reason = `outside public research/creation scope: ${remoteCapabilityExclusions[reference]}`;
     else if (contract.readiness === "listed" || !contract.execution.executable || contract.execution.run_supported === false || !["sync", "async"].includes(contract.execution.mode)) reason = "not executable through Run";
     else if (contract.input_schema?.type !== "object" || !contract.input_schema.properties) reason = "missing object input contract";
-    else if (unsupportedSchema(contract.input_schema)) reason = "credential input or unresolved schema reference";
+    else if (unsupportedPublicInputSchema(contract.input_schema)) reason = "credential input or unresolved schema reference";
     else if (!contract.schema_hash) reason = "missing contract schema hash";
     if (reason) {
       excluded.push({ reference, reason });
@@ -94,7 +69,7 @@ export function compileRemoteCatalog(contracts) {
     if (bindings[name]) throw new Error(`Generated tool name collision: ${name}`);
     bindings[name] = { reference, operation: "start", schemaHash: contract.schema_hash,
       mode: contract.execution.mode, statusSupported: contract.execution.status_supported === true };
-    const inputSchema = normalizeSchemaAnnotations(contract.input_schema);
+    const inputSchema = normalizePublicSchema(contract.input_schema);
     const confirmation = inputSchema["x-beatapi-agent-input"];
     if (confirmation !== undefined) {
       if (!confirmation || typeof confirmation !== "object" || Array.isArray(confirmation)) throw new Error(`Invalid agent input contract: ${reference}`);
@@ -111,6 +86,7 @@ export function compileRemoteCatalog(contracts) {
           idempotency_key: { type: "string", minLength: 1, maxLength: 255, pattern: "\\S", not: { const: "<idempotency_key>" } },
         },
       },
+      outputSchema: structuredClone(resultOutputSchema),
       // Run 会持久化结果或启动任务，不能因为社媒平台未被修改就标成纯只读。
       annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
       securitySchemes: [{ type: "oauth2", scopes: [scope] }],
@@ -141,7 +117,7 @@ export function compileRemoteCatalog(contracts) {
   ]) {
     if (properties.reference.enum.length) tools.push({ name, title: description.split(";")[0], description,
       inputSchema: { type: "object", additionalProperties: false, properties, required }, annotations: { ...read },
-      outputSchema: { type: "object", properties: { data: { type: "object" }, error: { type: "object" }, next: { type: "object" } }, additionalProperties: true },
+      outputSchema: structuredClone(resultOutputSchema),
       securitySchemes: [{ type: "oauth2", scopes: ["mcp:tasks:read"] }],
       _meta: { securitySchemes: [{ type: "oauth2", scopes: ["mcp:tasks:read"] }],
         ui: { resourceUri: resultResourceUri, visibility: ["model", "app"] },

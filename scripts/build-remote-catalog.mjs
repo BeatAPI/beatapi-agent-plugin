@@ -1,6 +1,6 @@
 /**
  * [INPUT]: 匿名网关 Search 全量分页，或操作者指定的完整契约 JSON 数组
- * [OUTPUT]: 工具和绑定、exclusions 及公开源契约快照；默认写入 ignored dist
+ * [OUTPUT]: 工具/绑定/公开源契约；可显式导出网关目录与同源结果 Schema，不部署
  * [POS]: 只读目录构建命令；不调用 Run，不生成或部署新的后端服务
  * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
  */
@@ -8,8 +8,10 @@ import { readFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { compileRemoteCatalog } from "./remote-capabilities.mjs";
+import { resultOutputSchema } from "./remote-schema.mjs";
+import { validateRemoteCatalog } from "./remote-preflight.mjs";
 
-const { values } = parseArgs({ options: { fetch: { type: "boolean" }, catalog: { type: "string" }, output: { type: "string" } } });
+const { values } = parseArgs({ options: { fetch: { type: "boolean" }, catalog: { type: "string" }, output: { type: "string" }, "gateway-dir": { type: "string" } } });
 if (Boolean(values.fetch) === Boolean(values.catalog)) throw new Error("Choose --fetch (anonymous catalog only) or --catalog <contracts.json>.");
 let contracts;
 if (values.catalog) {
@@ -38,7 +40,7 @@ if (values.catalog) {
   } while (cursor);
   if (contracts.length !== total) throw new Error("Incomplete catalog; refusing partial tool generation.");
 }
-const catalog = compileRemoteCatalog(contracts);
+const catalog = validateRemoteCatalog(compileRemoteCatalog(contracts));
 const path = resolve(values.output ?? "dist/submission/remote-catalog.json");
 mkdirSync(dirname(path), { recursive: true });
 if (values.fetch) {
@@ -47,6 +49,12 @@ if (values.fetch) {
   console.log(`Public contract snapshot: ${snapshot}`);
 }
 writeFileSync(path, JSON.stringify(catalog, null, 2) + "\n");
+if (values["gateway-dir"]) {
+  const directory = resolve(values["gateway-dir"]);
+  mkdirSync(directory, { recursive: true });
+  writeFileSync(resolve(directory, "catalog_default.json"), JSON.stringify(catalog, null, 1) + "\n");
+  writeFileSync(resolve(directory, "result_schema.json"), JSON.stringify(resultOutputSchema, null, 1) + "\n");
+}
 console.log(`Generated ${Object.keys(catalog.bindings).length} independent capability tools, ${catalog.tools.length} total tools; excluded ${catalog.excluded.length}.`);
 console.log(path);
 console.log("Build artifact only: the OAuth server must enforce these bindings and adapt next; no deployment or review is implied.");

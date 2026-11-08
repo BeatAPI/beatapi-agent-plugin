@@ -10,6 +10,7 @@ import { z } from "zod";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { createRemoteDispatcher, discoveryTools, taskTool, resultTool, remoteCapabilityExclusions } from "./remote-capabilities.mjs";
+import { resultOutputSchema, validatePublicSchema, unsupportedPublicInputSchema } from "./remote-schema.mjs";
 
 export const firstPartyUrl = z.string().url().refine((value) => {
   const url = new URL(value);
@@ -22,7 +23,7 @@ const oauthScheme = z.object({ type: z.literal("oauth2"), scopes: z.array(z.stri
 const catalogSchema = z.object({
   version: z.literal(2), discovery: z.tuple([z.literal("capabilities_search"), z.literal("capabilities_inspect")]),
   tools: z.array(z.object({ name: z.string().regex(/^[a-zA-Z0-9_-]{1,64}$/), title: z.string().min(1), description: z.string().min(1),
-    inputSchema: z.record(z.string(), z.unknown()), outputSchema: z.record(z.string(), z.unknown()).optional(), annotations, securitySchemes: z.array(oauthScheme).min(1),
+    inputSchema: z.record(z.string(), z.unknown()), outputSchema: z.record(z.string(), z.unknown()), annotations, securitySchemes: z.array(oauthScheme).min(1),
     _meta: z.object({ securitySchemes: z.array(oauthScheme).min(1),
       "beatapi/capability": z.object({ reference: z.string(), schemaHash: z.string().min(1), operation: z.literal("start") }).strict().optional(),
       "beatapi/operation": z.enum(["status", "result"]).optional(),
@@ -40,6 +41,10 @@ export function validateRemoteCatalog(value) {
   const names = new Set();
   const references = new Set();
   for (const tool of catalog.tools) {
+    validatePublicSchema(tool.inputSchema, `${tool.name} inputSchema`);
+    validatePublicSchema(tool.outputSchema, `${tool.name} outputSchema`);
+    if (!isDeepStrictEqual(tool.outputSchema, resultOutputSchema)) throw new Error(`Unexpected result outputSchema: ${tool.name}`);
+    if (unsupportedPublicInputSchema(tool.inputSchema)) throw new Error(`Unsupported public input schema: ${tool.name}`);
     if (names.has(tool.name)) throw new Error(`Duplicate catalog tool: ${tool.name}`);
     names.add(tool.name);
     if (!isDeepStrictEqual(tool.securitySchemes, tool._meta.securitySchemes)) throw new Error(`Conflicting OAuth declarations: ${tool.name}`);
@@ -71,6 +76,20 @@ function canonical(value) {
   return value;
 }
 
+function validateResultResource(content) {
+  if (content.mimeType !== "text/html;profile=mcp-app" || !content.text?.trim()) throw new Error("Invalid UI resource content or MIME type.");
+  const ui = content._meta?.ui;
+  let domain;
+  try { domain = new URL(ui?.domain); } catch { throw new Error("Missing or invalid UI domain."); }
+  if (domain.protocol !== "https:" || domain.origin !== ui.domain || domain.username || domain.password || domain.port ||
+      domain.hostname.includes("*") || ["web-sandbox.oaiusercontent.com", "oaiusercontent.com"].includes(domain.hostname)) throw new Error("UI domain must be a dedicated HTTPS origin.");
+  const csp = ui.csp;
+  if (!csp || !Array.isArray(csp.connectDomains) || csp.connectDomains.length || !Array.isArray(csp.resourceDomains) ||
+      !isDeepStrictEqual([...(csp.resourceDomains ?? [])].sort(), ["https://cdn.beatapi.io", "https://media.beatapi.io"]) ||
+      (csp.frameDomains?.length ?? 0)) throw new Error("Unexpected result UI CSP.");
+  return { uri: content.uri, domain: domain.origin, sha256: createHash("sha256").update(content.text).digest("hex") };
+}
+
 export async function probeRemoteTools(url, value, fetcher = fetch) {
   firstPartyUrl.parse(url);
   const catalog = validateRemoteCatalog(value);
@@ -86,7 +105,7 @@ export async function probeRemoteTools(url, value, fetcher = fetch) {
       if (["authorization", "cookie", "proxy-authorization"].some((name) => headers.has(name))) throw new Error("Tool scan must remain anonymous.");
       if (init.method === "POST") {
         const message = JSON.parse(init.body);
-        if (!["initialize", "notifications/initialized", "tools/list"].includes(message.method)) throw new Error("Tool scan refuses business operations.");
+        if (!["initialize", "notifications/initialized", "tools/list", "resources/list", "resources/read"].includes(message.method)) throw new Error("Tool scan refuses business operations.");
       } else if (init.method !== "GET") throw new Error("Unexpected tool scan HTTP method.");
       const deadline = AbortSignal.timeout(15_000);
       return fetcher(input, { ...init, headers, redirect: "error", credentials: "omit",
@@ -107,6 +126,8 @@ export async function probeRemoteTools(url, value, fetcher = fetch) {
         if (!tool.title?.trim() || !tool.description?.trim()) throw new Error(`Missing remote title or description: ${tool.name}`);
         const security = tool.securitySchemes ?? tool._meta?.securitySchemes;
         if (discoveryTools.includes(tool.name)) {
+          validatePublicSchema(tool.outputSchema, `${tool.name} outputSchema`);
+          if (!isDeepStrictEqual(tool.outputSchema, resultOutputSchema)) throw new Error(`Discovery outputSchema mismatch: ${tool.name}`);
           if (tool.annotations.readOnlyHint !== true || tool.annotations.destructiveHint !== false ||
             !Array.isArray(security) || !security.some((scheme) => scheme.type === "noauth")) throw new Error(`Public discovery policy mismatch: ${tool.name}`);
           continue;
@@ -129,9 +150,27 @@ export async function probeRemoteTools(url, value, fetcher = fetch) {
       cursors.add(cursor);
     } while (cursor);
     for (const name of [...discoveryTools, ...expected.keys()]) if (!seen.has(name)) throw new Error(`Missing remote tool: ${name}`);
+    const linked = new Set(catalog.tools.flatMap(tool => tool._meta.ui ? [tool._meta.ui.resourceUri] : []));
+    const registered = new Set();
+    const resourceCursors = new Set();
+    cursor = undefined;
+    do {
+      const page = await client.listResources(cursor ? { cursor } : undefined, { timeout: 15_000 });
+      for (const resource of page.resources) registered.add(resource.uri);
+      cursor = page.nextCursor;
+      if (cursor && (resourceCursors.has(cursor) || !page.resources.length)) throw new Error("UI resource pagination did not advance.");
+      resourceCursors.add(cursor);
+    } while (cursor);
+    const uiResources = [];
+    for (const uri of linked) {
+      if (!registered.has(uri)) throw new Error(`Missing linked UI resource: ${uri}`);
+      const response = await client.readResource({ uri }, { timeout: 15_000 });
+      if (response.contents.length !== 1 || response.contents[0].uri !== uri) throw new Error(`Invalid UI resource response: ${uri}`);
+      uiResources.push(validateResultResource(response.contents[0]));
+    }
     return {
       catalogSha256: createHash("sha256").update(JSON.stringify(canonical(catalog))).digest("hex"),
-      server: client.getServerVersion(), toolCount: seen.size, anonymousToolListing: true,
+      server: client.getServerVersion(), toolCount: seen.size, anonymousToolListing: true, uiResources,
       notVerified: ["user OAuth consent, refresh and revocation", "anonymous Search and Inspect execution",
         "per-tool scope enforcement and account isolation", "paid execution, billing and idempotency", "host tool limits and Portal review"],
     };
