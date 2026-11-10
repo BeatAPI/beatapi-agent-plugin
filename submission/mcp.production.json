@@ -1,0 +1,21 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+  "mcpServers": {
+    "beatapi": {
+      "type": "streamable-http",
+      "url": "https://api.beatapi.io/mcp/openai",
+      "extensions": {
+        "com.openai": {
+          "auth": {
+            "type": "oauth",
+            "client": {
+              "mode": "provided",
+              "clientId": "beatapi-chatgpt",
+              "tokenEndpointAuthMethod": "none"
+            }
+          }
+        }
+      }
+    }
+  }
+}

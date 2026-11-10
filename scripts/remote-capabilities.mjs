@@ -1,5 +1,5 @@
 /**
- * [INPUT]: 网关完整能力契约与 remote-schema 的公共 Schema 投影；不读取凭证
+ * [INPUT]: 网关完整能力契约、remote-schema 公共 Schema 与 remote-presentation 的领域展示；不读取凭证
  * [OUTPUT]: 公开范围、显式媒体设置门禁、最小权限工具与只读结果 UI 编译和协议 next 改写
  * [POS]: 公开 MCP 的构建期契约编译器；不启动服务器、不鉴权、不执行或扣费
  * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
@@ -8,6 +8,7 @@ import { createHash } from "node:crypto";
 import { z } from "zod";
 import { AjvJsonSchemaValidator } from "@modelcontextprotocol/sdk/validation/ajv";
 import { normalizePublicSchema, resultOutputSchema, unsupportedPublicInputSchema } from "./remote-schema.mjs";
+import { describeRemoteCapability } from "./remote-presentation.mjs";
 
 const contractSchema = z.object({
   reference: z.string().regex(/^(model|data|workflow):[^\s]+$/),
@@ -29,9 +30,11 @@ const read = { readOnlyHint: true, destructiveHint: false, openWorldHint: false 
 
 export const remoteCapabilityExclusions = Object.freeze({
   "data:bilibili.huahuo.account_session_info": "advertiser session identity is not public research",
+  "data:bilibili.huahuo.dmp_pkg_list": "custom audience packages await advertiser authorization evidence",
   "data:douyin.app.v3.open_douyin_app_to_send_private_message": "messaging deep links are not research",
   "data:tiktok.app.v3.open_tiktok_app_to_send_private_message": "messaging deep links are not research",
   "data:douyin.app.v3.register_device": "device registration is not research",
+  "data:tiktok.web.device_register": "device registration and guest credentials are not public research",
   "data:douyin.web.fetch_douyin_web_guest_cookie": "guest credential acquisition is not research",
   "data:tiktok.web.fetch_tiktok_web_guest_cookie": "guest credential acquisition is not research",
   "data:tiktok.web.generate_real_mstoken": "credential generation is not research",
@@ -64,7 +67,8 @@ export function compileRemoteCatalog(contracts) {
       excluded.push({ reference, reason });
       continue;
     }
-    const name = toolName(reference);
+    const presentation = describeRemoteCapability(contract, toolName(reference));
+    const name = presentation.name;
     const scope = contract.kind === "data" ? "mcp:data:read" : contract.kind === "workflow" || contract.execution.mode === "async" ? "mcp:media:create" : "mcp:models:run";
     if (bindings[name]) throw new Error(`Generated tool name collision: ${name}`);
     bindings[name] = { reference, operation: "start", schemaHash: contract.schema_hash,
@@ -77,8 +81,7 @@ export function compileRemoteCatalog(contracts) {
       delete inputSchema["x-beatapi-agent-input"];
     }
     tools.push({
-      name, title: contract.title,
-      description: `${contract.description || contract.title}. Executes only ${reference}. Uses the connected BeatAPI balance; inspect current pricing first. Include every user-selected supported setting in input, even when optional. Resolve conditional constraints and inherited settings using this schema before execution; do not silently change mode or media. Reuse idempotency_key only for retries of the same input.`,
+      ...presentation,
       inputSchema: {
         type: "object", additionalProperties: false, required: ["input", "idempotency_key"],
         properties: {

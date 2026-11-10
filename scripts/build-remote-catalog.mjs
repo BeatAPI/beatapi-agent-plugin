@@ -1,6 +1,6 @@
 /**
  * [INPUT]: 匿名网关 Search 全量分页，或操作者指定的完整契约 JSON 数组
- * [OUTPUT]: 工具/绑定/公开源契约；可显式导出网关目录与同源结果 Schema，不部署
+ * [OUTPUT]: 工具/绑定/公开源契约；可选紧凑注解、共享执行指引或显式导出网关目录，不部署
  * [POS]: 只读目录构建命令；不调用 Run，不生成或部署新的后端服务
  * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
  */
@@ -10,8 +10,9 @@ import { parseArgs } from "node:util";
 import { compileRemoteCatalog } from "./remote-capabilities.mjs";
 import { resultOutputSchema } from "./remote-schema.mjs";
 import { validateRemoteCatalog } from "./remote-preflight.mjs";
+import { compactRemoteCatalog, shareRemoteExecutionGuidance } from "./remote-metadata.mjs";
 
-const { values } = parseArgs({ options: { fetch: { type: "boolean" }, catalog: { type: "string" }, output: { type: "string" }, "gateway-dir": { type: "string" } } });
+const { values } = parseArgs({ options: { fetch: { type: "boolean" }, catalog: { type: "string" }, output: { type: "string" }, compact: { type: "boolean" }, "shared-instructions": { type: "boolean" }, "gateway-dir": { type: "string" } } });
 if (Boolean(values.fetch) === Boolean(values.catalog)) throw new Error("Choose --fetch (anonymous catalog only) or --catalog <contracts.json>.");
 let contracts;
 if (values.catalog) {
@@ -40,7 +41,9 @@ if (values.catalog) {
   } while (cursor);
   if (contracts.length !== total) throw new Error("Incomplete catalog; refusing partial tool generation.");
 }
-const catalog = validateRemoteCatalog(compileRemoteCatalog(contracts));
+const compiled = compileRemoteCatalog(contracts);
+const compacted = values.compact ? compactRemoteCatalog(compiled) : compiled;
+const catalog = validateRemoteCatalog(values["shared-instructions"] ? shareRemoteExecutionGuidance(compacted) : compacted);
 const path = resolve(values.output ?? "dist/submission/remote-catalog.json");
 mkdirSync(dirname(path), { recursive: true });
 if (values.fetch) {
