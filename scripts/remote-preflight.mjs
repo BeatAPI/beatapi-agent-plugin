@@ -1,6 +1,6 @@
 /**
- * [INPUT]: 固定远程目录、公开范围策略、第一方 MCP URL 与匿名 HTTP；使用官方 MCP Client/Transport
- * [OUTPUT]: validateRemoteCatalog 校验构建目录，probeRemoteTools 精确比对真实分页工具及 UI/outputSchema 元数据
+ * [INPUT]: 固定远程目录、元数据约束投影、公开范围策略与匿名 HTTP；使用官方 MCP Client/Transport
+ * [OUTPUT]: 构建范围/读取引用校验，及真实分页工具与 UI/outputSchema 的精确只读比对
  * [POS]: 发布前只读工具扫描；不注册 OAuth 客户端、不签发令牌、不调用任何业务工具
  * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
  */
@@ -11,6 +11,7 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { createRemoteDispatcher, discoveryTools, taskTool, resultTool, remoteCapabilityExclusions } from "./remote-capabilities.mjs";
 import { resultOutputSchema, validatePublicSchema, unsupportedPublicInputSchema } from "./remote-schema.mjs";
+import { schemaAssertions } from "./remote-metadata.mjs";
 
 export const firstPartyUrl = z.string().url().refine((value) => {
   const url = new URL(value);
@@ -21,7 +22,7 @@ export const firstPartyUrl = z.string().url().refine((value) => {
 const annotations = z.object({ readOnlyHint: z.boolean(), destructiveHint: z.boolean(), openWorldHint: z.boolean() });
 const oauthScheme = z.object({ type: z.literal("oauth2"), scopes: z.array(z.string()) }).strict();
 const catalogSchema = z.object({
-  version: z.literal(2), discovery: z.tuple([z.literal("capabilities_search"), z.literal("capabilities_inspect")]),
+  version: z.literal(2), instructions: z.string().min(1).optional(), discovery: z.tuple([z.literal("capabilities_search"), z.literal("capabilities_inspect")]),
   tools: z.array(z.object({ name: z.string().regex(/^[a-zA-Z0-9_-]{1,64}$/), title: z.string().min(1), description: z.string().min(1),
     inputSchema: z.record(z.string(), z.unknown()), outputSchema: z.record(z.string(), z.unknown()), annotations, securitySchemes: z.array(oauthScheme).min(1),
     _meta: z.object({ securitySchemes: z.array(oauthScheme).min(1),
@@ -43,7 +44,7 @@ export function validateRemoteCatalog(value) {
   for (const tool of catalog.tools) {
     validatePublicSchema(tool.inputSchema, `${tool.name} inputSchema`);
     validatePublicSchema(tool.outputSchema, `${tool.name} outputSchema`);
-    if (!isDeepStrictEqual(tool.outputSchema, resultOutputSchema)) throw new Error(`Unexpected result outputSchema: ${tool.name}`);
+    if (!isDeepStrictEqual(schemaAssertions(tool.outputSchema), schemaAssertions(resultOutputSchema))) throw new Error(`Unexpected result outputSchema: ${tool.name}`);
     if (unsupportedPublicInputSchema(tool.inputSchema)) throw new Error(`Unsupported public input schema: ${tool.name}`);
     if (names.has(tool.name)) throw new Error(`Duplicate catalog tool: ${tool.name}`);
     names.add(tool.name);
@@ -65,6 +66,11 @@ export function validateRemoteCatalog(value) {
     }
   }
   if (!references.size || Object.keys(catalog.bindings).some((name) => !names.has(name))) throw new Error("Incomplete catalog bindings.");
+  for(const tool of catalog.tools.filter(tool=>[taskTool,resultTool].includes(tool.name))) {
+    for(const reference of tool.inputSchema.properties.reference.enum) {
+      if(Object.hasOwn(remoteCapabilityExclusions,reference))throw new Error(`Excluded retrieval reference: ${reference}`);
+    }
+  }
   if ([...discoveryTools, "capabilities_run"].some((name) => names.has(name))) throw new Error("Generic or discovery tools cannot be execution bindings.");
   createRemoteDispatcher(catalog);
   return catalog;
@@ -115,6 +121,7 @@ export async function probeRemoteTools(url, value, fetcher = fetch) {
   const client = new Client({ name: "beatapi-public-tool-preflight", version: "0.4.0" });
   try {
     await client.connect(transport, { timeout: 15_000 });
+    if ((client.getInstructions() ?? "") !== (catalog.instructions ?? "")) throw new Error("Remote server instructions drift.");
     let cursor;
     do {
       const page = await client.listTools(cursor ? { cursor } : undefined, { timeout: 15_000 });

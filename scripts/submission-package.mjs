@@ -1,7 +1,7 @@
 /**
  * [INPUT]: 本地展示源、品牌 PNG、审核案例、操作者已核验的录像链接与真实 OAuth/工具扫描
  * [OUTPUT]: 展示源校验/导出、完整预检及含录像链接的远程 ZIP，不验证录像内容或案例实绩
- * [POS]: OpenAI 公开包边界；不继承本地接线，也不替代网关授权或门户审核
+ * [POS]: OpenAI 公开包边界；展示不含促销和价格宣称，费用披露留在 Skill/审核信息，不替代门户审核
  * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
  */
 import { execFileSync } from "node:child_process";
@@ -63,7 +63,7 @@ export function createRemoteManifest(local, version, releaseNotes, testCases) {
       interface: {
         displayName: "BeatAPI Agent Toolkit",
         developerName: publisherName,
-        category: "Productivity",
+        category: "Data & Analytics",
         capabilities: ["Read", "Write"],
         websiteURL: ui.websiteURL,
         privacyPolicyURL: ui.privacyPolicyURL,
@@ -75,21 +75,21 @@ export function createRemoteManifest(local, version, releaseNotes, testCases) {
         logoDark: "./assets/logo-dark.png",
         shortDescription: "Research, SEO and AI creation",
         longDescription: [
-          "BeatAPI Agent Toolkit brings social and web research, SEO analysis, text and decision models, and image/video creation into one toolkit. Investigate a market, compare competitors, find content opportunities or create campaign assets. Use each capability independently or combine the steps your task needs.",
+          "BeatAPI Agent Toolkit brings social and web research, SEO analysis, text and decision models, and image/video creation into one toolkit for market and content research. Analyze public information, compare competitors and identify content opportunities. Draft copy or create campaign assets when your task calls for it. Use each capability independently or combine the steps your task needs.",
           "Social research: Find public posts, videos, profiles and comments to investigate brand mentions, audience questions and competitor content. Compare discussion themes and available engagement signals, with source links and sample limits. Supported platforms include Xiaohongshu, Douyin, TikTok, Bilibili, Weibo, X, Instagram, YouTube and Reddit; available operations vary by platform.",
           "Web research: Search for current information, read relevant pages and research questions across multiple sources. Prepare market briefs, product comparisons and evidence summaries. Keep source links, distinguish retrieved facts from interpretation, and flag missing or unread evidence.",
           "SEO and competitor analysis: Explore keyword ideas, search volume, intent and difficulty. Compare domains, ranking keywords, top pages, backlinks, domain ratings and estimated traffic to prioritize content opportunities. Check the requested market and data dates: traffic figures are estimates, and ranking positions are historical snapshots, not live rank tracking.",
           "AI creation and workflows: Turn a creative brief into product visuals, ad creatives, social images and short videos. Discover image and video models, compare supported inputs and settings, and generate the options you choose. Start from a text prompt or reference images supplied as public HTTPS URLs, depending on the selected capability. Use product-video, music-video or video-analysis workflows when available, then track tasks and retrieve results.",
           "Text and decision models: Draft copy, summarize findings and evaluate options using the models selected for your task. For example, combine audience research and keyword data into a content brief, then create visuals if requested. Research does not require a generation step.",
-          "Find a capability, inspect its current inputs, pricing and readiness, then choose what to run. Search and Inspect are free; web searches and other execution calls use your existing BeatAPI balance. Charges depend on the selected capability and usage. The plugin does not sell credits or handle payments.",
+          "Find a capability, inspect its inputs and availability, then run only the operations you choose. Track progress and retrieve saved results without starting a replacement task.",
           "Connect through OAuth without installing local software or sharing credentials in chat. Available operations depend on the connected server and your permissions.",
-          "Social data is for reading and research, not posting, messaging or managing social accounts. Local file uploads, account administration, credit purchases, webhooks and Realtime setup are not included.",
+          "Social data is for reading and research, not posting, messaging or managing social accounts. Local file uploads, account administration, webhooks and Realtime setup are not included.",
         ].join("\n\n"),
         supportURL: "https://github.com/BeatAPI/beatapi-agent-plugin/issues",
         defaultPrompt: [
-          "Use $beatapi to plan social and web research on my topic, with sources and sample limits. Show pricing before running.",
-          "Use $beatapi to plan SEO keyword and competitor analysis for my domain and target market. Show pricing before running.",
-          "Use $beatapi to plan product visuals and a short video from these image URLs. Show options and pricing before running.",
+          "Use $beatapi to research my topic across social posts and the web, with sources and sample limits. Plan before running.",
+          "Use $beatapi to plan SEO keyword and competitor analysis for my domain and target market.",
+          "Use $beatapi to plan product visuals and a short video from these image URLs. Compare supported inputs before running.",
         ],
       },
       review: {

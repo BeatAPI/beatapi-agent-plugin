@@ -47,7 +47,7 @@
 
 ## 归档与下一阶段
 
-持久归档目录：`/Users/zeiki/.codex/visualizations/2026/11/04/01a1a5a8-479b-7063-a433-9fdd22e908c9/beatapi-review-20261106`。
+持久归档目录：`/Users/zeiki/workspace/code-web-app/beatapi-agent-plugin/submission/artifacts/beatapi-review-20261106`。按用户要求从 Codex visualizations 迁入插件仓库；历史记录中的原路径仅表示当时位置。
 保留完整主录像、历史方形录像、彩排问题录像、1.1.1 修复补录、案例快照、截图、真实图片和摘要；剪辑版只省略等待，剪辑区间另存，不伪造结果。
 尚未托管审核员可访问的录像 URL、构建最终公开送审 ZIP 或提交审核。后续将核验录像外链并进入正式包/门户流程；Reviewer 账户及安全字段届时单独处理，不写入公开材料。
 

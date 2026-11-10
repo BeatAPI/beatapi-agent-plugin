@@ -1,6 +1,6 @@
 /**
  * [INPUT]: 远程发布构建器、展示翻译、品牌 PNG、审核案例与 mock OAuth 响应
- * [OUTPUT]: 验证发布/ZIP 同源、Schema 投影、网关契约导出与 SDK 只读 UI 扫描；隔离凭证及付费执行
+ * [OUTPUT]: 验证公开范围/读取枚举、ZIP 白名单、网关导出与 SDK 只读扫描；隔离内部来源、凭证及付费执行
  * [POS]: 公开发布边界回归；不代替真实用户 OAuth、计费或门户审核
  * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
  */
@@ -13,6 +13,7 @@ import { execFileSync } from "node:child_process";
 import test from "node:test";
 import { compileRemoteCatalog, createRemoteDispatcher, adaptRemoteNext, discoveryTools, taskTool, resultTool } from "../scripts/remote-capabilities.mjs";
 import { probeRemoteTools, validateRemoteCatalog } from "../scripts/remote-preflight.mjs";
+import { shareRemoteExecutionGuidance } from "../scripts/remote-metadata.mjs";
 import {
   createRemoteManifest,
   validateRemoteConfig,
@@ -48,6 +49,8 @@ test("catalog CLI exports gateway metadata and result schema from one validated 
     assert.deepEqual(JSON.parse(readFileSync(join(gateway, "catalog_default.json"), "utf8")), catalog);
     const schema = JSON.parse(readFileSync(join(gateway, "result_schema.json"), "utf8"));
     for (const tool of catalog.tools) assert.deepEqual(tool.outputSchema, schema);
+    execFileSync(process.execPath, ["scripts/build-remote-catalog.mjs", "--catalog", input, "--output", output, "--shared-instructions"], { cwd: root });
+    assert.deepEqual(validateRemoteCatalog(JSON.parse(readFileSync(output,"utf8"))),shareRemoteExecutionGuidance(catalog));
   } finally { rmSync(directory, { recursive: true, force: true }); }
 });
 
@@ -86,7 +89,7 @@ test("remote manifest has complete listing without local runtime dependencies", 
   assert.equal(ui.supportURL, "https://github.com/BeatAPI/beatapi-agent-plugin/issues");
   assert.ok(ui.shortDescription.length <= 30);
   assert.match(ui.longDescription, /OAuth/);
-  assert.match(ui.longDescription, /Search and Inspect are free/);
+  assert.match(ui.longDescription, /inspect its inputs and availability/);
   assert.equal(ui.shortDescription, "Research, SEO and AI creation");
   for (const area of ["Social research:", "Web research:", "SEO and competitor analysis:", "AI creation and workflows:", "Text and decision models:"]) {
     assert.ok(ui.longDescription.includes(area), area);
@@ -115,7 +118,7 @@ test("private presentation and submission share English defaults, translations a
   const manifest = checkRemoteSource(root);
   const openai = manifest.extensions["com.openai"];
   assert.equal(openai.interface.displayName, "BeatAPI Agent Toolkit");
-  assert.equal(openai.interface.category, "Productivity");
+  assert.equal(openai.interface.category, "Data & Analytics");
   assert.equal(openai.interface.websiteURL, "https://beatapi.io");
   assert.equal(openai.interface.shortDescription, "Research, SEO and AI creation");
   assert.match(manifest.description, /^Combine social and web research/);
@@ -140,6 +143,22 @@ test("private presentation and submission share English defaults, translations a
   } finally {
     rmSync(directory, { recursive: true, force: true });
   }
+});
+
+test("public listing avoids pricing claims and release notes describe the product rather than preparation", () => {
+  const openai = checkRemoteSource(root).extensions["com.openai"];
+  assert.equal(openai.interface.category, "Data & Analytics");
+  const listing = [openai.interface.longDescription, ...openai.interface.defaultPrompt].join("\n");
+  assert.doesNotMatch(listing, /\b(?:pricing|free|subscription|promotion|credits|balance|top-ups)\b/i);
+  for (const translation of Object.values(openai.publication.translations)) {
+    assert.doesNotMatch(translation.description, /价格|免费|充值|余额|积分|料金|無料|残高|クレジット/);
+  }
+  const notes = openai.publication.release_notes;
+  assert.ok(notes.length < 1600);
+  assert.match(notes, /BeatAPI Agent Toolkit/);
+  assert.doesNotMatch(notes, /pending|Private 1\.1|preparation|review approval|back(end)? registration/i);
+  assert.match(readFileSync(join(root, "submission/REMOTE-SKILL.md"), "utf8"), /If balance is insufficient/);
+  assert.match(openai.review.commerce_description, /existing BeatAPI balance/);
 });
 
 test("remote skill discloses insufficient balance without promoting a purchase", () => {
@@ -256,7 +275,7 @@ test("general remote Skill and review drafts cover discovery and bounded cross-d
   }
   assert.deepEqual(checkRemoteSource(root).extensions["com.openai"].review.test_cases, cases);
   const fixtureHash = createHash("sha256").update(readFileSync(join(root, "assets/demo-water-bottle-v1.png"))).digest("hex");
-  const mediaCase = cases.positive.find((item) => item.tools_triggered.includes("beatapi_model_nano_banana_2_890739a2f7"));
+  const mediaCase = cases.positive.find((item) => item.tools_triggered.includes("beatapi_generate_images_nano_banana_2_890739a2"));
   assert.ok(mediaCase.prompt.includes(`https://cdn.beatapi.io/plugins/beatapi-agent-toolkit/review/demo-water-bottle-${fixtureHash.slice(0, 12)}.png`));
   assert.match(mediaCase.description, /AI-generated fictional unbranded/);
   assert.match(mediaCase.prompt, /1K, 9:16 and PNG/);
@@ -287,7 +306,7 @@ function mockReady(catalog, change = (tools) => tools) {
     const message = JSON.parse(init.body);
     methods.push(message.method);
     if (message.method === "initialize") return Response.json({ jsonrpc: "2.0", id: message.id,
-      result: { protocolVersion: message.params.protocolVersion, capabilities: { tools: {} }, serverInfo: { name: "beatapi-test", version: "1" } } });
+      result: { protocolVersion: message.params.protocolVersion, capabilities: { tools: {} }, serverInfo: { name: "beatapi-test", version: "1" }, ...(catalog.instructions ? {instructions:catalog.instructions} : {}) } });
     if (message.method === "notifications/initialized") return new Response(null, { status: 202 });
     if (message.method === "resources/list") return Response.json({ jsonrpc: "2.0", id: message.id, result: { resources: [{ uri: resource.uri, name: "Results", mimeType: resource.mimeType }] } });
     if (message.method === "resources/read") {
@@ -301,6 +320,14 @@ function mockReady(catalog, change = (tools) => tools) {
       result: { tools: tools.slice(offset, end), ...(end < tools.length ? { nextCursor: String(end) } : {}) } });
   } };
 }
+
+test("release preflight verifies server instructions and rejects loss of shared guidance",async()=>{
+  const source=compileRemoteCatalog([capability("data:search")]),shared=shareRemoteExecutionGuidance(source);
+  await probeRemoteTools(config().mcpServers.beatapi.url,shared,mockReady(shared).fetcher);
+  const missing={...shared};delete missing.instructions;
+  await assert.rejects(probeRemoteTools(config().mcpServers.beatapi.url,shared,mockReady(missing).fetcher),/instructions drift/);
+  await assert.rejects(probeRemoteTools(config().mcpServers.beatapi.url,source,mockReady({...source,instructions:"Unexpected instructions"}).fetcher),/instructions drift/);
+});
 
 test("release preflight uses real SDK pagination and compares every exposed tool without running any", async () => {
   const catalog = compileRemoteCatalog([capability("data:search"), capability("model:image", {
@@ -382,9 +409,11 @@ test("catalog compiler exposes each executable reference independently and repor
 test("public research catalog excludes messaging, device and credential utilities without blocking public research", () => {
   const excluded = [
     "data:bilibili.huahuo.account_session_info",
+    "data:bilibili.huahuo.dmp_pkg_list",
     "data:douyin.app.v3.open_douyin_app_to_send_private_message",
     "data:tiktok.app.v3.open_tiktok_app_to_send_private_message",
     "data:douyin.app.v3.register_device",
+    "data:tiktok.web.device_register",
     "data:douyin.web.fetch_douyin_web_guest_cookie",
     "data:tiktok.web.fetch_tiktok_web_guest_cookie",
     "data:tiktok.web.generate_real_mstoken",
@@ -402,6 +431,14 @@ test("public research catalog excludes messaging, device and credential utilitie
   unsafe.tools[0]._meta["beatapi/capability"].reference = reference;
   assert.throws(() => validateRemoteCatalog(unsafe), /public.*scope/);
   assert.throws(() => dispatcher("capabilities_run", { reference }), /not exposed/);
+});
+
+test("public retrieval schemas cannot reintroduce excluded references",()=>{
+  for(const reference of ["data:tiktok.web.device_register","data:bilibili.huahuo.dmp_pkg_list"]){
+    const catalog=compileRemoteCatalog([capability("data:search")]);
+    catalog.tools.find(t=>t.name===resultTool).inputSchema.properties.reference.enum.push(reference);
+    assert.throws(()=>validateRemoteCatalog(catalog),/Excluded retrieval reference/);
+  }
 });
 
 test("remote dispatch pins references, validates exact input and prevents generic execution or mode switching", () => {
@@ -533,6 +570,7 @@ test("remote ZIP contains portable connection and Skill but no local MCP or cred
     const catalog = compileRemoteCatalog([
       capability("data:xiaohongshu.app_v2.search_notes"), capability("data:web.search"), capability("data:web.read"),
       capability("data:seo.keyword_overview"), capability("model:nano-banana-2", {
+        title: "Nano Banana 2", categories: ["image"],
         execution: { mode: "async", executable: true, status_supported: true },
         input_schema: { type: "object", properties: {
           output_format: { type: "string" }, resolution: { type: "string" }, aspect_ratio: { type: "string" },
@@ -550,9 +588,11 @@ test("remote ZIP contains portable connection and Skill but no local MCP or cred
     const archive = await buildRemotePackage(root, dist, config(), mockReady(catalog).fetcher, catalog, demoUrl);
     const files = execFileSync("unzip", ["-Z1", archive], { encoding: "utf8" }).split("\n");
     const prefix = "beatapi-agent-plugin/";
-    for (const name of ["plugin.json", "mcp.json", "skills/beatapi/SKILL.md", "assets/logo.png", "assets/logo-dark.png", "assets/icon.png", "LICENSE"]) {
+    const allowedFiles=["plugin.json", "mcp.json", "skills/beatapi/SKILL.md", "assets/logo.png", "assets/logo-dark.png", "assets/icon.png", "LICENSE"];
+    for (const name of allowedFiles) {
       assert.ok(files.includes(prefix + name), name);
     }
+    assert.deepEqual(files.filter(name=>name&&!name.endsWith("/")).sort(),allowedFiles.map(name=>prefix+name).sort(),"Internal audit evidence and source documents must stay outside public ZIPs");
     assert.doesNotMatch(files.join("\n"), /node_modules|server\.mjs|\.codex-plugin|\.app\.json|\.env|README\.txt/);
     const remote = JSON.parse(execFileSync("unzip", ["-p", archive, prefix + "mcp.json"], { encoding: "utf8" }));
     validateRemoteConfig(remote);

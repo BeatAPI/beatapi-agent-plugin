@@ -1,10 +1,55 @@
 # BeatAPI Agent Toolkit - OpenAI remote MCP + Skill submission
 
+Owner update, 2026-11-10: the owner reports that the plugin has been submitted.
+That portal state and whether the private context accompanied the submission
+have not been independently rechecked. The current Git closeout preserves the
+submitted package and production endpoint: no ZIP upload, rescan, review
+cancellation, publication or deployment is part of this work. Earlier statements
+below describe their recorded preparation stages. See GIT-CLOSEOUT-2026-11-10.md.
+
 Public distribution targets **With MCP**, not Skills only or desktop-only.
 The owner has confirmed developer access and identity verification. This does
 not establish that an endpoint, OAuth connection, tool scan or review has passed.
 
-## Current acceptance, 2026-11-04
+## Formal Catalog Update, 2026-11-09
+
+The owner approved excluding TikTok guest-device registration and the Bilibili
+custom-audience package list from the public ChatGPT catalog only. The frozen
+986-tool catalog with the media/share, Xingtu, Instagram V2/V3 and six ranking-name fixes is deployed in gateway commit ffe8fbb7b; the original APIs
+and local tools stay unchanged. The same 0.4.0 plugin draft was updated and its
+formal scan completed for all 986 tools and shared instructions, with no runtime
+problem. All eight target tools have no specific findings; one retains a generic
+notice in an earlier scan. The latest formal scan completed at 23:04 Beijing time.
+All six ranking-name allegations disappeared; five targets have no findings and
+the industry creator-ranking target has a generic further-review reason with
+decision fail. The two unchanged read-only discovery tools have undisclosed-execution
+allegations with decision fail. There are also 485 generic further-review reasons,
+including 279 fail and 206 needs_investigation; these decisions cannot be dismissed
+as harmless notices. allToolsPass remains null. Results are saved in the same portal
+draft, with no separate report upload or identical ZIP replacement;
+no review has been submitted. Advertiser authorization evidence is still needed
+before reintroducing audience packages. Backups, rollback and exact scan evidence
+are recorded in MCP-RANKING-NAMES-2026-11-09.md. The draft is not cleared of
+specific findings. A subsequent live check of the final confirmation dialog at
+23:19 found that these MCP findings are explicitly non-blocking for submission,
+although unresolved findings may lead to rejection. A private explanation is
+filled in Additional Submission Context but has not been sent or saved server-side.
+All six legal/policy attestations remain unchecked for the authorized owner to
+confirm, and the final Submit action remains with the owner. See
+MCP-SUBMISSION-HANDOFF-2026-11-09.md. This is not review approval.
+
+## Local Candidate, 2026-11-09
+
+The four media/share and four Xingtu presentation repairs retained together since
+the 1dcbae3a8 release are now formally deployed in 243229fdf. Their earlier complete
+986-tool independent diagnostic scan completed
+with no specific findings and 904 generic further-review notices. Parameters,
+permissions and capabilities are preserved. That historical independent result
+is not the latest formal scan or review approval. See MCP-XINGTU-NAMES-2026-11-09.md
+for the semantic investigation and diagnostic cleanup evidence; the formal
+release record above is current.
+
+## Acceptance history, 2026-11-04
 
 The owner confirms that OAuth connection and tool invocation now work in ChatGPT.
 An independent anonymous initialize of `https://api.beatapi.io/mcp/openai` returns
@@ -41,15 +86,16 @@ Local compatibility manifests keep their existing identity and display names.
 | --- | --- |
 | Display name | BeatAPI Agent Toolkit |
 | Subtitle | Research, SEO and AI creation |
-| Category | Productivity |
+| Category | Data & Analytics; market/content research and SEO analysis are the main listing use cases, with AI creation available independently |
 | Description and starters | `createRemoteManifest` in `scripts/submission-package.mjs` is the authoritative package copy |
 | Publisher | Owner confirmed Logiavox LLC on 2026-11-04; remote author.name and developerName use this value. Select and verify the matching business identity in the portal; local brand metadata remains BeatAPI |
 | Countries | Owner requested all available countries; `publication.countries: []` removes directory country restrictions, not upstream or service eligibility limits |
 | Commerce declaration | `review.commerce: false`: no plugin purchases or checkout. Execution consumes existing BeatAPI balance; top-ups occur independently on the BeatAPI website. The review description discloses both facts |
 | Icons | Existing 180px composer icon and 1024px light/dark PNG logos; dark logo also supplies composerIconDark. Source checks enforce contained PNG paths, square dimensions, minimum resolution and 5 MiB maximum |
 
-The listing explains free capability Search/Inspect separately from paid
-execution, including web search. It covers social/web research, SEO analysis,
+The listing contains no pricing or promotional claims. The remote Skill and
+review commerce declaration retain discovery/execution cost boundaries and
+existing-balance disclosure. The listing covers social/web research, SEO analysis,
 text/decision models, images/videos and media workflows without claiming social posting, private
 messages, account administration, local uploads or credit purchases.
 

@@ -63,7 +63,7 @@ next 为 beatapi_data_web_search_96ea6f8641；页面可见工具活动，但未�
 发帖/私信/cookie 拒绝规则：不推荐或调查其他集成、不追问平台账户、不暗示 OAuth 能补足未支持能力。
 上传前重新导出当前 1.0.1 为基线；1.0.2 上传后再次下载，确认 Skill 与源码字节一致，
 `.app.json` 不变，manifest 仅 version 从 1.0.1 变为 1.0.2，其余所有字段和原 App/OAuth 绑定保持不变。
-归档位于本机 visualizations 的 beatapi-private-update-1.0.2.zip，不是公开送审 ZIP。
+归档现位于本仓库 submission/artifacts/beatapi-private-update-1.0.2.zip，不是公开送审 ZIP。
 源码回归已先观察失败后修复通过；实际宿主行为复验状态见 REVIEW-RUN-2026-11-05.md。
 
 ```bash
@@ -84,7 +84,7 @@ npm run submission:listing
 2026-11-05 在同一浏览器账户、同一插件 ID 更新为 1.1.0，页面显示 New version uploaded。
 上传前重新下载当前 1.0.2，上传后再次下载确认：Skill 与当前 REMOTE-SKILL.md 字节一致；
 `.app.json` 完全不变，manifest 仅 version 变为 1.1.0，其余字段、App ID、OAuth 连接与私有范围均保留。
-私有更新归档为 visualizations 下 beatapi-private-update-1.1.0.zip，不是正式公开送审包。
+私有更新归档现位于本仓库 submission/artifacts/beatapi-private-update-1.1.0.zip，不是正式公开送审包。
 新版 Skill 和服务端组件是不同发布环节：界面显示 1.1.0 不证明网关部署或内联组件已被宿主验收。
 
 ## 多语言边界
