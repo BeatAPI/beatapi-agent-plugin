@@ -1,99 +1,53 @@
+/**
+ * [INPUT]: Cursor manifest、远程 MCP 配置与文件树
+ * [OUTPUT]: 可复用的远程接线验证及 CLI 校验，不发起 OAuth 或业务请求
+ * [POS]: Cursor/Grok Bot 发布边界，拒绝本地后备、秘密与 ChatGPT 客户端混用
+ * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
+ */
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
-function fail(message) {
-  throw new Error(message);
-}
-
-function readJson(relativePath) {
-  const path = resolve(root, relativePath);
-  if (!existsSync(path)) fail(`Missing Cursor plugin file: ${relativePath}`);
-  return JSON.parse(readFileSync(path, "utf8"));
-}
-
-const manifest = readJson(".cursor-plugin/plugin.json");
-const mcp = readJson("mcp.json");
-const packageManifest = readJson("package.json");
-const codexManifest = readJson(".codex-plugin/plugin.json");
-
-if (!/^[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$/.test(manifest.name)) {
-  fail("Cursor plugin name must be lowercase kebab-case.");
-}
-if (
-  manifest.name !== packageManifest.name ||
-  manifest.name !== codexManifest.name
-) {
-  fail("Cursor, Codex, and package names must match.");
-}
-if (
-  manifest.version !== packageManifest.version ||
-  manifest.version !== codexManifest.version
-) {
-  fail("Cursor, Codex, and package versions must match.");
-}
-
-for (const field of ["logo", "skills", "mcpServers"]) {
-  const relativePath = manifest[field];
-  if (
-    typeof relativePath !== "string" ||
-    relativePath.startsWith("/") ||
-    relativePath.includes("..")
-  ) {
-    fail(`Cursor manifest ${field} must be a safe relative path.`);
+export function validateCursorRemote(manifest, mcp, directory = root) {
+  const packageManifest = JSON.parse(readFileSync(resolve(root, "package.json"), "utf8"));
+  if (!/^[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$/.test(manifest.name) ||
+      manifest.name !== packageManifest.name || manifest.version !== packageManifest.version) {
+    throw new Error("Cursor plugin name/version must match the package manifest.");
   }
-  if (!existsSync(resolve(root, relativePath))) {
-    fail(`Cursor manifest ${field} path does not exist: ${relativePath}`);
+  for (const field of ["logo", "skills", "mcpServers"]) {
+    const path = manifest[field];
+    if (typeof path !== "string" || path.startsWith("/") || path.includes("..") ||
+        !existsSync(resolve(directory, path))) {
+      throw new Error(`Cursor manifest ${field} must reference an existing safe relative path.`);
+    }
   }
-}
-
-const declaredVariables = new Set(
-  Object.keys(manifest.variables?.properties ?? {}),
-);
-const requiredVariables = new Set(manifest.variables?.required ?? []);
-if (!requiredVariables.has("BEATAPI_API_KEY")) {
-  fail("BEATAPI_API_KEY must be a required Cursor plugin variable.");
-}
-
-const serializedMcp = JSON.stringify(mcp);
-const placeholders = [
-  ...serializedMcp.matchAll(/\$\{([A-Z][A-Z0-9_]*)\}/g),
-].map((match) => match[1]);
-for (const name of placeholders) {
-  if (name !== "PLUGIN_ROOT" && !declaredVariables.has(name)) {
-    fail(`Cursor MCP placeholder is not declared in variables: ${name}`);
+  if (!manifest.description || manifest.skills !== "./cursor/skills/" ||
+      manifest.mcpServers !== "./mcp.json" || manifest.variables !== undefined) {
+    throw new Error("Cursor remote plugin must use remote skills and no local credential variables.");
   }
-}
-for (const name of declaredVariables) {
-  if (!placeholders.includes(name)) {
-    fail(`Declared Cursor variable is unused by mcp.json: ${name}`);
+  const server = mcp.mcpServers?.beatapi;
+  if (Object.keys(mcp).join() !== "mcpServers" ||
+      Object.keys(mcp.mcpServers).join() !== "beatapi" || !server ||
+      Object.keys(server).sort().join() !== "auth,url" ||
+      server.url !== "https://api.beatapi.io/mcp/openai" ||
+      Object.keys(server.auth ?? {}).sort().join() !== "CLIENT_ID,scopes" ||
+      server.auth.CLIENT_ID !== "beatapi-cursor") {
+    throw new Error("Cursor MCP must use the shared HTTPS service and dedicated public OAuth client only.");
   }
+  const scopes = server.auth.scopes;
+  if (!Array.isArray(scopes) || scopes.length === 0 ||
+      new Set(scopes).size !== scopes.length ||
+      scopes.some((scope) => typeof scope !== "string" || !/^mcp:[a-z]+:(read|create|run)$/.test(scope))) {
+    throw new Error("Cursor OAuth scopes must be explicit, unique BeatAPI capability scopes.");
+  }
+  return manifest;
 }
 
-const server = mcp.mcpServers?.beatapi;
-if (
-  server?.type !== "stdio" ||
-  server.command !== "node" ||
-  server.cwd !== "${PLUGIN_ROOT}" ||
-  server.args?.[0] !== "./mcp/server.mjs"
-) {
-  fail("Cursor MCP server must launch the bundled stdio runtime from PLUGIN_ROOT.");
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  const manifest = JSON.parse(readFileSync(resolve(root, ".cursor-plugin/plugin.json"), "utf8"));
+  const mcp = JSON.parse(readFileSync(resolve(root, "mcp.json"), "utf8"));
+  validateCursorRemote(manifest, mcp);
+  process.stdout.write(`Validated remote Cursor/Grok Bot config ${manifest.name}@${manifest.version}; OAuth registration and host tests are not verified.\n`);
 }
-if (
-  server.env?.BEATAPI_API_KEY !== "${BEATAPI_API_KEY}" ||
-  server.env?.BEATAPI_BASE_URL !== "${BEATAPI_BASE_URL}" ||
-  server.env?.BEATAPI_TRUST_CUSTOM_BASE_URL !==
-    "${BEATAPI_TRUST_CUSTOM_BASE_URL}" ||
-  server.env?.BEATAPI_UPLOAD_ROOTS !== "${BEATAPI_UPLOAD_ROOTS}"
-) {
-  fail("Cursor MCP environment must use declared variable placeholders.");
-}
-if (/sk_[A-Za-z0-9_-]{6,}/.test(serializedMcp)) {
-  fail("Cursor MCP config contains a credential-like value.");
-}
-
-process.stdout.write(
-  `Validated Cursor plugin ${manifest.name}@${manifest.version}.\n`,
-);

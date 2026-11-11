@@ -1,3 +1,9 @@
+/**
+ * [INPUT]: 各宿主 manifest、本地 MCP 与独立生成的远程 Skill
+ * [OUTPUT]: 本地跨宿主 marketplace 归档；Cursor/Grok Bot 仍连接远程服务
+ * [POS]: 本地安装归档入口，不作为 OpenAI 或 Cursor 专用公开发行包
+ * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
+ */
 import { execFileSync } from "node:child_process";
 import {
   cpSync,
@@ -27,6 +33,7 @@ const requiredPaths = [
   "contract",
   "generated",
   "skills",
+  "cursor",
   "mcp/server.mjs",
   "README.md",
   "SECURITY.md",

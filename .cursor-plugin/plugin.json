@@ -1,7 +1,7 @@
 {
   "name": "beatapi-agent-plugin",
   "version": "0.4.0",
-  "description": "Route Model, Data, Tool, and Workspace capabilities through BeatAPI from Cursor and Grok Bot.",
+  "description": "Research social and web data, analyze SEO, and generate images and videos through BeatAPI with a secure account connection.",
   "author": {
     "name": "BeatAPI",
     "email": "support@beatapi.io"
@@ -20,36 +20,6 @@
     "grok-bot"
   ],
   "logo": "assets/logo.png",
-  "skills": "./skills/",
-  "mcpServers": "./mcp.json",
-  "variables": {
-    "type": "object",
-    "properties": {
-      "BEATAPI_API_KEY": {
-        "type": "string",
-        "title": "BeatAPI API key",
-        "description": "Create a key at https://beatapi.io/dashboard/apikeys. The value is injected into the local MCP server and is never stored in this repository."
-      },
-      "BEATAPI_BASE_URL": {
-        "type": "string",
-        "title": "BeatAPI base URL",
-        "description": "Optional API base URL override. Keep the default unless BeatAPI support gave you another endpoint.",
-        "default": "https://api.beatapi.io"
-      },
-      "BEATAPI_TRUST_CUSTOM_BASE_URL": {
-        "type": "string",
-        "title": "Trust custom API origin",
-        "description": "Leave empty for the official API. Set exactly 1 only when BeatAPI support gave you the custom HTTPS origin above."
-      },
-      "BEATAPI_UPLOAD_ROOTS": {
-        "type": "string",
-        "title": "Approved upload directories",
-        "description": "Optional path-list of directories containing files you explicitly want the plugin to upload. Use colon separators on macOS/Linux and semicolons on Windows."
-      }
-    },
-    "required": [
-      "BEATAPI_API_KEY"
-    ],
-    "additionalProperties": false
-  }
+  "skills": "./cursor/skills/",
+  "mcpServers": "./mcp.json"
 }

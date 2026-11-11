@@ -15,18 +15,17 @@
 
 BeatAPI is the **professional capability layer for any agent**: one route to Model, Data, Tool,
 and Workspace capabilities. This plugin connects Codex, Cursor, Grok Bot, and
-Grok Build to BeatAPI through a bundled Skill, local MCP server, typed client,
-and locked public contract.
+Grok Build to BeatAPI through host-specific connections and a locked public contract.
 
-The existing host installations below use local stdio MCP. The OpenAI public
-release is a separate remote MCP + OAuth package under preparation; it does not
-require users to install a CLI or provide keys in chat. The owner has confirmed
-the hosted ChatGPT OAuth connection and tool invocation. Full review cases,
-the demo recording and public submission remain separate acceptance gates.
+Cursor and Grok Bot now have a remote MCP + OAuth integration candidate. Its
+dedicated OAuth client registration and authenticated host tests remain pending;
+see [remote setup and release gates](cursor/README.md). Codex and Grok Build keep
+their local stdio MCP. The separate OpenAI package was reported submitted by the
+owner; this change does not rebuild or update that review snapshot.
 This repository does not configure or deploy the hosted service.
 See [public submission](submission/SUBMISSION.md) for the build and review gates.
 The public listing is named **BeatAPI Agent Toolkit**; its stable package ID
-remains `beatapi-agent-plugin`, and existing local host manifests are unchanged.
+remains `beatapi-agent-plugin`.
 
 The remote Skill is general-purpose: social/web research, SEO keyword and competitor
 analysis, text and decision models, image/video generation and media workflows.
@@ -66,27 +65,31 @@ host-native use; both surfaces discover model IDs dynamically.
 ## How it routes
 
 ```text
-Codex · Cursor · Grok -> Skill + local MCP -> BeatAPI -> Models · Social Data · SEO Data · Web Search · Workflows
+Cursor · Grok Bot -> remote Skill + OAuth MCP -> BeatAPI
+Codex · Grok Build -> local Skill + stdio MCP -> BeatAPI
 ```
 
 The plugin exposes only capabilities supported by its current public contract
 and the live catalog. Tool and Workspace coverage expands through reviewed
 interfaces and integrations rather than README-only claims.
 
-The repository packages the same canonical `beatapi-video` Skill, bundled MCP
-server, typed client, and locked OpenAPI contract for four agent surfaces:
+Local hosts use the canonical `beatapi-video` Skill and bundled MCP client.
+Remote hosts use a generated Skill sharing the public remote instructions:
 
-| Host | Plugin metadata | MCP configuration | API key path |
+| Host | Plugin metadata | MCP configuration | Authentication |
 | --- | --- | --- | --- |
 | Codex | `.codex-plugin/plugin.json` | `.mcp.json` | BeatAPI CLI credential manager or host environment |
-| Cursor | `.cursor-plugin/plugin.json` | `mcp.json` | Plugins → Configure |
-| Grok Bot | Same Cursor account plugin | `mcp.json` | Plugins → Configure |
+| Cursor | `.cursor-plugin/plugin.json` | Remote `mcp.json` | Host-managed OAuth (candidate) |
+| Grok Bot | Cursor/Grok Bot remote distribution | Remote HTTPS connector | Host-managed OAuth (candidate) |
 | Grok Build | `.grok-plugin/plugin.json` | `.mcp.json` | BeatAPI CLI credential manager or host environment |
 
 Marketplace acceptance is a separate review step. The presence of a manifest
 in this repository does not mean a listing is already live.
 
 ## Quick start
+
+For Cursor and Grok Bot, use the [remote connection guide](cursor/README.md).
+The following quick start is for local Codex/Grok Build installations:
 
 1. Create a key in [Dashboard → API Keys](https://beatapi.io/dashboard/apikeys).
 2. Install the plugin for your host using one of the paths below.
@@ -106,20 +109,18 @@ Requirements: Node.js 20.19+ or 22.12+, a BeatAPI account, and network access to
 
 ## Install on Cursor and Grok Bot
 
-Cursor and Grok Bot share the same Cursor Marketplace plugin and account-level
-configuration. For local review on macOS or Linux, link this checkout and reload
-Cursor:
+Build the remote-only candidate:
 
 ```bash
-ln -s /absolute/path/to/beatapi-agent-plugin \
-  ~/.cursor/plugins/local/beatapi-agent-plugin
+npm run cursor:build
+npm run cursor:check
 ```
 
-Open **Customize → Plugins → BeatAPI → Configure**, then set
-`BEATAPI_API_KEY`. Add `BEATAPI_UPLOAD_ROOTS` only when you need local uploads;
-use colon-separated absolute directories on macOS/Linux or semicolon-separated
-directories on Windows. Keep the default `BEATAPI_BASE_URL`; a support-provided
-custom HTTPS origin also requires `BEATAPI_TRUST_CUSTOM_BASE_URL=1`.
+The output is `dist/cursor`: plugin metadata, remote MCP configuration, shared
+remote Skill, logo and documentation only. No local Node runtime or API key is
+required by the remote plugin. Operator OAuth registration and real login tests
+are still required; do not advertise this candidate as ready to install publicly.
+See [callback constraints, installation and acceptance](cursor/README.md).
 
 ## Install on Grok Build
 
@@ -221,8 +222,8 @@ trusted server-side application code or the BeatAPI dashboard for that setup.
 Never paste an API key into a prompt. The plugin excludes credential fields and
 recursively rejects credential-shaped values in open-ended model parameters.
 
-- Cursor and Grok Bot inject declared variables from the plugin configuration
-  screen.
+- Cursor and Grok Bot use host-managed OAuth; no API key variables or shell fallback
+  are included in their remote connection.
 - Codex and Grok Build can use `beatapi auth login` or inherit
   `BEATAPI_API_KEY` from the launching process.
 - Responses are recursively sanitized for credential-like fields and bearer
@@ -240,28 +241,34 @@ recursively rejects credential-shaped values in open-ended model parameters.
 
 ```mermaid
 flowchart LR
-  H[Codex · Cursor · Grok Bot · Grok Build] --> M[Host manifest]
-  M --> S[beatapi-video Skill]
-  M --> P[Bundled stdio MCP server]
+  H[Codex · Grok Build] --> M[Local host manifest]
+  M --> S[Canonical local Skill]
+  M --> P[Bundled stdio MCP]
   P --> C[Locked typed client]
   C --> A[BeatAPI public API]
   O[Locked OpenAPI contract] --> C
   O --> S
+  R[Cursor · Grok Bot] --> N[Remote host manifest]
+  N --> G[Generated remote Skill]
+  N --> Q[Remote MCP + OAuth]
+  Q --> B[BeatAPI gateway]
+  I[Shared remote instructions] --> G
 ```
 
-The host-specific manifests are thin adapters. Product behavior stays local to
-the shared Skill, MCP server, typed client, and contract, so fixes do not drift
-across separate repositories.
+The host-specific manifests are thin adapters. Local hosts share the bundled
+runtime and locked client. Remote hosts share the hosted gateway and public
+instructions; authentication and billing are not reimplemented in the plugin.
 
 ## Package layout
 
 | Path | Purpose |
 | --- | --- |
 | `.codex-plugin/plugin.json` | Codex presentation and component manifest |
-| `.cursor-plugin/plugin.json` | Cursor and Grok Bot metadata and variable declarations |
+| `.cursor-plugin/plugin.json` | Cursor and Grok Bot remote plugin metadata and component paths |
 | `.grok-plugin/plugin.json` | Grok Build marketplace metadata |
 | `.mcp.json` | Codex and Grok Build local stdio configuration |
-| `mcp.json` | Cursor and Grok Bot stdio configuration with variable placeholders |
+| `mcp.json` | Cursor and Grok Bot remote MCP with a dedicated public OAuth client |
+| `cursor/` | Remote host instructions, generated Skill and acceptance guide |
 | `mcp/server.mjs` | Dependency-free bundled MCP runtime |
 | `skills/beatapi-video/` | Synchronized canonical BeatAPI Skill |
 | `contract/` | Locked BeatAPI OpenAPI snapshot and provenance |

@@ -1,17 +1,17 @@
 {
   "mcpServers": {
     "beatapi": {
-      "type": "stdio",
-      "command": "node",
-      "args": [
-        "./mcp/server.mjs"
-      ],
-      "cwd": "${PLUGIN_ROOT}",
-      "env": {
-        "BEATAPI_API_KEY": "${BEATAPI_API_KEY}",
-        "BEATAPI_BASE_URL": "${BEATAPI_BASE_URL}",
-        "BEATAPI_TRUST_CUSTOM_BASE_URL": "${BEATAPI_TRUST_CUSTOM_BASE_URL}",
-        "BEATAPI_UPLOAD_ROOTS": "${BEATAPI_UPLOAD_ROOTS}"
+      "url": "https://api.beatapi.io/mcp/openai",
+      "auth": {
+        "CLIENT_ID": "beatapi-cursor",
+        "scopes": [
+          "mcp:catalog:read",
+          "mcp:usage:read",
+          "mcp:tasks:read",
+          "mcp:media:create",
+          "mcp:data:read",
+          "mcp:models:run"
+        ]
       }
     }
   }

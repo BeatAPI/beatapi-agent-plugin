@@ -1,3 +1,9 @@
+/**
+ * [INPUT]: 本地工具契约、各宿主 manifest 与远程连接配置
+ * [OUTPUT]: 工具安全边界及宿主独立接线的回归断言
+ * [POS]: 插件入口契约测试，不把配置存在当成线上授权成功
+ * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
+ */
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
@@ -227,7 +233,7 @@ test("plugin manifest wires the skill, local MCP, and production assets", async 
   assert.ok(defaultPrompts.every((prompt) => prompt.length <= 128));
 });
 
-test("Cursor manifest wires shared skills and MCP through declared variables", async () => {
+test("Cursor and Grok Bot default to remote OAuth without local credentials", async () => {
   const manifest = JSON.parse(
     await readFile(resolve(root, ".cursor-plugin/plugin.json"), "utf8"),
   ) as Record<string, unknown>;
@@ -235,11 +241,8 @@ test("Cursor manifest wires shared skills and MCP through declared variables", a
     mcpServers: Record<
       string,
       {
-        type: string;
-        command: string;
-        args: string[];
-        cwd: string;
-        env: Record<string, string>;
+        url: string;
+        auth: { CLIENT_ID: string; scopes: string[] };
       }
     >;
   };
@@ -249,32 +252,17 @@ test("Cursor manifest wires shared skills and MCP through declared variables", a
     manifest.repository,
     "https://github.com/BeatAPI/beatapi-agent-plugin",
   );
-  assert.equal(manifest.skills, "./skills/");
+  assert.equal(manifest.skills, "./cursor/skills/");
   assert.equal(manifest.mcpServers, "./mcp.json");
-
-  const variables = manifest.variables as {
-    properties: Record<string, unknown>;
-    required: string[];
-  };
-  assert.deepEqual(variables.required, ["BEATAPI_API_KEY"]);
-  assert.ok(variables.properties.BEATAPI_API_KEY);
-  assert.ok(variables.properties.BEATAPI_BASE_URL);
-  assert.ok(variables.properties.BEATAPI_TRUST_CUSTOM_BASE_URL);
-  assert.ok(variables.properties.BEATAPI_UPLOAD_ROOTS);
 
   const server = mcp.mcpServers.beatapi;
   assert.ok(server);
-  assert.equal(server.type, "stdio");
-  assert.equal(server.command, "node");
-  assert.deepEqual(server.args, ["./mcp/server.mjs"]);
-  assert.equal(server.cwd, "${PLUGIN_ROOT}");
-  assert.equal(server.env.BEATAPI_API_KEY, "${BEATAPI_API_KEY}");
-  assert.equal(server.env.BEATAPI_BASE_URL, "${BEATAPI_BASE_URL}");
-  assert.equal(
-    server.env.BEATAPI_TRUST_CUSTOM_BASE_URL,
-    "${BEATAPI_TRUST_CUSTOM_BASE_URL}",
-  );
-  assert.equal(server.env.BEATAPI_UPLOAD_ROOTS, "${BEATAPI_UPLOAD_ROOTS}");
+  assert.equal(server.url, "https://api.beatapi.io/mcp/openai");
+  assert.equal(server.auth.CLIENT_ID, "beatapi-cursor");
+  assert.deepEqual(server.auth.scopes, ["mcp:catalog:read", "mcp:usage:read",
+    "mcp:tasks:read", "mcp:media:create", "mcp:data:read", "mcp:models:run"]);
+  assert.deepEqual(Object.keys(server).sort(), ["auth", "url"]);
+  assert.equal(manifest.variables, undefined);
   assert.doesNotMatch(JSON.stringify(mcp), /sk_[A-Za-z0-9_-]{6,}/);
 });
 
