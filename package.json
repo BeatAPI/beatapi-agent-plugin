@@ -18,6 +18,7 @@
     "marketplace:build": "node scripts/build-marketplace.mjs",
     "cursor:build": "node scripts/build-cursor.mjs",
     "cursor:check": "node scripts/build-cursor.mjs --check",
+    "privacy:check": "node scripts/check-public-boundary.mjs",
     "validate:cursor": "node scripts/validate-cursor.mjs",
     "validate:grok": "node scripts/validate-grok.mjs",
     "typecheck": "tsc --noEmit",
@@ -27,7 +28,7 @@
     "submission:listing": "node scripts/build-submission.mjs --export-listing",
     "submission:probe": "node scripts/build-submission.mjs --probe",
     "submission:catalog": "node scripts/build-remote-catalog.mjs",
-    "verify": "npm run contract:check && npm run skill:check && npm run runtime:check && npm run cursor:check && npm run validate:cursor && npm run validate:grok && npm run typecheck && npm run ui:build && npm test && npm run build:check && npm run marketplace:build && npm run submission:check && npm run harness:check",
+    "verify": "npm run privacy:check && npm run contract:check && npm run skill:check && npm run runtime:check && npm run cursor:check && npm run validate:cursor && npm run validate:grok && npm run typecheck && npm run ui:build && npm test && npm run build:check && npm run marketplace:build && npm run submission:check && npm run harness:check",
     "harness:sync": "node scripts/sync-harness.mjs",
     "harness:check": "node scripts/sync-harness.mjs --check && node --test harness/test/*.test.mjs"
   },

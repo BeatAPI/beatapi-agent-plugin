@@ -1,15 +1,27 @@
 # Security policy
 
 The plugin must never send a BeatAPI API key through a model prompt or MCP tool
-argument. Credentials belong in Cursor/Grok Bot's plugin Configure store, the
-supported local credential store, or the `BEATAPI_API_KEY` process environment.
+argument. Remote Cursor/Grok Bot connections use host-managed OAuth. Local
+Codex/Grok Build connections use the supported credential store or the
+`BEATAPI_API_KEY` process environment. Manifests declare variable names only;
+never commit their values or the user's Codex configuration.
 
-Webhook creation returns a signing secret only once. The MCP server writes that
-secret to a new local file with permission mode `0600`, returns only the file
-path, and rolls back the webhook if secure storage fails.
+Operations that create one-time credentials, including webhook signing secrets,
+are not exposed through the agent tools. Do not use an alternate transport to
+bypass that boundary.
 
-Secret files use `BEATAPI_DATA_HOME` when configured, Codex's data directory
-when available, or `~/.beatapi-agent-plugin` on other hosts.
+## Public repository boundary
+
+Only reusable source, sanitized contracts, tests and public setup documentation
+belong in this repository. Submission records, recordings, account details,
+production request/task identifiers and infrastructure deployment configuration
+are private operator material, even when they are not authentication secrets.
+Keep them outside version control. Public submission build inputs are explicitly
+allowlisted; `npm run privacy:check` rejects tracked files outside that boundary
+and common credential-file names. This path check is not a complete secret scan.
+
+Removing a tracked file does not erase earlier Git history, forks or caches.
+Handle history cleanup separately and revoke any exposed credential immediately.
 
 Paid task creation, shot editing, and composition are described as paid
 mutations in MCP metadata. The plugin never retries authentication,
