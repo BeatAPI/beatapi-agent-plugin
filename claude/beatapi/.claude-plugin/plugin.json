@@ -1,0 +1,20 @@
+{
+  "name": "beatapi",
+  "version": "0.1.0",
+  "description": "Research social and web data, analyze SEO, and create images and videos with BeatAPI.",
+  "author": {
+    "name": "BeatAPI",
+    "email": "support@beatapi.io",
+    "url": "https://beatapi.io"
+  },
+  "homepage": "https://beatapi.io",
+  "repository": "https://github.com/BeatAPI/beatapi-agent-plugin",
+  "license": "MIT",
+  "keywords": [
+    "beatapi",
+    "research",
+    "seo",
+    "image-generation",
+    "video-generation"
+  ]
+}

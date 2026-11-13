@@ -1,0 +1,14 @@
+# claude/
+> Parent: ../AGENTS.md
+
+interaction.md: Claude-specific supplement to the shared remote Skill.
+beatapi/: self-contained GitHub-subfolder plugin for Claude directory validation.
+beatapi/.claude-plugin/plugin.json: Claude manifest, independent package version.
+beatapi/.mcp.json: shared remote endpoint with dedicated public Claude client ID.
+beatapi/README.md: installation, billing, privacy and compatibility boundaries.
+beatapi/LICENSE: MIT license copied from the repository license.
+beatapi/skills/beatapi/SKILL.md: generated shared remote Skill plus Claude supplement; never edit directly.
+
+Run npm run claude:build after changing the shared Skill or interaction supplement.
+Keep reviewer accounts, private evidence and credentials outside this repository.
+[PROTOCOL]: Keep this inventory aligned with changes.
