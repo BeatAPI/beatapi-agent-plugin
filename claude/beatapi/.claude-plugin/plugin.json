@@ -1,7 +1,7 @@
 {
   "name": "beatapi",
-  "version": "0.1.0",
-  "description": "Research social and web data, analyze SEO, and create images and videos with BeatAPI.",
+  "version": "0.2.0",
+  "description": "Research public social and web data, analyze SEO keywords and competitors with BeatAPI.",
   "author": {
     "name": "BeatAPI",
     "email": "support@beatapi.io",
@@ -13,9 +13,10 @@
   "keywords": [
     "beatapi",
     "research",
+    "social-data",
     "seo",
-    "image-generation",
-    "video-generation"
+    "web-search"
   ],
-  "privacyPolicyUrl": "https://beatapi.io/privacy-policy"
+  "privacyPolicyUrl": "https://beatapi.io/privacy-policy",
+  "displayName": "BeatAPI Research"
 }

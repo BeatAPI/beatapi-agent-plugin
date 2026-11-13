@@ -280,8 +280,8 @@ Do not edit synchronized Skill or client files directly. Refresh them through
 ## Claude plugin candidate
 
 The self-contained Claude directory source is [`claude/beatapi`](claude/beatapi).
-It reuses the shared remote Skill and OAuth MCP service with a dedicated Claude
-client. Run `npm run claude:build`, `npm run claude:check`, and
+It composes shared research/safety instructions with a Claude workflow and uses
+the isolated `/mcp/research` endpoint with a dedicated Claude client. Run `npm run claude:build`, `npm run claude:check`, and
 `claude plugin validate ./claude/beatapi`. See its README for host-specific
 release gates; packaging does not establish authenticated compatibility.
 
