@@ -4,6 +4,7 @@
 interaction.md: Claude-specific supplement to the shared remote Skill.
 beatapi/: self-contained GitHub-subfolder plugin for Claude directory validation.
 beatapi/.claude-plugin/plugin.json: Claude manifest, independent package version.
+beatapi/.claude-plugin/icon.png: square BeatAPI brand icon copied from assets/logo.png.
 beatapi/.mcp.json: shared remote endpoint with dedicated public Claude client ID.
 beatapi/README.md: installation, billing, privacy and compatibility boundaries.
 beatapi/LICENSE: MIT license copied from the repository license.
