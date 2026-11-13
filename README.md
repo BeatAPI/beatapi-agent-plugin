@@ -277,6 +277,14 @@ instructions; authentication and billing are not reimplemented in the plugin.
 Do not edit synchronized Skill or client files directly. Refresh them through
 `npm run skill:sync` and `npm run runtime:sync`.
 
+## Claude plugin candidate
+
+The self-contained Claude directory source is [`claude/beatapi`](claude/beatapi).
+It composes shared research/safety instructions with a Claude workflow and uses
+the isolated `/mcp/research` endpoint with a dedicated Claude client. Run `npm run claude:build`, `npm run claude:check`, and
+`claude plugin validate ./claude/beatapi`. See its README for host-specific
+release gates; packaging does not establish authenticated compatibility.
+
 ## Publishing paths
 
 1. **Cursor Marketplace and Grok Bot:** submit this public repository once at

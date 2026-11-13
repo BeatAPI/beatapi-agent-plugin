@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "beatapi": {
+      "type": "http",
+      "url": "https://api.beatapi.io/mcp/research",
+      "oauth": {
+        "clientId": "beatapi-claude"
+      }
+    }
+  }
+}

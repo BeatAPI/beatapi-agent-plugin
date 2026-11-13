@@ -28,9 +28,11 @@
     "submission:listing": "node scripts/build-submission.mjs --export-listing",
     "submission:probe": "node scripts/build-submission.mjs --probe",
     "submission:catalog": "node scripts/build-remote-catalog.mjs",
-    "verify": "npm run privacy:check && npm run contract:check && npm run skill:check && npm run runtime:check && npm run cursor:check && npm run validate:cursor && npm run validate:grok && npm run typecheck && npm run ui:build && npm test && npm run build:check && npm run marketplace:build && npm run submission:check && npm run harness:check",
+    "verify": "npm run privacy:check && npm run contract:check && npm run skill:check && npm run runtime:check && npm run cursor:check && npm run claude:check && npm run validate:cursor && npm run validate:grok && npm run typecheck && npm run ui:build && npm test && npm run build:check && npm run marketplace:build && npm run submission:check && npm run harness:check",
     "harness:sync": "node scripts/sync-harness.mjs",
-    "harness:check": "node scripts/sync-harness.mjs --check && node --test harness/test/*.test.mjs"
+    "harness:check": "node scripts/sync-harness.mjs --check && node --test harness/test/*.test.mjs",
+    "claude:build": "node scripts/build-claude.mjs",
+    "claude:check": "node scripts/build-claude.mjs --check"
   },
   "engines": {
     "node": ">=20.19.0 <21 || >=22.12.0"

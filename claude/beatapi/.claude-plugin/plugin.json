@@ -1,0 +1,22 @@
+{
+  "name": "beatapi",
+  "version": "0.2.0",
+  "description": "Research public social and web data, analyze SEO keywords and competitors with BeatAPI.",
+  "author": {
+    "name": "BeatAPI",
+    "email": "support@beatapi.io",
+    "url": "https://beatapi.io"
+  },
+  "homepage": "https://beatapi.io",
+  "repository": "https://github.com/BeatAPI/beatapi-agent-plugin",
+  "license": "MIT",
+  "keywords": [
+    "beatapi",
+    "research",
+    "social-data",
+    "seo",
+    "web-search"
+  ],
+  "privacyPolicyUrl": "https://beatapi.io/privacy-policy",
+  "displayName": "BeatAPI Research"
+}

@@ -13,6 +13,7 @@ contract/ - 上游 OpenAPI 快照
 generated/ - Skill 与客户端同步锁
 packages/ - DeepSeek Harness 插件包，独立于 OpenAI 公开包
 harness/ - Harness 共享运行时、同步校验与测试
+claude/ - Claude 独立目录插件，通用远程 Skill 同源生成，专用 OAuth 客户端与宿主验收分开
 cursor/ - Cursor/Grok Bot 远程 OAuth 候选的交互指引、同源生成 Skill 与登记/验收门槛
 .codex-plugin/, .grok-plugin/ - 本地宿主兼容配置，不作为远程公开包直接上传
 .cursor-plugin/ - Cursor/Grok Bot 远程发行 manifest；根 mcp.json 指向现有托管服务

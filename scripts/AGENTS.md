@@ -2,6 +2,7 @@
 > L2 | 父级: ../AGENTS.md
 
 成员清单
+build-claude.mjs: 组合共享研究/安全章节与 Claude 研究工作流，校验独立插件目录、研究远程地址与专用客户端，不部署或授权。
 check-public-boundary.mjs: 检查 Git 索引，拒绝内部审核/部署资料与常见凭证文件，不作为完整秘密扫描。
 remote-presentation.mjs: 按 reference 核实用途与技术名；区分 Bilibili 创作者榜/期数及 Douyin 增粉率/点赞率/搜索热度/话题热度，保留各自分页与结构标签；沿用 Instagram/星图边界，不改变参数或承诺私有访问。
 remote-metadata.mjs: 固定描述符的展示/紧凑/共享指引投影；公开范围复用统一排除表，仅删除排除工具与读取引用，不重建其他枚举或参数。
